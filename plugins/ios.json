@@ -1,0 +1,51 @@
+{
+    "prepare_queue": {
+        "installed": [],
+        "uninstalled": []
+    },
+    "config_munge": {
+        "files": {
+            "config.xml": {
+                "parents": {
+                    "/*": [
+                        {
+                            "xml": "<feature name=\"Device\"><param name=\"ios-package\" value=\"CDVDevice\" /></feature>",
+                            "count": 1
+                        }
+                    ]
+                }
+            }
+        },
+        "framework": {
+            "CoreBluetooth.framework": {
+                "false": 1
+            },
+            "AudioToolbox.framework": {
+                "true": 1
+            }
+        },
+        "config.xml": {
+            "/*": {
+                "<feature name=\"BluetoothLePlugin\"><param name=\"ios-package\" value=\"BluetoothLePlugin\" /></feature>": 1,
+                "<feature name=\"Notification\"><param name=\"ios-package\" value=\"CDVNotification\" /></feature>": 1
+            }
+        },
+        "*-Info.plist": {
+            "UIBackgroundModes": {
+                "<array><string>bluetooth-central</string></array>": 1
+            }
+        }
+    },
+    "installed_plugins": {
+        "org.apache.cordova.device": {
+            "PACKAGE_NAME": "nl.dobots.CrownStone"
+        },
+        "com.randdusing.bluetoothle": {
+            "PACKAGE_NAME": "nl.dobots.CrownStone"
+        },
+        "org.apache.cordova.dialogs": {
+            "PACKAGE_NAME": "nl.dobots.CrownStone"
+        }
+    },
+    "dependent_plugins": {}
+}
