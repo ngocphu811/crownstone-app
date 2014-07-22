@@ -1,8 +1,28 @@
-# Cordova
+# CrownStone
+
+The [Crownstone](http://dobots.nl/products/crownstone) is an nRF51822-based product from [DoBots](http://dobots.nl). DoBots is one of dozen daughter companies of the research institute [Almende](http://almende.com). DoBots performs commercial activities in two areas:
+
+* [Smart Buildings](http://dobots.nl/products/crownstone/)
+* [Smart Robots](http://dobots.nl/products/autopilot/)
+
+There is a lot of nonsense written about "Smart Buildings". At DoBots we create these actual products, no vaporware! that give buildings eyes and ears!
+
+The Crownstone is a Bluetooth Low-Energy switching block that can be embedded everywhere in a building. Not only can people use their smartphones to control every wire in the building, but also the building knows where the people are. This means:
+
+* An audiotour through a museum adjusted to your preferences
+* Directing people to the right track on a railway station
+* An alarm service in a daycare center or hospital
+* An office that shuts down all devices (except for fridges, etc.) at night
+
+The combination of observation and control allows for services that satisfy both facility managers as well as end-users.
+
+The basic software layer that resides on the Crownstone is open-source and its unofficial working name is [BlueNet](https://github.com/mrquincle/bluenet). You can use the application in this github repository to connect to it. More sophisticated software for accurate positioning, and dedicated services for end-users are, naturally, proprietary. However, if you have a specific end-user in mind, feel free to contact us about the possibilities to license this software. In that case you don't need to worry about configuring the system, position other nodes, or users, device profiling, etc.
+
+## Cordova
 
 The code that is cross-platform, is developed through Cordova.
 
-## Android
+### Android
 
 Commands can be found on the [project site](https://cordova.apache.org/docs/en/3.4.0/guide_platforms_ubuntu_index.md.html).
 
@@ -79,7 +99,7 @@ And to get rid of it:
     $> adb uninstall com.almende.CrownStone
     Success
 
-## BluetoothLE
+### BluetoothLE
 
 To support Bluetooth LE, we used a plugin:
 
@@ -94,3 +114,14 @@ Notifications are added as plugin as well:
     cordova plugin add https://git-wip-us.apache.org/repos/asf/cordova-plugin-dialogs.git
 
 This should automatically adjust your platform-specific configuration files as specified on [cordova.apache.org](https://cordova.apache.org/docs/en/3.0.0/cordova_notification_notification.md.html).
+
+## Copyrights
+
+The copyrights (2014) for this code belongs to [DoBots](http://dobots.nl) and are provided under an noncontagious open-source license:
+
+* Author: Anne van Rossum
+* Date: 22 Jul. 2014
+* License: LGPL v3
+* Distributed Organisms B.V. (DoBots), http://www.dobots.nl
+* Rotterdam, The Netherlands
+
