@@ -13,6 +13,10 @@ package_prefix="nl.dobots"
 echo "Navigate to working path: $working_path"
 cd $working_path
 
+release() {
+	cordova build android --release
+}
+
 build() {
 	cordova build android
 }
@@ -40,6 +44,9 @@ all() {
 }
 
 case "$cmd" in 
+	release)
+		release
+		;;
 	build)
 		build
 		;;
@@ -56,6 +63,6 @@ case "$cmd" in
 		all
 		;;
 	*)
-		echo $"Usage: $0 {build|upload|log}"
+		echo $"Usage: $0 {build|upload|log|release}"
 		exit 1
 esac

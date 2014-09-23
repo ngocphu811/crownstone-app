@@ -9,6 +9,8 @@ CrownStone.prototype = {
 
 		var ble = new BLEHandler();
 
+		var repeatFunctionHandle = null;
+
 		$.ajaxSetup({ cache: false });
 
 		start = function() {
@@ -32,11 +34,33 @@ CrownStone.prototype = {
 			$('#switchPower').on('click', function(event) {
 				console.log("Stop scan if running");
 				ble.stopScan();
-				console.log('Switch power event');
-				ble.writePowerLevel();
+				togglePower();
 			});
-			
+
+			$('#repeatPowerOnOff').on('click', function(event) {
+				console.log("Stop scan if running");
+				ble.stopScan();
+				if (repeatFunctionHandle) {
+					console.log("Clear repeat action");
+					clearInterval(repeatFunctionHandle);
+					repeatFunctionHandle = null;
+					return;
+				}
+				console.log("Set repeat action");
+				togglePower(function() {
+					repeatFunctionHandle = setInterval(togglePower, 4000);
+				});
+			});	
 		});
+
+		togglePower = function(callback, cargs) {
+			console.log('Switch power event');
+			ble.writePowerLevel();
+			if (callback) {
+				callback(cargs);
+			}
+		}
+
 		start();	
 	}
 }

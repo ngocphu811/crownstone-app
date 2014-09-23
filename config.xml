@@ -1,14 +1,15 @@
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="nl.dobots.CrownStone" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <name>Crownstone</name>
-    <description>
-	    A "crownstone" is a Bluetooth Low-Energy switch that can be controlled from a smartphone.
-    </description>
-    <author email="anne@dobots.nl" href="https://dobots.nl">
-        Anne van Rossum
-    </author>
-    <content src="index.html" />
-    <access origin="*" />
-		<preference name="StatusBarOverlaysWebView" value="true" />
-		<preference name="UIWebViewBounce" value="false" />
+	<name>Crownstone</name>
+	<description>
+		A "crownstone" is a Bluetooth Low-Energy switch that can be controlled from a smartphone.
+	</description>
+	<author email="anne@dobots.nl" href="https://dobots.nl">
+		Anne van Rossum
+	</author>
+	<content src="index.html" />
+	<access origin="*" />
+	<preference name="StatusBarOverlaysWebView" value="true" />
+	<preference name="UIWebViewBounce" value="false" />
+	<icon src="www/img/logo.png"/>
 </widget>
