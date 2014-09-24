@@ -24,7 +24,7 @@ CrownStone.prototype = {
 		        event.preventDefault();
 		};
 
-		$('#controlPage').on('pageshow', function() {
+		$('#controlPage').on('pagecreate', function() {
 			console.log("Create first page to control a crownstone");
 			
 			// set up bluetooth connection
