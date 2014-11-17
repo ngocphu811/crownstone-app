@@ -9,6 +9,9 @@ var BLEHandler = function() {
 	var linkLossServiceUuid = '1803';
 	var linkLossCharacteristicUuid = '2a06';
 
+	var temperatureServiceUuid = 'f5f93100-59f9-11e4-aa15-123b93f75cba';
+	var temperatureCharacteristicUuid = 'f5f90001-59f9-11e4-aa15-123b93f75cba';
+
 	// crownstone
 	//var crownstoneServiceUuid = '1802'
 	var crownstoneServiceUuid = '2220';
@@ -16,6 +19,8 @@ var BLEHandler = function() {
 	//var crownstoneServiceUuid = '00002220-0000-1000-8000-00805f9b34fb'
 	//var crownstoneCharacteristicUuid = '00000124-0000-1000-8000-00805f9b34fb'
 	var crownstoneCharacteristicUuid = '0124';
+	var deviceScanCharacteristicUuid = '0123';
+	var deviceListCharacteristicUuid = '0120';
 
 	var scanTimer = null;
 	var connectTimer = null;
@@ -206,8 +211,8 @@ var BLEHandler = function() {
 	 */
 	self.initSuccess = function(obj) {
 		console.log('Properly connected to BLE chip');
-		console.log('Message', obj.status);
-		if (obj.status == 'initialized') {
+		console.log("Message " + JSON.stringify(obj));
+		if (obj.status == 'enabled') {
 
 			var address = window.localStorage.getItem(self.addressKey);
 			if (address == null) {
@@ -385,7 +390,7 @@ var BLEHandler = function() {
 	}
 
 	self.readLinkLoss = function() {
-		console.log("Read link loss level at service " + alertLevelServiceUuid + ' and characteristic ' + alertLevelCharacteristicUuid);
+		console.log("Read link loss level at service " + linkLossServiceUuid + ' and characteristic ' + linkLossCharacteristicUuid);
 		var paramsObj = {"serviceUuid": linkLossServiceUuid, "characteristicUuid": linkLossCharacteristicUuid};
 		bluetoothle.read(self.readLinkLossSuccess, self.readLinkLossError, paramsObj);
 	}
@@ -422,6 +427,71 @@ var BLEHandler = function() {
 		console.log("Reading battery level, not yet implemented");
 		//var paramsObj = {"serviceUuid":batteryServiceUuid, "characteristicUuid":batteryLevelCharacteristicUuid};
 		//bluetoothle.read(readSuccess, readError, paramsObj);
+	}
+
+	self.readTemperature = function(callback) {
+		console.log("Read temperature at service " + temperatureServiceUuid + ' and characteristic ' + temperatureCharacteristicUuid);
+		var paramsObj = {"serviceUuid": temperatureServiceUuid, "characteristicUuid": temperatureCharacteristicUuid};
+		bluetoothle.read(function(obj) {
+			if (obj.status == "read")
+			{
+				var temperature = bluetoothle.encodedStringToBytes(obj.value);
+				console.log("temperature: " + temperature[0]);
+
+				callback(temperature[0]);
+			}
+			else
+			{
+				console.log("Unexpected read status: " + obj.status);
+				self.disconnectDevice();
+			}
+		}, 
+		function(obj) {
+			console.log('Error in reading temperature: ' + obj.error + " - " + obj.message);
+		},
+		paramsObj);
+	}
+
+	self.scanDevices = function(scan) {
+		var u8 = new Uint8Array(1);
+		u8[0] = scan ? 1 : 0;
+		var v = bluetoothle.bytesToEncodedString(u8);
+		console.log("Write " + v + " at service " + crownstoneServiceUuid + ' and characteristic ' + deviceScanCharacteristicUuid);
+		var paramsObj = {"serviceUuid": crownstoneServiceUuid, "characteristicUuid": deviceScanCharacteristicUuid, "value" : v};
+		bluetoothle.write(function(obj) {
+			if (obj.status == 'written') {
+				console.log('Successfully written to device scan characteristic - ' + obj.status);
+			} else {
+				console.log('Writing to device scan characteristic was not successful' + obj);
+			}
+		},
+		function(obj) {
+			console.log("Error in writing device scan characteristic" + obj.error + " - " + obj.message);
+		},
+		paramsObj);
+	}
+
+	self.listDevices = function(callback) {
+		console.log("Read device list at service " + crownstoneServiceUuid + ' and characteristic ' + deviceListCharacteristicUuid);
+		var paramsObj = {"serviceUuid": crownstoneServiceUuid, "characteristicUuid": deviceListCharacteristicUuid};
+		bluetoothle.read(function(obj) {
+			if (obj.status == "read")
+			{
+				var list = bluetoothle.encodedStringToBytes(obj.value);
+				console.log("list: " + list[0]);
+
+				callback(list);
+			}
+			else
+			{
+				console.log("Unexpected read status: " + obj.status);
+				self.disconnectDevice();
+			}
+		}, 
+		function(obj) {
+			console.log('Error in reading temperature: ' + obj.error + " - " + obj.message);
+		},
+		paramsObj);
 	}
 
 	self.disconnectDevice = function() {

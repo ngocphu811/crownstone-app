@@ -34,7 +34,7 @@ To run the application in the emulator:
 
     cordova run android
 
-The application is not necessarily automatically started, so after the emulator starts, navigate to applications, and click on the icon with the text "Virtuele Memo".
+The application is not necessarily automatically started, so after the emulator starts, navigate to applications, and click on the icon with the text "Crownstone".
 
 To run the application:
 
@@ -83,16 +83,16 @@ ERROR: Failed to launch application on device: ERROR: Failed to install apk to d
 
 However, I can't be bothered much, because it is easy to install it manually:
 
-    adb install platforms/android/ant-build/CrownStone-debug.apk
+    adb install platforms/android/ant-build/Crownstone-debug.apk
 
 Get the name of the activity to launch:
 
-    $> aapt dump badging platforms/android/ant-build/CrownStone-debug.apk | grep activity
-    launchable-activity: name='com.almende.CrownStone.CrownStone'  label='CrownStone' icon=''
+    $> aapt dump badging platforms/android/ant-build/Crownstone-debug.apk | grep activity
+    launchable-activity: name='nl.dobots.CrownStone.Crownstone'  label='Crownstone' icon=''
 
 And run it:
 
-    adb shell am start -n com.almende.CrownStone/.CrownStone
+    adb shell am start -n nl.dobots.CrownStone/.Crownstone
 
 And to get rid of it:
 

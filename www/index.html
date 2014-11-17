@@ -27,9 +27,9 @@
 		<link rel="stylesheet" type="text/css" href="css/crownstone.css" />
 		<script src="js/jquery-1.9.1.min.js"></script>
 		<script type='application/javascript' src='js/fastclick.js'></script>
-	        <script src="js/jquery.mobile-1.4.2.min.js"></script>
+		<script src="js/jquery.mobile-1.4.2.min.js"></script>
 		<script type="text/javascript" src="cordova.js"></script>
-	
+		
 		<title>Crownstone</title>
 	</head>
 
@@ -53,9 +53,21 @@
 			<div id="controlPageMain" role="main">
 				<img class="scaledLogo" src="img/crownstone.jpg"></img>
 				<button id="switchPower" class="ui-btn-active ui-state-persist" data-role="button">Switch Power</button>
-				<button id="repeatPowerOnOff" class="ui-btn-active ui-state-persist" data-role="button">On/off Repeat demo</button>
+				<div>
+					<button id="repeatPowerOnOff" class="ui-btn-active ui-state-persist" data-role="button">On/off Repeat demo</button>
+					<div id="powerState" style="display: none; text-align: center">ON/OFF?</div>
+				</div>
+				<div>
+					<button id="getTemperature" class="ui-btn-active ui-state-persist" data-role="button">Get Temperature</button>
+					<div id="temperature" style="display: none; text-align: center">Temperature: ?</div>
+				</div>
+				<div>
+					<button id="scanDevices" class="ui-btn-active ui-state-persist" data-role="button">Scan Devices</button>
+					<ol data-role="listview" id="deviceList" style="display: none"></ol>
+					<table id="deviceTable" style="display: none; width: 100%"></table>
+				</div>
 			</div>
-			
+
 			<div>	
 				<img class="scaledLogo" src="img/DObots.png"></img>
 			</div>
