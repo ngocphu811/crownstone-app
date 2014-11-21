@@ -24,25 +24,24 @@
 		<!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
 		<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, target-densitydpi=device-dpi" />
 		<link rel="stylesheet" href="css/jquery.mobile-1.4.2.min.css" />
-		<link rel="stylesheet" type="text/css" href="css/crownstone.css" />
 		<script src="js/jquery-1.9.1.min.js"></script>
-		<script type='application/javascript' src='js/fastclick.js'></script>
 		<script src="js/jquery.mobile-1.4.2.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="css/crownstone.css" />
 		<script type="text/javascript" src="cordova.js"></script>
 		
 		<title>Crownstone</title>
 	</head>
 
 	<body class="ui-body-a">
-		<div data-role="page" id="optionalBanner">
-<!--			<script>
+		<!-- <div data-role="page" id="optionalBanner">
+			<script>
 			console.log("Quickly move on to other page");
 			$(function() {
 				$.mobile.changePage("#controlPage", {transition:'slide', hashChange:true});
 			});
 			</script>
-			-->
-	</div>
+			
+		</div> -->
 
 		<!-- Control switch -->
         	<div data-role="page" id="controlPage">
@@ -51,25 +50,76 @@
 			</div>
 
 			<div id="controlPageMain" role="main">
-				<img class="scaledLogo" src="img/crownstone.jpg"></img>
-				<button id="switchPower" class="ui-btn-active ui-state-persist" data-role="button">Switch Power</button>
-				<div>
-					<button id="repeatPowerOnOff" class="ui-btn-active ui-state-persist" data-role="button">On/off Repeat demo</button>
-					<div id="powerState" style="display: none; text-align: center">ON/OFF?</div>
-				</div>
-				<div>
-					<button id="getTemperature" class="ui-btn-active ui-state-persist" data-role="button">Get Temperature</button>
-					<div id="temperature" style="display: none; text-align: center">Temperature: ?</div>
-				</div>
-				<div>
-					<button id="scanDevices" class="ui-btn-active ui-state-persist" data-role="button">Scan Devices</button>
-					<ol data-role="listview" id="deviceList" style="display: none"></ol>
-					<table id="deviceTable" style="display: none; width: 100%"></table>
-				</div>
-			</div>
+				<div class="scrollable">
+					<img class="scaledLogo" src="img/crownstone.jpg"></img>
+					<hr>
+					<div>
+						<table width="100%">
+							<tr>
+								<td><button id="powerON" class="ui-btn-active ui-state-persist" data-role="button">Power ON</button></td>
+								<td><button id="powerOFF" class="ui-btn-active ui-state-persist" data-role="button">Power OFF</button></td>
+							</tr>
+						</table>
+					</div>
+					<div>
+						<button id="repeatPowerOnOff" class="ui-btn-active ui-state-persist" data-role="button">On/off Repeat demo</button>
+						<div id="powerState" style="display: none; text-align: center">ON/OFF?</div>
+					</div>
+					<div>
+						<form action="">
+							<label for="pwm">Set PWM:</label>
+							<input type="range" name="pwm" id="pwm" value="0" min="0" max="255">
+						</form>
+					</div>
+					<hr>
+					<div>
+						<button id="getTemperature" class="ui-btn-active ui-state-persist" data-role="button">Get Temperature</button>
+						<div id="temperature" style="display: none; text-align: center">Temperature: ?</div>
+					</div>
+					<hr>
+					<div>
+						<button id="scanDevices" class="ui-btn-active ui-state-persist" data-role="button">Scan Devices</button>
+						<ol data-role="listview" id="deviceList" style="display: none"></ol>
+						<table id="deviceTable" style="display: none; width: 100%"></table>
+					</div>
+					<hr>
+					<div>
+						<button id="getPowerConsumption" class="ui-btn-active ui-state-persist" data-role="button">Get Power Consumption</button>
+						<div id="powerConsumption" style="display: none; text-align: center">Power Consumption: ?</div>
+					</div>
+					<hr>
+					<div>
+						<button id="getDeviceType" class="ui-btn-active ui-state-persist" data-role="button">Get Device Type</button>
+						<form action="">
+							<label for="deviceType">Device type:</label>
+							<input type="text" name="deviceType" id="deviceType">
+						</form>
+						<button id="setDeviceType" class="ui-btn-active ui-state-persist" data-role="button">Set Device Type</button>
+					</div>
+					<hr>
+					<div>
+						<button id="getRoom" class="ui-btn-active ui-state-persist" data-role="button">Get Room</button>
+						<form action="">
+							<label for="room">Room:</label>
+							<input type="text" name="room" id="room">
+						</form>
+						<button id="setRoom" class="ui-btn-active ui-state-persist" data-role="button">Set Room</button>
+					</div>
+					<hr>
+					<div>
+						<button id="getCurrentLimit" class="ui-btn-active ui-state-persist" data-role="button">Get Current Limit</button>
+						<form action="">
+							<label for="currentLimit">Current Limit:</label>
+							<input type="number" name="currentLimit" id="currentLimit" min="0" max="100000">
+						</form>
+						<button id="setCurrentLimit" class="ui-btn-active ui-state-persist" data-role="button">Set Current Limit</button>
+					</div>
+					<hr>
 
-			<div>	
-				<img class="scaledLogo" src="img/DObots.png"></img>
+					<div>	
+						<img class="scaledLogo" src="img/DObots.png"></img>
+					</div>
+				</div>
 			</div>
 		</div>
 
@@ -78,6 +128,7 @@
 		<script type="text/javascript" src="js/crownstone.js"></script>
 		<script type="text/javascript">
 			app.initialize();
+
 			function pluginsReady() {
 				console.log("Load plugins");
 				crownstone = new CrownStone();

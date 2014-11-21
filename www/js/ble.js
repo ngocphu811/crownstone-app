@@ -9,18 +9,42 @@ var BLEHandler = function() {
 	var linkLossServiceUuid = '1803';
 	var linkLossCharacteristicUuid = '2a06';
 
-	var temperatureServiceUuid = 'f5f93100-59f9-11e4-aa15-123b93f75cba';
-	var temperatureCharacteristicUuid = 'f5f90001-59f9-11e4-aa15-123b93f75cba';
-
 	// crownstone
 	//var crownstoneServiceUuid = '1802'
+
 	var crownstoneServiceUuid = '2220';
 	var crownstoneServiceFullUuid = '00002220-0000-1000-8000-00805f9b34fb';
 	//var crownstoneServiceUuid = '00002220-0000-1000-8000-00805f9b34fb'
 	//var crownstoneCharacteristicUuid = '00000124-0000-1000-8000-00805f9b34fb'
-	var crownstoneCharacteristicUuid = '0124';
-	var deviceScanCharacteristicUuid = '0123';
-	var deviceListCharacteristicUuid = '0120';
+	var rssiUuid = '2201';
+	var deviceTypeUuid = '0101';
+	var roomUuid = '0102';
+	var personalThresholdUuid = '0122';
+
+	//////////////////////////////////////////////////////////////////////////////
+	// Indoor Localisation Service
+	var indoorLocalisationServiceUuid = '00002220-0000-1000-8000-00805f9b34fb';
+	// Indoor Localisation Service - Characteristics
+	var deviceScanUuid = '0123';
+	var deviceListUuid = '0120';
+	//////////////////////////////////////////////////////////////////////////////
+
+	//////////////////////////////////////////////////////////////////////////////
+	// Temperature Service
+	var temperatureServiceUuid = 'f5f93100-59f9-11e4-aa15-123b93f75cba';
+	// Temperature Service - Characteristics
+	var temperatureCharacteristicUuid = 'f5f90001-59f9-11e4-aa15-123b93f75cba';
+	//////////////////////////////////////////////////////////////////////////////
+
+	//////////////////////////////////////////////////////////////////////////////
+	// Power Service
+	var powerServiceUuid = '5b8d7800-6f20-11e4-b116-123b93f75cba';
+	// Power Service - Characteristics
+	var pwmUuid = '5b8d0001-6f20-11e4-b116-123b93f75cba';
+	var voltageCurveUuid = '5b8d0002-6f20-11e4-b116-123b93f75cba';
+	var powerConsumptionUuid = '5b8d0003-6f20-11e4-b116-123b93f75cba';
+	var currentLimitUuid = '5b8d0004-6f20-11e4-b116-123b93f75cba';
+	//////////////////////////////////////////////////////////////////////////////
 
 	var scanTimer = null;
 	var connectTimer = null;
@@ -347,26 +371,26 @@ var BLEHandler = function() {
 		self.disconnectDevice();
 	}
 
-	self.writePowerLevel = function() {
-		var u8 = new Uint8Array(1);
-		u8[0] = 2;
-		var v = bluetoothle.bytesToEncodedString(u8);
-		console.log("Write signal " + v + " at service " + crownstoneServiceUuid + ' and characteristic ' + crownstoneCharacteristicUuid);
-		var paramsObj = {"serviceUuid": crownstoneServiceUuid, "characteristicUuid": crownstoneCharacteristicUuid, "value": v };
-		bluetoothle.write(self.writeCrownstoneSuccess, self.writeCrownstoneError, paramsObj);
-	}
+	// self.writePowerLevel = function() {
+	// 	var u8 = new Uint8Array(1);
+	// 	u8[0] = 2;
+	// 	var v = bluetoothle.bytesToEncodedString(u8);
+	// 	console.log("Write signal " + v + " at service " + crownstoneServiceUuid + ' and characteristic ' + crownstoneCharacteristicUuid);
+	// 	var paramsObj = {"serviceUuid": crownstoneServiceUuid, "characteristicUuid": crownstoneCharacteristicUuid, "value": v };
+	// 	bluetoothle.write(self.writeCrownstoneSuccess, self.writeCrownstoneError, paramsObj);
+	// }
 
-	self.writeCrownstoneSuccess = function(obj) {
-		if (obj.status == 'written') {
-			console.log('Successful written power command', obj.status);
-		} else {
-			console.log('Writing was not successful', obj);
-		}
-	}
+	// self.writeCrownstoneSuccess = function(obj) {
+	// 	if (obj.status == 'written') {
+	// 		console.log('Successful written power command', obj.status);
+	// 	} else {
+	// 		console.log('Writing was not successful', obj);
+	// 	}
+	// }
 
-	self.writeCrownstoneError = function(obj) {
-		console.log('Error in writing power command', obj.status);
-	}
+	// self.writeCrownstoneError = function(obj) {
+	// 	console.log('Error in writing power command', obj.status);
+	// }
 	
 	self.writeAlertLevel = function() {
 		var u8 = new Uint8Array(1);
@@ -456,8 +480,8 @@ var BLEHandler = function() {
 		var u8 = new Uint8Array(1);
 		u8[0] = scan ? 1 : 0;
 		var v = bluetoothle.bytesToEncodedString(u8);
-		console.log("Write " + v + " at service " + crownstoneServiceUuid + ' and characteristic ' + deviceScanCharacteristicUuid);
-		var paramsObj = {"serviceUuid": crownstoneServiceUuid, "characteristicUuid": deviceScanCharacteristicUuid, "value" : v};
+		console.log("Write " + v + " at service " + indoorLocalisationServiceUuid + ' and characteristic ' + deviceScanUuid );
+		var paramsObj = {"serviceUuid": indoorLocalisationServiceUuid, "characteristicUuid": deviceScanUuid , "value" : v};
 		bluetoothle.write(function(obj) {
 			if (obj.status == 'written') {
 				console.log('Successfully written to device scan characteristic - ' + obj.status);
@@ -472,8 +496,8 @@ var BLEHandler = function() {
 	}
 
 	self.listDevices = function(callback) {
-		console.log("Read device list at service " + crownstoneServiceUuid + ' and characteristic ' + deviceListCharacteristicUuid);
-		var paramsObj = {"serviceUuid": crownstoneServiceUuid, "characteristicUuid": deviceListCharacteristicUuid};
+		console.log("Read device list at service " + indoorLocalisationServiceUuid + ' and characteristic ' + deviceListUuid );
+		var paramsObj = {"serviceUuid": indoorLocalisationServiceUuid, "characteristicUuid": deviceListUuid };
 		bluetoothle.read(function(obj) {
 			if (obj.status == "read")
 			{
@@ -490,6 +514,180 @@ var BLEHandler = function() {
 		}, 
 		function(obj) {
 			console.log('Error in reading temperature: ' + obj.error + " - " + obj.message);
+		},
+		paramsObj);
+	}
+
+	self.writePWM = function(value) {
+		var u8 = new Uint8Array(1);
+		u8[0] = value;
+		var v = bluetoothle.bytesToEncodedString(u8);
+		console.log("Write " + v + " at service " + powerServiceUuid + ' and characteristic ' + pwmUuid );
+		var paramsObj = {"serviceUuid": powerServiceUuid, "characteristicUuid": pwmUuid , "value" : v};
+		bluetoothle.write(function(obj) {
+			if (obj.status == 'written') {
+				console.log('Successfully written to pwm characteristic - ' + obj.status);
+			} else {
+				console.log('Writing to pwm characteristic was not successful' + obj);
+			}
+		},
+		function(obj) {
+			console.log("Error in writing to pwm characteristic" + obj.error + " - " + obj.message);
+		},
+		paramsObj);
+	}
+
+	self.readPowerConsumption = function(callback) {
+		console.log("Read power consumption at service " + powerServiceUuid + ' and characteristic ' + powerConsumptionUuid);
+		var paramsObj = {"serviceUuid": powerServiceUuid, "characteristicUuid": powerConsumptionUuid};
+		bluetoothle.read(function(obj) {
+			if (obj.status == "read")
+			{
+				var powerConsumption = bluetoothle.encodedStringToBytes(obj.value);
+				console.log("powerConsumption: " + powerConsumption[0]);
+
+				callback(powerConsumption[0]);
+			}
+			else
+			{
+				console.log("Unexpected read status: " + obj.status);
+				self.disconnectDevice();
+			}
+		}, 
+		function(obj) {
+			console.log('Error in reading temperature: ' + obj.error + " - " + obj.message);
+		},
+		paramsObj);
+	}
+
+	self.writeDeviceType = function(value) {
+		var u8 = bluetoothle.stringToBytes(value);
+		var v = bluetoothle.bytesToEncodedString(u8);
+		console.log("Write " + v + " at service " + crownstoneServiceUuid + ' and characteristic ' + deviceTypeUuid );
+		var paramsObj = {"serviceUuid": crownstoneServiceUuid, "characteristicUuid": deviceTypeUuid , "value" : v};
+		bluetoothle.write(function(obj) {
+			if (obj.status == 'written') {
+				console.log('Successfully written to device type characteristic - ' + obj.status);
+			} else {
+				console.log('Writing to device type characteristic was not successful' + obj);
+			}
+		},
+		function(obj) {
+			console.log("Error in writing to device type characteristic" + obj.error + " - " + obj.message);
+		},
+		paramsObj);
+	}
+
+	self.readDeviceType = function(callback) {
+		console.log("Read device type at service " + crownstoneServiceUuid + ' and characteristic ' + deviceTypeUuid );
+		var paramsObj = {"serviceUuid": crownstoneServiceUuid, "characteristicUuid": deviceTypeUuid };
+		bluetoothle.read(function(obj) {
+			if (obj.status == "read")
+			{
+				var deviceType = bluetoothle.encodedStringToBytes(obj.value);
+				var deviceTypeStr = bluetoothle.bytesToString(deviceType);
+				console.log("deviceType: " + deviceTypeStr);
+
+				callback(deviceTypeStr);
+			}
+			else
+			{
+				console.log("Unexpected read status: " + obj.status);
+				self.disconnectDevice();
+			}
+		}, 
+		function(obj) {
+			console.log('Error in reading device type characteristic: ' + obj.error + " - " + obj.message);
+		},
+		paramsObj);
+	}
+
+	self.writeRoom = function(value) {
+		var u8 = bluetoothle.stringToBytes(value);
+		var v = bluetoothle.bytesToEncodedString(u8);
+		console.log("Write " + v + " at service " + crownstoneServiceUuid + ' and characteristic ' + roomUuid );
+		var paramsObj = {"serviceUuid": crownstoneServiceUuid, "characteristicUuid": roomUuid , "value" : v};
+		bluetoothle.write(function(obj) {
+			if (obj.status == 'written') {
+				console.log('Successfully written to room characteristic - ' + obj.status);
+			} else {
+				console.log('Writing to room characteristic was not successful' + obj);
+			}
+		},
+		function(obj) {
+			console.log("Error in writing to room characteristic" + obj.error + " - " + obj.message);
+		},
+		paramsObj);
+	}
+
+	self.readRoom = function(callback) {
+		console.log("Read room at service " + crownstoneServiceUuid + ' and characteristic ' + roomUuid );
+		var paramsObj = {"serviceUuid": crownstoneServiceUuid, "characteristicUuid": roomUuid };
+		bluetoothle.read(function(obj) {
+			if (obj.status == "read")
+			{
+				var room = bluetoothle.encodedStringToBytes(obj.value);
+				var roomStr = bluetoothle.bytesToString(room);
+				console.log("room: " + roomStr);
+
+				callback(roomStr);
+			}
+			else
+			{
+				console.log("Unexpected read status: " + obj.status);
+				self.disconnectDevice();
+			}
+		}, 
+		function(obj) {
+			console.log('Error in reading room characteristic: ' + obj.error + " - " + obj.message);
+		},
+		paramsObj);
+	}
+
+	self.writeCurrentLimit = function(value) {
+		var u8 = new Uint8Array(4);
+		u8[0] = value & 0xFF;
+		u8[1] = (value >> 8) & 0xFF;
+		u8[2] = (value >> 16) & 0xFF;
+		u8[3] = (value >> 24) & 0xFF;
+		var v = bluetoothle.bytesToEncodedString(u8);
+		console.log("Write " + v + " at service " + powerServiceUuid + ' and characteristic ' + currentLimitUuid );
+		var paramsObj = {"serviceUuid": powerServiceUuid, "characteristicUuid": currentLimitUuid , "value" : v};
+		bluetoothle.write(function(obj) {
+			if (obj.status == 'written') {
+				console.log('Successfully written to current limit characteristic - ' + obj.status);
+			} else {
+				console.log('Writing to current limit characteristic was not successful' + obj);
+			}
+		},
+		function(obj) {
+			console.log("Error in writing to current limit characteristic" + obj.error + " - " + obj.message);
+		},
+		paramsObj);
+	}
+
+	self.readCurrentLimit = function(callback) {
+		console.log("Read current limit at service " + powerServiceUuid + ' and characteristic ' + currentLimitUuid );
+		var paramsObj = {"serviceUuid": powerServiceUuid, "characteristicUuid": currentLimitUuid };
+		bluetoothle.read(function(obj) {
+			if (obj.status == "read")
+			{
+				var currentLimit = bluetoothle.encodedStringToBytes(obj.value);
+				console.log("current limit: " + currentLimit[0] + '-' + currentLimit[1] + '-' + currentLimit[2] + '-' + currentLimit[3]);
+
+				var value = (currentLimit[0] & 0xFF) | ((currentLimit[1] & 0xFF) << 8) | 
+							((currentLimit[2] & 0xFF) << 16) | ((currentLimit[3] & 0xFF) << 24);
+
+				callback(value);
+			}
+			else
+			{
+				console.log("Unexpected read status: " + obj.status);
+				self.disconnectDevice();
+			}
+		}, 
+		function(obj) {
+			console.log('Error in reading current limit characteristic: ' + obj.error + " - " + obj.message);
 		},
 		paramsObj);
 	}

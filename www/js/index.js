@@ -39,7 +39,6 @@ var app = {
 				$('body').addClass('phonegap-ios-7');
 			}
 		}
-		nextInit();
 	},
 	// Update DOM on a Received Event
 	receivedEvent: function(id) {

@@ -328,20 +328,20 @@ html, body {
 }
 
 
-input, body, button, select, option, textarea {
+/*input, body, button, select, option, textarea {
 	font-family : HelveticaNeueThin; 
-	font-size: 32px;
+	font-size: 32px;*/
 	/* color : #FFFFFF; */
 	/* color : rgb(255, 255, 255); */
-}
+/*}*/
 
 body {
 	font-size : 100%;
 }
 
-input, button, select, option, textarea {
+/*input, button, select, option, textarea {
 	font-size : 200%;
-}
+}*/
 
 /* Prevent text selection while swiping with mouse */
 #guidePage .ui-header, .ui-title, .control .ui-btn, .trivia-btn {
