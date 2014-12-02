@@ -1,3 +1,34 @@
+//////////////////////////////////////////////////////////////////////////////
+// Indoor Localisation Service
+var indoorLocalisationServiceUuid = '7e170000-429c-41aa-83d7-d91220abeb33';
+// Indoor Localisation Service - Characteristics
+var rssiUuid = '7e170001-429c-41aa-83d7-d91220abeb33';
+var personalThresholdUuid = '7e170002-429c-41aa-83d7-d91220abeb33';
+var deviceScanUuid = '7e170003-429c-41aa-83d7-d91220abeb33';
+var deviceListUuid = '7e170004-429c-41aa-83d7-d91220abeb33';
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// General Service
+var generalServiceUuid = 'f5f90000-59f9-11e4-aa15-123b93f75cba';
+// General Service - Characteristics
+var temperatureCharacteristicUuid = 'f5f90001-59f9-11e4-aa15-123b93f75cba';
+var changeNameCharacteristicUuid = 'f5f90002-59f9-11e4-aa15-123b93f75cba';
+var deviceTypeUuid = 'f5f90003-59f9-11e4-aa15-123b93f75cba';
+var roomUuid = 'f5f90004-59f9-11e4-aa15-123b93f75cba';
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// Power Service
+var powerServiceUuid = '5b8d0000-6f20-11e4-b116-123b93f75cba';
+// Power Service - Characteristics
+var pwmUuid = '5b8d0001-6f20-11e4-b116-123b93f75cba';
+var voltageCurveUuid = '5b8d0002-6f20-11e4-b116-123b93f75cba';
+var powerConsumptionUuid = '5b8d0003-6f20-11e4-b116-123b93f75cba';
+var currentLimitUuid = '5b8d0004-6f20-11e4-b116-123b93f75cba';
+//////////////////////////////////////////////////////////////////////////////
+
+
 var BLEHandler = function() {
 	var self = this;
 	var addressKey = 'address';
@@ -9,43 +40,6 @@ var BLEHandler = function() {
 	var linkLossServiceUuid = '1803';
 	var linkLossCharacteristicUuid = '2a06';
 
-	// crownstone
-	//var crownstoneServiceUuid = '1802'
-
-	var crownstoneServiceUuid = '2220';
-	var crownstoneServiceFullUuid = '00002220-0000-1000-8000-00805f9b34fb';
-	//var crownstoneServiceUuid = '00002220-0000-1000-8000-00805f9b34fb'
-	//var crownstoneCharacteristicUuid = '00000124-0000-1000-8000-00805f9b34fb'
-	var rssiUuid = '2201';
-	var deviceTypeUuid = '0101';
-	var roomUuid = '0102';
-	var personalThresholdUuid = '0122';
-
-	//////////////////////////////////////////////////////////////////////////////
-	// Indoor Localisation Service
-	var indoorLocalisationServiceUuid = '00002220-0000-1000-8000-00805f9b34fb';
-	// Indoor Localisation Service - Characteristics
-	var deviceScanUuid = '0123';
-	var deviceListUuid = '0120';
-	//////////////////////////////////////////////////////////////////////////////
-
-	//////////////////////////////////////////////////////////////////////////////
-	// Temperature Service
-	var temperatureServiceUuid = 'f5f93100-59f9-11e4-aa15-123b93f75cba';
-	// Temperature Service - Characteristics
-	var temperatureCharacteristicUuid = 'f5f90001-59f9-11e4-aa15-123b93f75cba';
-	//////////////////////////////////////////////////////////////////////////////
-
-	//////////////////////////////////////////////////////////////////////////////
-	// Power Service
-	var powerServiceUuid = '5b8d7800-6f20-11e4-b116-123b93f75cba';
-	// Power Service - Characteristics
-	var pwmUuid = '5b8d0001-6f20-11e4-b116-123b93f75cba';
-	var voltageCurveUuid = '5b8d0002-6f20-11e4-b116-123b93f75cba';
-	var powerConsumptionUuid = '5b8d0003-6f20-11e4-b116-123b93f75cba';
-	var currentLimitUuid = '5b8d0004-6f20-11e4-b116-123b93f75cba';
-	//////////////////////////////////////////////////////////////////////////////
-
 	var scanTimer = null;
 	var connectTimer = null;
 	var reconnectTimer = null;
@@ -53,12 +47,30 @@ var BLEHandler = function() {
 	var iOSPlatform = "iOS";
 	var androidPlatform = "Android";
 
-	self.init = function() {
+	var __callback = null;
+
+	self.init = function(callback) {
 		console.log("Initializing connection");
-		bluetoothle.initialize(self.initSuccess, self.initError, {"request": true});
+		bluetoothle.initialize(function(obj) {
+				console.log('Properly connected to BLE chip');
+				console.log("Message " + JSON.stringify(obj));
+				if (obj.status == 'enabled') {
+					callback(true);
+				}
+			}, function(obj) {
+				console.log('Connection to BLE chip failed');
+				console.log('Message', obj.status);
+				navigator.notification.alert(
+						'Bluetooth is not turned on, or could not be turned on. Make sure your phone has a Bluetooth 4.+ (BLE) chip.',
+						null,
+						'BLE off?',
+						'Sorry!');
+				callback(false);
+			}, {"request": true});
 	}
 
-	self.connectDevice = function(address) {
+	self.connectDevice = function(address, callback) {
+		_callback = callback;
 		console.log("Beginning to connect to " + address + " with 5 second timeout");
 		var paramsObj = {"address": address};
 		bluetoothle.connect(self.connectSuccess, self.connectError, paramsObj);
@@ -84,16 +96,28 @@ var BLEHandler = function() {
 		else {
 			console.log("Unexpected connect status: " + obj.status);
 			self.clearConnectTimeout();
+			if (_callback) {
+				_callback(false);
+				_callback = null;
+			}
 		}
 	}
 
 	self.connectError = function(obj) {
 		console.log("Connect error: " + obj.error + " - " + obj.message);
 		self.clearConnectTimeout();
+		if (_callback) {
+			_callback(false);
+			_callback = null;
+		}
 	}
 
 	self.connectTimeout = function() {
 		console.log('Connection timed out, stop connection attempts');
+		if (_callback) {
+			_callback(false);
+			_callback = null;
+		}
 	}
 
 	self.clearConnectTimeout = function() { 
@@ -228,6 +252,60 @@ var BLEHandler = function() {
 				'Sorry!');
 	}
 
+	self.startEndlessScan = function(callback) {
+		console.log('start endless scan');
+		var paramsObj = {}
+		bluetoothle.startScan(function(obj) {
+				if (obj.status == 'scanResult') {
+					// console.log('name: ' + obj.name + ", addr: " + obj.address + ", rssi: " + obj.rssi);
+					var arr = bluetoothle.encodedStringToBytes(obj.advertisement);
+					// console.log("adv: " + arr.length + ", " + arr.join(' '));
+					// console.log("adv: " + Array.apply([], arr).join(","));
+					self.parseAdvertisement(arr, 0xFF, function(data) {
+						var value = data[0] << 8 | data[1];
+						if (value == 0x1111) {
+							// console.log("found crownstone, company id: 0x" + value.toString(16));
+							callback(obj);
+						}
+					})
+				} else if (obj.status == 'scanStarted') {
+					console.log('Endless scan was started successfully');
+					// self.scanTimer = setTimeout(self.scanTimeout, 10000);
+				} else {
+					console.log('Unexpected start scan status: ' + obj.status);
+					console.log('Stopping scan');
+					bluetoothle.stopScan(self.stopScanSuccess, self.stopScanError);
+					// self.clearScanTimeout();
+				}
+			}, self.startScanError, paramsObj);
+	}
+
+	self.stopEndlessScan = function(callback) {
+		bluetoothle.stopScan(self.stopScanSuccess, self.stopScanError);
+	}
+	
+	self.parseAdvertisement = function(obj, search, callback) {
+		var start = 0;
+		var end = obj.length;
+		for (var i = 0; i < obj.length; ) {
+			var el_len = obj[i];
+			var el_type = obj[i+1];
+			if (el_type == search) {
+				var begin = i+2;
+				var end = begin + el_len - 1;
+				var el_data = obj.subarray(begin, end);
+				callback(el_data);
+				return;
+			} else if (el_type == 0) {
+				// console.log(search.toString(16) + " not found!");
+				return;
+			} else {
+				i += el_len + 1;
+			}
+		}
+	}
+
+
 	/**
 	 * Initalization successful, now start scan if no address yet registered (with which we are already connected).
 	 *
@@ -242,8 +320,8 @@ var BLEHandler = function() {
 			if (address == null) {
 				console.log('No address known, so start scan');
 				//var paramsObj = { 'serviceUuids': [memoUuid]};
-				var paramsObj = { 'serviceUuids': [crownstoneServiceUuid]};
-				bluetoothle.startScan(self.startScanSuccess, self.startScanError, paramsObj);
+				var paramsObj = { 'serviceUuids': [generalServiceUuid]};
+				// bluetoothle.startScan(self.startScanSuccess, self.startScanError, paramsObj);
 			} else {
 				console.log('Address already known, so connect directly to ', address);
 			}
@@ -355,8 +433,13 @@ var BLEHandler = function() {
 				for (var j = 0; j < characteristics.length; ++j) {
 					var characteristicUuid = characteristics[j].characteristicUuid;
 					console.log("Found service " + serviceUuid + " with characteristic " + characteristicUuid);
+					if (_callback) {
+						_callback(true, serviceUuid, characteristicUuid);
+					}
 				}
 			}
+			_callback = null;
+
 		}
 		else
 		{
@@ -368,15 +451,19 @@ var BLEHandler = function() {
 	self.discoverError = function(obj)
 	{
 		console.log("Discover error: " + obj.error + " - " + obj.message);
-		self.disconnectDevice();
+		self.disconnectDevice();	
+		if (_callback) {
+			_callback(false);
+			_callback = null;
+		}
 	}
 
 	// self.writePowerLevel = function() {
 	// 	var u8 = new Uint8Array(1);
 	// 	u8[0] = 2;
 	// 	var v = bluetoothle.bytesToEncodedString(u8);
-	// 	console.log("Write signal " + v + " at service " + crownstoneServiceUuid + ' and characteristic ' + crownstoneCharacteristicUuid);
-	// 	var paramsObj = {"serviceUuid": crownstoneServiceUuid, "characteristicUuid": crownstoneCharacteristicUuid, "value": v };
+	// 	console.log("Write signal " + v + " at service " + generalServiceUuid + ' and characteristic ' + crownstoneCharacteristicUuid);
+	// 	var paramsObj = {"serviceUuid": generalServiceUuid, "characteristicUuid": crownstoneCharacteristicUuid, "value": v };
 	// 	bluetoothle.write(self.writeCrownstoneSuccess, self.writeCrownstoneError, paramsObj);
 	// }
 
@@ -454,8 +541,8 @@ var BLEHandler = function() {
 	}
 
 	self.readTemperature = function(callback) {
-		console.log("Read temperature at service " + temperatureServiceUuid + ' and characteristic ' + temperatureCharacteristicUuid);
-		var paramsObj = {"serviceUuid": temperatureServiceUuid, "characteristicUuid": temperatureCharacteristicUuid};
+		console.log("Read temperature at service " + generalServiceUuid + ' and characteristic ' + temperatureCharacteristicUuid);
+		var paramsObj = {"serviceUuid": generalServiceUuid, "characteristicUuid": temperatureCharacteristicUuid};
 		bluetoothle.read(function(obj) {
 			if (obj.status == "read")
 			{
@@ -560,11 +647,53 @@ var BLEHandler = function() {
 		paramsObj);
 	}
 
+	self.writeDeviceName = function(value) {
+		var u8 = bluetoothle.stringToBytes(value);
+		var v = bluetoothle.bytesToEncodedString(u8);
+		console.log("Write " + v + " at service " + generalServiceUuid + ' and characteristic ' + changeNameCharacteristicUuid );
+		var paramsObj = {"serviceUuid": generalServiceUuid, "characteristicUuid": changeNameCharacteristicUuid , "value" : v};
+		bluetoothle.write(function(obj) {
+			if (obj.status == 'written') {
+				console.log('Successfully written to change name characteristic - ' + obj.status);
+			} else {
+				console.log('Writing to change name characteristic was not successful' + obj);
+			}
+		},
+		function(obj) {
+			console.log("Error in writing to change name characteristic" + obj.error + " - " + obj.message);
+		},
+		paramsObj);
+	}
+
+	self.readDeviceName = function(callback) {
+		console.log("Read device type at service " + generalServiceUuid + ' and characteristic ' + changeNameCharacteristicUuid );
+		var paramsObj = {"serviceUuid": generalServiceUuid, "characteristicUuid": changeNameCharacteristicUuid };
+		bluetoothle.read(function(obj) {
+			if (obj.status == "read")
+			{
+				var deviceName = bluetoothle.encodedStringToBytes(obj.value);
+				var deviceNameStr = bluetoothle.bytesToString(deviceName);
+				console.log("deviceName: " + deviceNameStr);
+
+				callback(deviceNameStr);
+			}
+			else
+			{
+				console.log("Unexpected read status: " + obj.status);
+				self.disconnectDevice();
+			}
+		}, 
+		function(obj) {
+			console.log('Error in reading change name characteristic: ' + obj.error + " - " + obj.message);
+		},
+		paramsObj);
+	}
+
 	self.writeDeviceType = function(value) {
 		var u8 = bluetoothle.stringToBytes(value);
 		var v = bluetoothle.bytesToEncodedString(u8);
-		console.log("Write " + v + " at service " + crownstoneServiceUuid + ' and characteristic ' + deviceTypeUuid );
-		var paramsObj = {"serviceUuid": crownstoneServiceUuid, "characteristicUuid": deviceTypeUuid , "value" : v};
+		console.log("Write " + v + " at service " + generalServiceUuid + ' and characteristic ' + deviceTypeUuid );
+		var paramsObj = {"serviceUuid": generalServiceUuid, "characteristicUuid": deviceTypeUuid , "value" : v};
 		bluetoothle.write(function(obj) {
 			if (obj.status == 'written') {
 				console.log('Successfully written to device type characteristic - ' + obj.status);
@@ -579,8 +708,8 @@ var BLEHandler = function() {
 	}
 
 	self.readDeviceType = function(callback) {
-		console.log("Read device type at service " + crownstoneServiceUuid + ' and characteristic ' + deviceTypeUuid );
-		var paramsObj = {"serviceUuid": crownstoneServiceUuid, "characteristicUuid": deviceTypeUuid };
+		console.log("Read device type at service " + generalServiceUuid + ' and characteristic ' + deviceTypeUuid );
+		var paramsObj = {"serviceUuid": generalServiceUuid, "characteristicUuid": deviceTypeUuid };
 		bluetoothle.read(function(obj) {
 			if (obj.status == "read")
 			{
@@ -605,8 +734,8 @@ var BLEHandler = function() {
 	self.writeRoom = function(value) {
 		var u8 = bluetoothle.stringToBytes(value);
 		var v = bluetoothle.bytesToEncodedString(u8);
-		console.log("Write " + v + " at service " + crownstoneServiceUuid + ' and characteristic ' + roomUuid );
-		var paramsObj = {"serviceUuid": crownstoneServiceUuid, "characteristicUuid": roomUuid , "value" : v};
+		console.log("Write " + v + " at service " + generalServiceUuid + ' and characteristic ' + roomUuid );
+		var paramsObj = {"serviceUuid": generalServiceUuid, "characteristicUuid": roomUuid , "value" : v};
 		bluetoothle.write(function(obj) {
 			if (obj.status == 'written') {
 				console.log('Successfully written to room characteristic - ' + obj.status);
@@ -621,8 +750,8 @@ var BLEHandler = function() {
 	}
 
 	self.readRoom = function(callback) {
-		console.log("Read room at service " + crownstoneServiceUuid + ' and characteristic ' + roomUuid );
-		var paramsObj = {"serviceUuid": crownstoneServiceUuid, "characteristicUuid": roomUuid };
+		console.log("Read room at service " + generalServiceUuid + ' and characteristic ' + roomUuid );
+		var paramsObj = {"serviceUuid": generalServiceUuid, "characteristicUuid": roomUuid };
 		bluetoothle.read(function(obj) {
 			if (obj.status == "read")
 			{

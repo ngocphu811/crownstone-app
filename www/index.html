@@ -54,70 +54,91 @@
 					<img class="scaledLogo" src="img/crownstone.jpg"></img>
 					<hr>
 					<div>
-						<table width="100%">
-							<tr>
-								<td><button id="powerON" class="ui-btn-active ui-state-persist" data-role="button">Power ON</button></td>
-								<td><button id="powerOFF" class="ui-btn-active ui-state-persist" data-role="button">Power OFF</button></td>
-							</tr>
-						</table>
-					</div>
-					<div>
-						<button id="repeatPowerOnOff" class="ui-btn-active ui-state-persist" data-role="button">On/off Repeat demo</button>
-						<div id="powerState" style="display: none; text-align: center">ON/OFF?</div>
-					</div>
-					<div>
-						<form action="">
-							<label for="pwm">Set PWM:</label>
-							<input type="range" name="pwm" id="pwm" value="0" min="0" max="255">
-						</form>
+						<button id="findCrownstones" class="ui-btn-active ui-state-persist" data-role="button" disabled>Find Crownstones</button>
+						<table id="crownStoneTable" style="display: none; width: 100%"></table>
+						<div id="closestCrownstone">Closest Crownstone:</div>
 					</div>
 					<hr>
-					<div>
-						<button id="getTemperature" class="ui-btn-active ui-state-persist" data-role="button">Get Temperature</button>
-						<div id="temperature" style="display: none; text-align: center">Temperature: ?</div>
-					</div>
-					<hr>
-					<div>
-						<button id="scanDevices" class="ui-btn-active ui-state-persist" data-role="button">Scan Devices</button>
-						<ol data-role="listview" id="deviceList" style="display: none"></ol>
-						<table id="deviceTable" style="display: none; width: 100%"></table>
-					</div>
-					<hr>
-					<div>
-						<button id="getPowerConsumption" class="ui-btn-active ui-state-persist" data-role="button">Get Power Consumption</button>
-						<div id="powerConsumption" style="display: none; text-align: center">Power Consumption: ?</div>
-					</div>
-					<hr>
-					<div>
-						<button id="getDeviceType" class="ui-btn-active ui-state-persist" data-role="button">Get Device Type</button>
-						<form action="">
-							<label for="deviceType">Device type:</label>
-							<input type="text" name="deviceType" id="deviceType">
-						</form>
-						<button id="setDeviceType" class="ui-btn-active ui-state-persist" data-role="button">Set Device Type</button>
-					</div>
-					<hr>
-					<div>
-						<button id="getRoom" class="ui-btn-active ui-state-persist" data-role="button">Get Room</button>
-						<form action="">
-							<label for="room">Room:</label>
-							<input type="text" name="room" id="room">
-						</form>
-						<button id="setRoom" class="ui-btn-active ui-state-persist" data-role="button">Set Room</button>
-					</div>
-					<hr>
-					<div>
-						<button id="getCurrentLimit" class="ui-btn-active ui-state-persist" data-role="button">Get Current Limit</button>
-						<form action="">
-							<label for="currentLimit">Current Limit:</label>
-							<input type="number" name="currentLimit" id="currentLimit" min="0" max="100000">
-						</form>
-						<button id="setCurrentLimit" class="ui-btn-active ui-state-persist" data-role="button">Set Current Limit</button>
-					</div>
-					<hr>
+					<div id="crownstone" style="display: none;">
+						<button id="disconnect" class="ui-btn-active ui-state-persist" data-role="button">Disconnect</button>
+						<hr>
+						<div id="pwmTab" style="display: none">
+							<div>
+								<table width="100%">
+									<tr>
+										<td><button id="powerON" class="ui-btn-active ui-state-persist" data-role="button">Power ON</button></td>
+										<td><button id="powerOFF" class="ui-btn-active ui-state-persist" data-role="button">Power OFF</button></td>
+									</tr>
+								</table>
+							</div>
+							<div>
+								<button id="repeatPowerOnOff" class="ui-btn-active ui-state-persist" data-role="button">On/off Repeat demo</button>
+								<div id="powerState" style="display: none; text-align: center">ON/OFF?</div>
+							</div>
+							<div>
+								<form action="">
+									<label for="pwm">Set PWM:</label>
+									<input type="range" name="pwm" id="pwm" value="0" min="0" max="255">
+								</form>
+							</div>
+							<hr>
+						</div>
+						<div id="getTemperatureTab" style="display: none">
+							<button id="getTemperature" class="ui-btn-active ui-state-persist" data-role="button">Get Temperature</button>
+							<div id="temperature" style="display: none; text-align: center">Temperature: ?</div>
+							<hr>
+						</div>
+						<div id="scanDevicesTab" style="display: none">
+							<button id="scanDevices" class="ui-btn-active ui-state-persist" data-role="button">Scan Devices</button>
+							<ol data-role="listview" id="deviceList" style="display: none"></ol>
+							<table id="deviceTable" style="display: none; width: 100%"></table>
+							<hr>
+						</div>
+						<div id="powerConsumptionTab" style="display: none">
+							<button id="getPowerConsumption" class="ui-btn-active ui-state-persist" data-role="button">Get Power Consumption</button>
+							<div id="powerConsumption" style="display: none; text-align: center">Power Consumption: ?</div>
+							<hr>
+						</div>
+						<div id="changeNameTab" style="display: none">
+							<button id="getDeviceName" class="ui-btn-active ui-state-persist" data-role="button">Get Name</button>
+							<form action="">
+								<label for="deviceName">Name:</label>
+								<input type="text" name="deviceName" id="deviceName">
+							</form>
+							<button id="setDeviceName" class="ui-btn-active ui-state-persist" data-role="button">Set Name</button>
+							<hr>
+						</div>
+						<div id="deviceTypeTab" style="display: none">
+							<button id="getDeviceType" class="ui-btn-active ui-state-persist" data-role="button">Get Device Type</button>
+							<form action="">
+								<label for="deviceType">Device type:</label>
+								<input type="text" name="deviceType" id="deviceType">
+							</form>
+							<button id="setDeviceType" class="ui-btn-active ui-state-persist" data-role="button">Set Device Type</button>
+							<hr>
+						</div>
+						<div id="roomTab" style="display: none">
+							<button id="getRoom" class="ui-btn-active ui-state-persist" data-role="button">Get Room</button>
+							<form action="">
+								<label for="room">Room:</label>
+								<input type="text" name="room" id="room">
+							</form>
+							<button id="setRoom" class="ui-btn-active ui-state-persist" data-role="button">Set Room</button>
+							<hr>
+						</div>
+						<div id="currentLimitTab" style="display: none">
+							<button id="getCurrentLimit" class="ui-btn-active ui-state-persist" data-role="button">Get Current Limit</button>
+							<form action="">
+								<label for="currentLimit">Current Limit:</label>
+								<input type="number" name="currentLimit" id="currentLimit" min="0" max="100000">
+							</form>
+							<button id="setCurrentLimit" class="ui-btn-active ui-state-persist" data-role="button">Set Current Limit</button>
+							<hr>
+						</div>
 
-					<div>	
-						<img class="scaledLogo" src="img/DObots.png"></img>
+						<div>	
+							<img class="scaledLogo" src="img/DObots.png"></img>
+						</div>
 					</div>
 				</div>
 			</div>
