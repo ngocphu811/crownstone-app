@@ -43,24 +43,35 @@
 			
 		</div> -->
 
-		<!-- Control switch -->
-        	<div data-role="page" id="controlPage">
+		<div data-role="page" id="selectionPage">
 			<div data-role="header" data-position='fixed'>
 				<h1 class="ui-title" role="heading" aria-level="1">Crownstone</h1>
 			</div>
 
+			<div class="scrollable" role="main">
+				<img class="scaledLogo" src="img/crownstone.png"></img>
+				<div>
+					<button id="findCrownstones" class="ui-btn-active ui-state-persist" data-role="button" disabled>Find Crownstones</button>
+					<table id="crownStoneTable" style="display: none; width: 100%"></table>
+					<p/>
+					<div id="closestCrownstone">Closest Crownstone:</div>
+				</div>
+				<div>	
+					<img class="scaledLogo" src="img/DObots.png"></img>
+				</div>
+			</div>
+		</div>
+
+		<!-- Control switch -->
+    	<div data-role="page" id="controlPage">
+			<div data-role="header" data-position='fixed'>
+				<h1 id="crownstoneTitle" class="ui-title" role="heading" aria-level="1">Crownstone</h1>
+			</div>
+
 			<div id="controlPageMain" role="main">
 				<div class="scrollable">
-					<img class="scaledLogo" src="img/crownstone.jpg"></img>
-					<hr>
-					<div>
-						<button id="findCrownstones" class="ui-btn-active ui-state-persist" data-role="button" disabled>Find Crownstones</button>
-						<table id="crownStoneTable" style="display: none; width: 100%"></table>
-						<div id="closestCrownstone">Closest Crownstone:</div>
-					</div>
-					<hr>
-					<div id="crownstone" style="display: none;">
-						<button id="disconnect" class="ui-btn-active ui-state-persist" data-role="button">Disconnect</button>
+					<!-- <div id="crownstone" style="display: none;"> -->
+						<button id="disconnect" class="ui-btn-active ui-state-persist" data-role="button" data-rel="back">Disconnect</button>
 						<hr>
 						<div id="pwmTab" style="display: none">
 							<div>
@@ -139,7 +150,7 @@
 						<div>	
 							<img class="scaledLogo" src="img/DObots.png"></img>
 						</div>
-					</div>
+					<!-- </div> -->
 				</div>
 			</div>
 		</div>

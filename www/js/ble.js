@@ -83,10 +83,16 @@ var BLEHandler = function() {
 
 			self.clearConnectTimeout();
 
-			if (window.device.platform == androidPlatform) {
-				console.log("Beginning discovery");
-				bluetoothle.discover(self.discoverSuccess, self.discoverError);
+			// if (window.device.platform == androidPlatform) {
+			// 	console.log("Beginning discovery");
+			// 	bluetoothle.discover(self.discoverSuccess, self.discoverError);
+			// }
+
+			if (_callback) {
+				_callback(true);
+				_callback = null;
 			}
+
 
 		//	self.tempDisconnectDevice();
 		}
@@ -190,6 +196,12 @@ var BLEHandler = function() {
 		if (self.reconnectTimer != null) {
 			clearTimeout(self.reconnectTimer);
 		}
+	}
+
+	self.discoverServices = function(callback) {
+		_callback = callback;
+		console.log("Beginning discovery");
+		bluetoothle.discover(self.discoverSuccess, self.discoverError);
 	}
 
 	/**
@@ -434,7 +446,7 @@ var BLEHandler = function() {
 					var characteristicUuid = characteristics[j].characteristicUuid;
 					console.log("Found service " + serviceUuid + " with characteristic " + characteristicUuid);
 					if (_callback) {
-						_callback(true, serviceUuid, characteristicUuid);
+						_callback(serviceUuid, characteristicUuid);
 					}
 				}
 			}
@@ -774,11 +786,9 @@ var BLEHandler = function() {
 	}
 
 	self.writeCurrentLimit = function(value) {
-		var u8 = new Uint8Array(4);
+		var u8 = new Uint8Array(2);
 		u8[0] = value & 0xFF;
 		u8[1] = (value >> 8) & 0xFF;
-		u8[2] = (value >> 16) & 0xFF;
-		u8[3] = (value >> 24) & 0xFF;
 		var v = bluetoothle.bytesToEncodedString(u8);
 		console.log("Write " + v + " at service " + powerServiceUuid + ' and characteristic ' + currentLimitUuid );
 		var paramsObj = {"serviceUuid": powerServiceUuid, "characteristicUuid": currentLimitUuid , "value" : v};
@@ -802,10 +812,9 @@ var BLEHandler = function() {
 			if (obj.status == "read")
 			{
 				var currentLimit = bluetoothle.encodedStringToBytes(obj.value);
-				console.log("current limit: " + currentLimit[0] + '-' + currentLimit[1] + '-' + currentLimit[2] + '-' + currentLimit[3]);
+				console.log("current limit: " + currentLimit[0] + '-' + currentLimit[1]);
 
-				var value = (currentLimit[0] & 0xFF) | ((currentLimit[1] & 0xFF) << 8) | 
-							((currentLimit[2] & 0xFF) << 16) | ((currentLimit[3] & 0xFF) << 24);
+				var value = (currentLimit[0] & 0xFF) | ((currentLimit[1] & 0xFF) << 8);
 
 				callback(value);
 			}

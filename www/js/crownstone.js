@@ -46,25 +46,84 @@ CrownStone.prototype = {
 		// };
 
 		var powerStateOn = false;
-
 		var searching = false;
+		var connected = false;
 
-		// $('#controlPage').on('pagecreate', function() {
 		start = function() {
-			console.log("Create first page to control a crownstone");
+			console.log("Create first page to find crownstones");
 			
 			// set up bluetooth connection
 			ble.init(function(enabled) {
 				$('#findCrownstones').prop("disabled", !enabled);
 			});
 
+			$('#findCrownstones').on('click', function(event) {
+				ble.stopScan();
 
-			// set handler on button click
-			// $('#switchPower').on('click', function(event) {
-			// 	console.log("Stop scan if running");
-			// 	ble.stopScan();
-			// 	togglePower();
-			// });
+				if (searching) {
+					searching = false;
+					stopSearch();
+				} else {
+					searching = true;
+
+					$('#crownStoneTable').hide();
+					$('#closestCrownstone').html("Closest Crownstone: ");
+					var map = {};
+
+					findCrownstones(function(obj) {
+
+						if (!map.hasOwnProperty(obj.address)) {
+							map[obj.address] = {'name': obj.name, 'rssi': obj.rssi};
+						} else {
+							map[obj.address]['rssi'] = obj.rssi;
+						}
+
+						var r = new Array(), j = -1;
+						r[++j] = '<col width="20%">';
+						r[++j] = '<col width="60%">';
+						r[++j] = '<col width="20%">';
+						r[++j] = '<tr><th align="left">Nr</th><th align="left">MAC</th><th align="left">RSSI</th></tr>';
+
+						var nr = 0;
+						var closest_rssi = -128;
+						var closest_name = "";
+						for (var el in map) {
+							r[++j] ='<tr id="'
+							r[++j] = el;
+							r[++j] = '"><td>';
+							r[++j] = ++nr;
+							r[++j] = '</td><td>';
+							r[++j] = map[el]['name'] + '<br/>' + el;
+							r[++j] = '</td><td>';
+							r[++j] = map[el]['rssi'];
+							r[++j] = '</td></tr>';
+
+							if (map[el]['rssi'] > closest_rssi) {
+								closest_rssi = map[el]['rssi'];
+								closest_name = map[el]['name'];
+								
+							}
+						}
+						$('#crownStoneTable').show();
+						$('#crownStoneTable').html(r.join(''));
+						
+						$('#closestCrownstone').html("Closest Crownstone: <b>" + closest_name + "</b>");
+
+						$(document).on("click", "#crownStoneTable tr", function(e) {
+							if (searching) {
+								searching = false;
+								stopSearch();
+							}
+							connect(this.id);
+							$('#crownstone').show();
+						})
+					});
+				}
+			});
+		}
+
+		$('#controlPage').on('pagecreate', function() {
+			console.log("Create page to control a crownstone");
 
 			$('#pwm').on('slidestop focusout', function() {
 				ble.stopScan();
@@ -114,6 +173,7 @@ CrownStone.prototype = {
 					setTimeout(stopDeviceScan, 10000);
 					setTimeout(getDeviceList, 11000);
 				});
+				// $(this).progressbar("option", "value", false);
 			});
 
 			$('#getPowerConsumption').on('click', function(event) {
@@ -212,72 +272,98 @@ CrownStone.prototype = {
 				ble.stopScan();
 				disconnect();
 				$('#crownstone').hide();
+				history.back();
 			})
 
-			$('#findCrownstones').on('click', function(event) {
-				ble.stopScan();
+			
+		});
 
-				if (searching) {
-					searching = false;
-					stopSearch();
-				} else {
-					searching = true;
+		// triggering of get characteristics needs to be delayed
+		// if all are requested at the same time then some will
+		// get lost, so trigger each get at a different time
+		var trigger = 0;
+		var triggerDelay = 500;
+		$('#controlPage').on('pageshow', function(event) {
 
-					$('#crownStoneTable').hide();
-					$('#closestCrownstone').html("Closest Crownstone: ");
-					var map = {};
+			// clear fields
+			$('#deviceName').val('');
+			$('#deviceType').val('');
+			$('#Room').val('');
+			$('#currentLimit').val('');
 
-					findCrownstones(function(obj) {
+			// hide all tabs, will be shown only if
+			// service / characteristic is available
+			$('#scanDevicesTab').hide();
+			$('#scanDevicesTab').hide();
+			$('#getTemperatureTab').hide();
+			$('#changeNameTab').hide();
+			$('#deviceTypeTab').hide();
+			$('#roomTab').hide();
+			$('#pwmTab').hide();
+			$('#powerConsumptionTab').hide();
+			$('#currentLimitTab').hide();
 
-						if (!map.hasOwnProperty(obj.address)) {
-							map[obj.address] = {'name': obj.name, 'rssi': obj.rssi};
-						} else {
-							map[obj.address]['rssi'] = obj.rssi;
-						}
+			// discover available services
+			discoverServices(function(serviceUuid, characteristicUuid) {
+				console.log("updating: " + serviceUuid + ' : ' + characteristicUuid);
 
-						var r = new Array(), j = -1;
-						r[++j] = '<col width="20%">';
-						r[++j] = '<col width="60%">';
-						r[++j] = '<col width="20%">';
-						r[++j] = '<tr><th align="left">Nr</th><th align="left">MAC</th><th align="left">RSSI</th></tr>';
-
-						var nr = 0;
-						var closest_rssi = -128;
-						var closest_name = "";
-						for (var el in map) {
-							r[++j] ='<tr id="'
-							r[++j] = el;
-							r[++j] = '"><td>';
-							r[++j] = ++nr;
-							r[++j] = '</td><td>';
-							r[++j] = map[el]['name'] + '<br/>' + el;
-							r[++j] = '</td><td>';
-							r[++j] = map[el]['rssi'];
-							r[++j] = '</td></tr>';
-
-							if (map[el]['rssi'] > closest_rssi) {
-								closest_rssi = map[el]['rssi'];
-								closest_name = map[el]['name'];
-								
-							}
-						}
-						$('#crownStoneTable').show();
-						$('#crownStoneTable').html(r.join(''));
-						
-						$('#closestCrownstone').html("Closest Crownstone: <b>" + closest_name + "</b>");
-
-						$(document).on("click", "#crownStoneTable tr", function(e) {
-							if (searching) {
-								searching = false;
-								stopSearch();
-							}
-							connect(this.id);
-							$('#crownstone').show();
-						})
-					});
+				if (serviceUuid == indoorLocalisationServiceUuid) {
+					if (characteristicUuid == deviceScanUuid) {
+						$('#scanDevicesTab').show();
+					} 
+					if (characteristicUuid == deviceListUuid) {
+						$('#scanDevicesTab').show();
+					}
+				}
+				if (serviceUuid == generalServiceUuid) {
+					if (characteristicUuid == temperatureCharacteristicUuid) {
+						$('#getTemperatureTab').show();
+					}
+					if (characteristicUuid == changeNameCharacteristicUuid) {
+						$('#changeNameTab').show();
+						// request device name to fill initial value
+						setTimeout(function() {
+							$('#getDeviceName').trigger('click');
+						}, (trigger++) * triggerDelay);
+					}
+					if (characteristicUuid == deviceTypeUuid) {
+						$('#deviceTypeTab').show();
+						// request device type to fill initial value
+						setTimeout(function() {
+							$('#getDeviceType').trigger('click');
+						}, (trigger++) * triggerDelay);
+					}
+					if (characteristicUuid == roomUuid) {
+						$('#roomTab').show();
+						// request room to fill initial value
+						setTimeout(function() {
+							$('#getRoom').trigger('click');
+						}, (trigger++) * triggerDelay);
+					}
+				}
+				if (serviceUuid == powerServiceUuid) {
+					if (characteristicUuid == pwmUuid) {
+						$('#pwmTab').show();
+					}
+					if (characteristicUuid == powerConsumptionUuid) {
+						$('#powerConsumptionTab').show();
+					}
+					if (characteristicUuid == currentLimitUuid) {
+						$('#currentLimitTab').show();
+						// request current limit to fill initial value
+						setTimeout(function() {
+							$('#getCurrentLimit').trigger('click');
+						}, (trigger++) * triggerDelay);
+					}
 				}
 			});
-		};
+		});
+
+		$('#controlPage').on('pagehide', function(event) {
+			if (connected) {
+				disconnect();
+			}
+		});
 
 		setPWM = function(pwm, callback, cargs) {
 			console.log("Set pwm to " + pwm);
@@ -311,6 +397,7 @@ CrownStone.prototype = {
 		}
 
 		startDeviceScan = function(callback, cargs) {
+			navigator.notification.activityStart("Device Scan", "scanning");
 			console.log("Scan for devices");
 			ble.scanDevices(true);
 			if (callback) {
@@ -324,6 +411,7 @@ CrownStone.prototype = {
 		}
 
 		getDeviceList = function() {
+			navigator.notification.activityStop();
 			console.log("Get Device List");
 			ble.listDevices(function(list) {
 				var size = Object.size(list);
@@ -381,12 +469,12 @@ CrownStone.prototype = {
 		}
 
 		getDeviceName = function(callback) {
-			console.log("Get device type");
+			console.log("Get device name");
 			ble.readDeviceName(callback);
 		}
 
 		setDeviceName = function(deviceName, callback, cargs) {
-			console.log("Set device type to: " + deviceName);
+			console.log("Set device name to: " + deviceName);
 			ble.writeDeviceName(deviceName);
 			if (callback) {
 				callback(cargs);
@@ -444,70 +532,38 @@ CrownStone.prototype = {
 			$('#findCrownstones').html("Find Crownstones");
 		}
 
-		var connected = false;
 		connect = function(address) {
 			if (!connected) {
 				connected = true;
 				console.log("connecting to " + address);
-				ble.connectDevice(address, function(connected, serviceUuid, characteristicUuid) {
-					if (!connected) {
-						$('#crownstone').hide();
-					} else {
-						$('#crownstone').show();
+				// 
+				ble.connectDevice(address, function(connected) {
 
-						if (serviceUuid == indoorLocalisationServiceUuid) {
-							if (characteristicUuid == deviceScanUuid) {
-								$('#scanDevicesTab').show();
-							} 
-							if (characteristicUuid == deviceListUuid) {
-								$('#scanDevicesTab').show();
-							}
-						}
-						if (serviceUuid == generalServiceUuid) {
-							if (characteristicUuid == temperatureCharacteristicUuid) {
-								$('#getTemperatureTab').show();
-							}
-							if (characteristicUuid == changeNameCharacteristicUuid) {
-								$('#changeNameTab').show();
-							}
-							if (characteristicUuid == deviceTypeUuid) {
-								$('#deviceTypeTab').show();
-							}
-							if (characteristicUuid == roomUuid) {
-								$('#roomTab').show();
-							}
-						}
-						if (serviceUuid == powerServiceUuid) {
-							if (characteristicUuid == pwmUuid) {
-								$('#pwmTab').show();
-							}
-							if (characteristicUuid == powerConsumptionUuid) {
-								$('#powerConsumptionTab').show();
-							}
-							if (characteristicUuid == currentLimitUuid) {
-								$('#currentLimitTab').show();
-							}
-						}
+					if (connected) {
+						$.mobile.changePage("#controlPage", {transition:'slide', hashChange:true});
+					} else {
+						navigator.notification.alert(
+							'Could not connect to Crownstone',
+							null,
+							'BLE error',
+							'Sorry!');
 					}
+
 				});
 			}
+		}
+
+		discoverServices = function(callback) {
+			console.log("discover services");
+			trigger = 0;
+			ble.discoverServices(callback);
 		}
 
 		disconnect = function() {
 			if (connected) {
 				connected = false;
-				console.log("disconnectiong...");
+				console.log("disconnecting...");
 				ble.disconnectDevice();
-
-				$('#scanDevicesTab').hide();
-				$('#scanDevicesTab').hide();
-				$('#getTemperatureTab').hide();
-				$('#changeNameTab').hide();
-				$('#deviceTypeTab').hide();
-				$('#roomTab').hide();
-				$('#pwmTab').hide();
-				$('#powerConsumptionTab').hide();
-				$('#currentLimitTab').hide();
 			}
 		}
 
