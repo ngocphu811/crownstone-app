@@ -520,15 +520,32 @@ CrownStone.prototype = {
 			}
 		}
 
+		var findTimer = null;
 		findCrownstones = function(callback) {
 			console.log("Find crownstones");
 			$('#findCrownstones').html("Stop");
 			ble.startEndlessScan(callback);
+			// [9.12.14] Some devices (such as the Nexus 4) only report
+			//   the first advertisement for each device. all
+			//   subsequently received advertisements are dropped. In order
+			//   to receive rssi updates for such devices too, we now
+			//   restart the ble scan every second, thus getting at least
+			//	 an rssi update every second
+			// if (device.model == "Nexus 4") {
+				findTimer = setInterval(function() {
+					console.log("restart");
+					ble.stopEndlessScan();
+					ble.startEndlessScan(callback);
+				}, 1000);
+			// }
 		}
 
-		stopSearch = function(callback) {
+		stopSearch = function() {
 			console.log("stop search");
-			ble.stopEndlessScan(callback);
+			if (findTimer != null) {
+				clearInterval(findTimer);
+			}
+			ble.stopEndlessScan();
 			$('#findCrownstones').html("Find Crownstones");
 		}
 

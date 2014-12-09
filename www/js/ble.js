@@ -292,7 +292,7 @@ var BLEHandler = function() {
 			}, self.startScanError, paramsObj);
 	}
 
-	self.stopEndlessScan = function(callback) {
+	self.stopEndlessScan = function() {
 		bluetoothle.stopScan(self.stopScanSuccess, self.stopScanError);
 	}
 	
