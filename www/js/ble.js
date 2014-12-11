@@ -102,6 +102,7 @@ var BLEHandler = function() {
 		else {
 			console.log("Unexpected connect status: " + obj.status);
 			self.clearConnectTimeout();
+			self.closeDevice();
 			if (_callback) {
 				_callback(false);
 				_callback = null;
@@ -786,9 +787,9 @@ var BLEHandler = function() {
 	}
 
 	self.writeCurrentLimit = function(value) {
-		var u8 = new Uint8Array(2);
+		var u8 = new Uint8Array(1);
 		u8[0] = value & 0xFF;
-		u8[1] = (value >> 8) & 0xFF;
+		// u8[1] = (value >> 8) & 0xFF;
 		var v = bluetoothle.bytesToEncodedString(u8);
 		console.log("Write " + v + " at service " + powerServiceUuid + ' and characteristic ' + currentLimitUuid );
 		var paramsObj = {"serviceUuid": powerServiceUuid, "characteristicUuid": currentLimitUuid , "value" : v};
@@ -812,9 +813,9 @@ var BLEHandler = function() {
 			if (obj.status == "read")
 			{
 				var currentLimit = bluetoothle.encodedStringToBytes(obj.value);
-				console.log("current limit: " + currentLimit[0] + '-' + currentLimit[1]);
+				console.log("current limit: " + currentLimit[0]);
 
-				var value = (currentLimit[0] & 0xFF) | ((currentLimit[1] & 0xFF) << 8);
+				var value = currentLimit[0];
 
 				callback(value);
 			}
