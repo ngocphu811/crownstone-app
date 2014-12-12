@@ -125,20 +125,26 @@ CrownStone.prototype = {
 		$('#controlPage').on('pagecreate', function() {
 			console.log("Create page to control a crownstone");
 
-			$('#pwm').on('slidestop focusout', function() {
+			// $('#pwm').on('slidestop focusout', function() {
+			// 	ble.stopScan();
+			// 	setPWM($(this).val());
+			// });
+			$('#setPWM').on('click', function(event) {
 				ble.stopScan();
-				setPWM($(this).val());
+				setPWM($('#pwm').val());
 			});
 
 			$('#powerON').on('click', function(event) {
 				ble.stopScan();
 				powerON();
-			})
+				$('#pwm').val(255).slider('refresh');
+			});
 
 			$('#powerOFF').on('click', function(event) {
 				ble.stopScan();
 				powerOFF();
-			})
+				$('#pwm').val(0).slider('refresh');
+			});
 
 			$('#repeatPowerOnOff').on('click', function(event) {
 				console.log("Stop scan if running");
