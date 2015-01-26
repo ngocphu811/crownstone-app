@@ -709,10 +709,52 @@ var BLEHandler = function() {
 		paramsObj);
 	}
 
+	self.getTrackedDevices = function(callback) {
+		console.log("Read device list at service " + indoorLocalisationServiceUuid + ' and characteristic ' + listTrackedDevicesUuid );
+		var paramsObj = {"serviceUuid": indoorLocalisationServiceUuid, "characteristicUuid": listTrackedDevicesUuid };
+		bluetoothle.read(function(obj) {
+			if (obj.status == "read")
+			{
+				var list = bluetoothle.encodedStringToBytes(obj.value);
+				console.log("list: " + list[0]);
 
+				callback(list);
+			}
+			else
+			{
+				console.log("Unexpected read status: " + obj.status);
+				self.disconnectDevice();
+			}
+		}, 
+		function(obj) {
+			console.log('Error in reading temperature: ' + obj.error + " - " + obj.message);
+		},
+		paramsObj);
 	}
 
+	self.addTrackedDevice = function(address, rssi) {
+		var u8 = new Uint8Array(7);
+		for (var i = 0; i < 6; i++) {
+			u8[i] = parseInt(address[i], 16);
+			console.log("i: " + u8[i]);
 		}
+		u8[6] = rssi;
+		// u8[0] = value & 0xFF;
+		// u8[1] = (value >> 8) & 0xFF;
+		var v = bluetoothle.bytesToEncodedString(u8);
+		console.log("Write " + v + " at service " + indoorLocalisationServiceUuid + ' and characteristic ' + addTrackedDeviceUuid );
+		var paramsObj = {"serviceUuid": indoorLocalisationServiceUuid, "characteristicUuid": addTrackedDeviceUuid , "value" : v};
+		bluetoothle.write(function(obj) {
+			if (obj.status == 'written') {
+				console.log('Successfully written to add tracked device characteristic - ' + obj.status);
+			} else {
+				console.log('Writing to add tracked device characteristic was not successful' + obj);
+			}
+		},
+		function(obj) {
+			console.log("Error in writing to add tracked device characteristic" + obj.error + " - " + obj.message);
+		},
+		paramsObj);
 	}
 
 }

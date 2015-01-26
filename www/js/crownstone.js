@@ -48,6 +48,7 @@ CrownStone.prototype = {
 		var powerStateOn = false;
 		var searching = false;
 		var connected = false;
+		var tracking = false;
 
 		start = function() {
 			console.log("Create first page to find crownstones");
@@ -239,6 +240,58 @@ CrownStone.prototype = {
 				});
 			});
 
+			$('#getTrackedDevices').on('click', function(event) {
+				ble.stopScan();
+				getTrackedDevices(function(list) {
+					var size = Object.size(list);
+					var elements = list[0];
+					var trackedDevices = $('#trackedDevices');
+					if (elements * 7 + 1 != size) {
+						console.log("size error, arraySize: " + size + "but should be: " + Number(list[0] * 7 + 1));
+					} else {
+						// deviceTable.remove();
+						var r = new Array(), j = -1;
+						r[++j] = '<col width="20%">';
+						r[++j] = '<col width="50%">';
+						r[++j] = '<col width="30%">';
+						r[++j] = '<tr><th align="left">Nr</th><th align="left">MAC</th><th align="left">RSSI</th></tr>';
+						for (var i = 0; i < elements; i++) {
+							var idx = 1 + i * 9;
+							var mac = "{0}-{1}-{2}-{3}-{4}-{5}".format(list[idx].toString(16).toUpperCase(), list[idx+1].toString(16).toUpperCase(), 
+																	   list[idx+2].toString(16).toUpperCase(), list[idx+3].toString(16).toUpperCase(), 
+																	   list[idx+4].toString(16).toUpperCase(), list[idx+5].toString(16).toUpperCase());
+							var rssi = list[idx+6];
+							if (rssi > 127) {
+								rssi -= 256;
+							}
+							console.log("list item {0}: mac={1}, rssi={2}".format(i+1, mac, rssi));
+
+							r[++j] ='<tr><td>';
+							r[++j] = i+1;
+							r[++j] = '</td><td>';
+							r[++j] = mac;
+							r[++j] = '</td><td>';
+							r[++j] = rssi;
+							r[++j] = '</td></tr>';
+
+						}
+						trackedDevices.show();
+						trackedDevices.html(r.join(''));
+					}
+				});
+			});
+
+			$('#addTrackedDevice').on('click', function(event) {
+				ble.stopScan();
+				addTrackedDevice($('#trackAddress').val(), $('#trackRSSI').val());
+				tracking = !tracking;
+				if (tracking) {
+					$(this).html('Stop tracking');
+				} else {
+					$(this).html('Start tracking');
+				}
+			});
+
 			// $('#findCrownstones').on('click', function(event) {
 			// 	ble.stopScan();
 			// 	$('#crownStoneTable').show();
@@ -284,9 +337,10 @@ CrownStone.prototype = {
 			
 		});
 
-		// triggering of get characteristics needs to be delayed
-		// if all are requested at the same time then some will
-		// get lost, so trigger each get at a different time
+		// triggering of get characteristics for the initial value
+		// needs to be delayed. if all are requested at the same 
+		// time then some will get lost, so we trigger each get 
+		// at a different time
 		var trigger = 0;
 		var triggerDelay = 500;
 		$('#controlPage').on('pageshow', function(event) {
@@ -296,10 +350,14 @@ CrownStone.prototype = {
 			$('#deviceType').val('');
 			$('#Room').val('');
 			$('#currentLimit').val('');
+			$('#trackAddress').val('');
+			$('#trackRSSI').val('');
+
+			$('#deviceTable').html('');
+			$('#trackedDevices').html('');
 
 			// hide all tabs, will be shown only if
 			// service / characteristic is available
-			$('#scanDevicesTab').hide();
 			$('#scanDevicesTab').hide();
 			$('#getTemperatureTab').hide();
 			$('#changeNameTab').hide();
@@ -308,6 +366,7 @@ CrownStone.prototype = {
 			$('#pwmTab').hide();
 			$('#powerConsumptionTab').hide();
 			$('#currentLimitTab').hide();
+			$('#trackedDevicesTab').hide();
 
 			// discover available services
 			discoverServices(function(serviceUuid, characteristicUuid) {
@@ -317,8 +376,8 @@ CrownStone.prototype = {
 					if (characteristicUuid == deviceScanUuid) {
 						$('#scanDevicesTab').show();
 					} 
-					if (characteristicUuid == deviceListUuid) {
-						$('#scanDevicesTab').show();
+					if (characteristicUuid == addTrackedDeviceUuid) {
+						$('#trackedDevicesTab').show();
 					}
 				}
 				if (serviceUuid == generalServiceUuid) {
@@ -588,6 +647,32 @@ CrownStone.prototype = {
 				console.log("disconnecting...");
 				ble.disconnectDevice();
 			}
+		}
+
+		getTrackedDevices = function(callback) {
+			console.log("Get tracked devices");
+			ble.getTrackedDevices(callback);
+		}
+
+		addTrackedDevice = function(address, rssi) {
+			if (address.indexOf(':') > -1) {
+				var bt_address = address.split(':');
+				if (bt_address.length != 6) {
+					console.log("error, malformed bluetooth address");
+				}
+			} else if (address.indexOf('-') > -1) {
+				var bt_address = address.split('-');
+				if (bt_address.length != 6) {
+					console.log("error, malformed bluetooth address");
+				}
+			} else  {
+				var bt_address = [];
+				for (var i = 0; i < 6; i++) {
+					bt_address[i] = address.slice(i*2, i*2+2);
+				}
+			}
+			console.log("Add tracked device");
+			ble.addTrackedDevice(bt_address, rssi);
 		}
 
 		start();	
