@@ -3,9 +3,10 @@
 var indoorLocalisationServiceUuid = '7e170000-429c-41aa-83d7-d91220abeb33';
 // Indoor Localisation Service - Characteristics
 var rssiUuid = '7e170001-429c-41aa-83d7-d91220abeb33';
-var personalThresholdUuid = '7e170002-429c-41aa-83d7-d91220abeb33';
+var addTrackedDeviceUuid = '7e170002-429c-41aa-83d7-d91220abeb33';
 var deviceScanUuid = '7e170003-429c-41aa-83d7-d91220abeb33';
 var deviceListUuid = '7e170004-429c-41aa-83d7-d91220abeb33';
+var listTrackedDevicesUuid = '7e170005-429c-41aa-83d7-d91220abeb33';
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
@@ -23,22 +24,17 @@ var roomUuid = 'f5f90004-59f9-11e4-aa15-123b93f75cba';
 var powerServiceUuid = '5b8d0000-6f20-11e4-b116-123b93f75cba';
 // Power Service - Characteristics
 var pwmUuid = '5b8d0001-6f20-11e4-b116-123b93f75cba';
-var voltageCurveUuid = '5b8d0002-6f20-11e4-b116-123b93f75cba';
-var powerConsumptionUuid = '5b8d0003-6f20-11e4-b116-123b93f75cba';
-var currentLimitUuid = '5b8d0004-6f20-11e4-b116-123b93f75cba';
+var sampleCurrentUuid = '5b8d0002-6f20-11e4-b116-123b93f75cba';
+var currentCurveUuid = '5b8d0003-6f20-11e4-b116-123b93f75cba';
+var currentConsumptionUuid = '5b8d0004-6f20-11e4-b116-123b93f75cba';
+var currentLimitUuid = '5b8d0005-6f20-11e4-b116-123b93f75cba';
 //////////////////////////////////////////////////////////////////////////////
 
 
 var BLEHandler = function() {
 	var self = this;
 	var addressKey = 'address';
-	var flowerUuid = '39e1fa00-84a8-11e2-afba-0002a5d5c51b'; // not yet used
-	var memoUuid = '1802';
-	var alertLevelServiceUuid = '1802';
-	var alertLevelCharacteristicUuid = '2a06';
-
-	var linkLossServiceUuid = '1803';
-	var linkLossCharacteristicUuid = '2a06';
+	var dobotsCompanyId = 0x1111 // has to be defined, this is only a dummy value
 
 	var scanTimer = null;
 	var connectTimer = null;
@@ -168,9 +164,9 @@ var BLEHandler = function() {
 			self.clearReconnectTimeout();
 
 			if (window.device.platform == iOSPlatform) {
-				console.log("Discovering alert level service");
-				var paramsObj = {"serviceUuids": [alertLevelServiceUuid] };
-				bluetoothle.services(self.alertLevelSuccess, self.alertLevelError, paramsObj);
+				console.log("Discovering services");
+				// var paramsObj = {"serviceUuids": [alertLevelServiceUuid] };
+				// bluetoothle.services(self.alertLevelSuccess, self.alertLevelError, paramsObj);
 			} else if (window.device.platform == androidPlatform) {
 				console.log("Beginning discovery");
 				bluetoothle.discover(self.discoverSuccess, self.discoverError);
@@ -276,7 +272,7 @@ var BLEHandler = function() {
 					// console.log("adv: " + Array.apply([], arr).join(","));
 					self.parseAdvertisement(arr, 0xFF, function(data) {
 						var value = data[0] << 8 | data[1];
-						if (value == 0x1111) {
+						if (value == dobotsCompanyId) {
 							// console.log("found crownstone, company id: 0x" + value.toString(16));
 							callback(obj);
 						}
@@ -332,7 +328,6 @@ var BLEHandler = function() {
 			var address = window.localStorage.getItem(self.addressKey);
 			if (address == null) {
 				console.log('No address known, so start scan');
-				//var paramsObj = { 'serviceUuids': [memoUuid]};
 				var paramsObj = { 'serviceUuids': [generalServiceUuid]};
 				// bluetoothle.startScan(self.startScanSuccess, self.startScanError, paramsObj);
 			} else {
@@ -349,89 +344,6 @@ var BLEHandler = function() {
 				null,
 				'BLE off?',
 				'Sorry!');
-	}
-
-	self.alertLevelSuccess = function(obj) {
-		if (obj.status == "discoveredServices")
-		{
-//			console.log("Discovered services");
-			var serviceUuids = obj.serviceUuids;
-			for (var i = 0; i < serviceUuids.length; i++) {
-				var serviceUuid = serviceUuids[i];
-//				console.log("Found service Uuid: " + serviceUuid);
-				if (serviceUuid == self.alertLevelServiceUuid) {
-					console.log("Finding alert level characteristics");
-					var paramsObj = {"serviceUuid":alertLevelServiceUuid, "characteristicUuids":[alertLevelCharacteristicUuid]};
-					bluetoothle.characteristics(self.characteristicsAlertLevelSuccess, self.characteristicsAlertLevelError, paramsObj);
-					return;
-				}
-			}
-			console.log("Error: alert level service not found");
-//			return;
-		}
-		else
-		{
-			console.log("Unexpected services alert level status: " + obj.status);
-		}
-		self.disconnectDevice();
-	}
-
-	self.alertLevelError = function(obj) {
-		console.log("Services alert level error: " + obj.error + " - " + obj.message);
-		self.disconnectDevice();
-	}
-
-	self.characteristicsAlertLevelSuccess = function(obj) {
-		if (obj.status == "discoveredCharacteristics") {
-			var characteristicUuids = obj.characteristicUuids;
-			for (var i = 0; i < characteristicUuids.length; i++)
-			{
-				console.log("Alert level characteristics found, now discovering descriptor");
-				var characteristicUuid = characteristicUuids[i];
-
-				if (characteristicUuid == alertLevelCharacteristicUuid) {
-					//self.writeAlertLevel();
-					self.readLinkLoss();
-					return;
-					//var paramsObj = {"serviceUuid": self.alertLevelServiceUuid, "characteristicUuid": self.alertLevelCharacteristicUuid};
-					//bluetoothle.descriptors(self.descriptorsAlertLevelSuccess, self.descriptorsAlertLevelError, paramsObj);
-					//return;
-				}
-			}
-			console.log("Error: Alert level characteristic not found.");
-		}
-		else
-		{
-			console.log("Unexpected characteristics alert level: " + obj.status);
-		}
-		self.disconnectDevice();
-	}
-
-	self.characteristicsAlertLevelError = function(obj)
-	{
-		console.log("Characteristics heart error: " + obj.error + " - " + obj.message);
-		self.disconnectDevice();
-	}
-
-	// function only works on iOS, not on Android
-	self.descriptorsAlertLevelSuccess = function(obj)
-	{
-		if (obj.status == "discoveredDescriptors")
-		{
-			console.log("Discovered alert level descriptor");
-		}
-		else
-		{
-			console.log("Unexpected alert level status: " + obj.status);
-			self.disconnectDevice();
-		}
-	}
-
-	// function only works on iOS, not on Android
-	self.descriptorsAlertLevelError = function(obj)
-	{
-		console.log("Descriptors alert error: " + obj.error + " - " + obj.message);
-		self.disconnectDevice();
 	}
 
 	self.discoverSuccess = function(obj)
@@ -471,86 +383,52 @@ var BLEHandler = function() {
 		}
 	}
 
-	// self.writePowerLevel = function() {
-	// 	var u8 = new Uint8Array(1);
-	// 	u8[0] = 2;
-	// 	var v = bluetoothle.bytesToEncodedString(u8);
-	// 	console.log("Write signal " + v + " at service " + generalServiceUuid + ' and characteristic ' + crownstoneCharacteristicUuid);
-	// 	var paramsObj = {"serviceUuid": generalServiceUuid, "characteristicUuid": crownstoneCharacteristicUuid, "value": v };
-	// 	bluetoothle.write(self.writeCrownstoneSuccess, self.writeCrownstoneError, paramsObj);
-	// }
-
-	// self.writeCrownstoneSuccess = function(obj) {
-	// 	if (obj.status == 'written') {
-	// 		console.log('Successful written power command', obj.status);
-	// 	} else {
-	// 		console.log('Writing was not successful', obj);
-	// 	}
-	// }
-
-	// self.writeCrownstoneError = function(obj) {
-	// 	console.log('Error in writing power command', obj.status);
-	// }
-	
-	self.writeAlertLevel = function() {
-		var u8 = new Uint8Array(1);
-		u8[0] = 2;
-		var v = bluetoothle.bytesToEncodedString(u8);
-		console.log("Write alert level " + v + " at service " + alertLevelServiceUuid + ' and characteristic ' + alertLevelCharacteristicUuid);
-		var paramsObj = {"serviceUuid": alertLevelServiceUuid, "characteristicUuid": alertLevelCharacteristicUuid, "value": v };
-		bluetoothle.write(self.writeAlertLevelSuccess, self.writeAlertLevelError, paramsObj);
-	}
-	
-	self.writeAlertLevelSuccess = function(obj) {
-		if (obj.status == 'written') {
-			console.log('Successful written alert level', obj.status);
-		} else {
-			console.log('Writing was not successful', obj);
-		}
+	self.disconnectDevice = function() {
+		bluetoothle.disconnect(self.disconnectSuccess, self.disconnectError);
 	}
 
-	self.writeAlertLevelError = function(obj) {
-		console.log('Error in writing alert level', obj.status);
-	}
-
-	self.readLinkLoss = function() {
-		console.log("Read link loss level at service " + linkLossServiceUuid + ' and characteristic ' + linkLossCharacteristicUuid);
-		var paramsObj = {"serviceUuid": linkLossServiceUuid, "characteristicUuid": linkLossCharacteristicUuid};
-		bluetoothle.read(self.readLinkLossSuccess, self.readLinkLossError, paramsObj);
-	}
-
-	self.readLinkLossSuccess = function(obj) {
-		if (obj.status == "read")
+	self.disconnectSuccess = function(obj)
+	{
+		if (obj.status == "disconnected")
 		{
-			console.log("Read status");
-			self.writeAlertLevel();
-
-			//var bytes = bluetoothle.encodedStringToBytes(obj.value);
-			//console.log("Link loss: " + bytes[0]);
-
-			/*
-			console.log("Subscribing to heart rate for 5 seconds");
-			var paramsObj = {"serviceUuid":heartRateServiceUuid, "characteristicUuid":heartRateMeasurementCharacteristicUuid};
-			bluetoothle.subscribe(subscribeSuccess, subscribeError, paramsObj);
-			setTimeout(unsubscribeDevice, 5000);
-			*/
+			console.log("Disconnect device");
+			self.closeDevice();
+		}
+		else if (obj.status == "disconnecting")
+		{
+			console.log("Disconnecting device");
 		}
 		else
 		{
-			console.log("Unexpected read status: " + obj.status);
-			self.disconnectDevice();
+			console.log("Unexpected disconnect status: " + obj.status);
 		}
 	}
 
-	self.readLinkLossError = function(obj) {
-		console.log('Error in reading link loss level', obj.status);
-		self.writeAlertLevel();
+	self.disconnectError = function(obj)
+	{
+		console.log("Disconnect error: " + obj.error + " - " + obj.message);
 	}
 
-	self.readBatteryLevel = function() {
-		console.log("Reading battery level, not yet implemented");
-		//var paramsObj = {"serviceUuid":batteryServiceUuid, "characteristicUuid":batteryLevelCharacteristicUuid};
-		//bluetoothle.read(readSuccess, readError, paramsObj);
+	self.closeDevice = function()
+	{
+		bluetoothle.close(self.closeSuccess, self.closeError);
+	}
+
+	self.closeSuccess = function(obj)
+	{
+		if (obj.status == "closed")
+		{
+			console.log("Closed device");
+		}
+		else
+		{
+			console.log("Unexpected close status: " + obj.status);
+		}
+	}
+
+	self.closeError = function(obj)
+	{
+		console.log("Close error: " + obj.error + " - " + obj.message);
 	}
 
 	self.readTemperature = function(callback) {
@@ -831,52 +709,11 @@ var BLEHandler = function() {
 		paramsObj);
 	}
 
-	self.disconnectDevice = function() {
-		bluetoothle.disconnect(self.disconnectSuccess, self.disconnectError);
+
 	}
 
-	self.disconnectSuccess = function(obj)
-	{
-		if (obj.status == "disconnected")
-		{
-			console.log("Disconnect device");
-			self.closeDevice();
-		}
-		else if (obj.status == "disconnecting")
-		{
-			console.log("Disconnecting device");
-		}
-		else
-		{
-			console.log("Unexpected disconnect status: " + obj.status);
 		}
 	}
 
-	self.disconnectError = function(obj)
-	{
-		console.log("Disconnect error: " + obj.error + " - " + obj.message);
-	}
-
-	self.closeDevice = function()
-	{
-		bluetoothle.close(self.closeSuccess, self.closeError);
-	}
-
-	self.closeSuccess = function(obj)
-	{
-		if (obj.status == "closed")
-		{
-			console.log("Closed device");
-		}
-		else
-		{
-			console.log("Unexpected close status: " + obj.status);
-		}
-	}
-
-	self.closeError = function(obj)
-	{
-		console.log("Close error: " + obj.error + " - " + obj.message);
-	}
 }
 
