@@ -596,7 +596,12 @@ var BLEHandler = function() {
 	}
 
 	self.writeDeviceName = function(value) {
+		if (value != "") {
 		var u8 = bluetoothle.stringToBytes(value);
+		} else {
+			var u8 = new Uint8Array(1);
+			u8[0] = 0;
+		}
 		var v = bluetoothle.bytesToEncodedString(u8);
 		console.log("Write " + v + " at service " + generalServiceUuid + ' and characteristic ' + changeNameCharacteristicUuid );
 		var paramsObj = {"serviceUuid": generalServiceUuid, "characteristicUuid": changeNameCharacteristicUuid , "value" : v};
