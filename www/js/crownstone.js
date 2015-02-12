@@ -183,12 +183,12 @@ CrownStone.prototype = {
 				// $(this).progressbar("option", "value", false);
 			});
 
-			$('#getPowerConsumption').on('click', function(event) {
+			$('#getCurrentConsumption').on('click', function(event) {
 				ble.stopScan();
-				getPowerConsumption(function(powerConsumption) {
-					$('#powerConsumption').html("Power consumption: tbd [unit]");
-					// $('#powerConsumption').html("Power consumption: " + powerConsumption + " [unit]");
-					$('#powerConsumption').show();
+				getCurrentConsumption(function(currentConsumption) {
+					$('#currentConsumption').html("Current consumption: tbd [unit]");
+					// $('#currentConsumption').html("Current consumption: " + currentConsumption + " [unit]");
+					$('#currentConsumption').show();
 				});
 			});
 
@@ -237,6 +237,26 @@ CrownStone.prototype = {
 				ble.stopScan();
 				getCurrentLimit(function(currentLimit) {
 					$('#currentLimit').val(currentLimit);
+				});
+			});
+
+			$('#sampleCurrentCurve').on('click', function(event) {
+				ble.stopScan();
+				sampleCurrentCurve(function(success) {
+					if (success) {
+						setTimeout(function() {
+							getCurrentCurve(function(result) {
+								var list = [];
+								for (var i = 2; i < result.length; ++i) {
+									list.push([i-2, result[i]]);
+								}
+								$('#currentCurve').show();
+								$.plot("#currentCurve", [list]);
+							});
+						}, 100);
+					} else {
+
+					}
 				});
 			});
 
@@ -364,9 +384,11 @@ CrownStone.prototype = {
 			$('#deviceTypeTab').hide();
 			$('#roomTab').hide();
 			$('#pwmTab').hide();
-			$('#powerConsumptionTab').hide();
+			$('#currentConsumptionTab').hide();
 			$('#currentLimitTab').hide();
 			$('#trackedDevicesTab').hide();
+			$('#currentCurveTab').hide();
+			$('#currentCurve').hide();
 
 			// discover available services
 			discoverServices(function(serviceUuid, characteristicUuid) {
@@ -410,8 +432,8 @@ CrownStone.prototype = {
 					if (characteristicUuid == pwmUuid) {
 						$('#pwmTab').show();
 					}
-					if (characteristicUuid == powerConsumptionUuid) {
-						$('#powerConsumptionTab').show();
+					if (characteristicUuid == currentConsumptionUuid) {
+						$('#currentConsumptionTab').show();
 					}
 					if (characteristicUuid == currentLimitUuid) {
 						$('#currentLimitTab').show();
@@ -419,6 +441,9 @@ CrownStone.prototype = {
 						setTimeout(function() {
 							$('#getCurrentLimit').trigger('click');
 						}, (trigger++) * triggerDelay);
+					}
+					if (characteristicUuid == currentCurveUuid) {
+						$('#currentCurveTab').show();
 					}
 				}
 			});
@@ -528,9 +553,9 @@ CrownStone.prototype = {
 			ble.readTemperature(callback);
 		}
 
-		getPowerConsumption = function(callback) {
+		getCurrentConsumption = function(callback) {
 			console.log("Reading consumption");
-			ble.readPowerConsumption(callback);
+			ble.readCurrentConsumption(callback);
 		}
 
 		getDeviceName = function(callback) {
@@ -673,6 +698,16 @@ CrownStone.prototype = {
 			}
 			console.log("Add tracked device");
 			ble.addTrackedDevice(bt_address, rssi);
+		}
+
+		sampleCurrentCurve = function(callback) {
+			console.log("Sample current curve");
+			ble.sampleCurrent(0x02, callback);
+		}
+
+		getCurrentCurve = function(callback) {
+			console.log("Get current curve");
+			ble.getCurrentCurve(callback);
 		}
 
 		start();	

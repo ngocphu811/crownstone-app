@@ -515,9 +515,9 @@ var BLEHandler = function() {
 		paramsObj);
 	}
 
-	self.readPowerConsumption = function(callback) {
-		console.log("Read power consumption at service " + powerServiceUuid + ' and characteristic ' + powerConsumptionUuid);
-		var paramsObj = {"serviceUuid": powerServiceUuid, "characteristicUuid": powerConsumptionUuid};
+	self.readCurrentConsumption = function(callback) {
+		console.log("Read power consumption at service " + powerServiceUuid + ' and characteristic ' + currentConsumptionUuid);
+		var paramsObj = {"serviceUuid": powerServiceUuid, "characteristicUuid": currentConsumptionUuid};
 		bluetoothle.read(function(obj) {
 			if (obj.status == "read")
 			{
@@ -525,6 +525,63 @@ var BLEHandler = function() {
 				console.log("powerConsumption: " + powerConsumption[0]);
 
 				callback(powerConsumption[0]);
+			}
+			else
+			{
+				console.log("Unexpected read status: " + obj.status);
+				self.disconnectDevice();
+			}
+		}, 
+		function(obj) {
+			console.log('Error in reading temperature: ' + obj.error + " - " + obj.message);
+		},
+		paramsObj);
+	}
+
+	self.sampleCurrent = function(value, callback) {
+		var u8 = new Uint8Array(1);
+		u8[0] = value;
+		var v = bluetoothle.bytesToEncodedString(u8);
+		console.log("Write " + v + " at service " + powerServiceUuid + ' and characteristic ' + sampleCurrentUuid );
+		var paramsObj = {"serviceUuid": powerServiceUuid, "characteristicUuid": sampleCurrentUuid , "value" : v};
+		bluetoothle.write(function(obj) {
+			if (obj.status == 'written') {
+				console.log('Successfully written to sample current characteristic - ' + obj.status);
+
+				if (callback) {
+					callback(true)
+				}
+			} else {
+				console.log('Writing to sample current characteristic was not successful' + obj);
+
+				if (callback) {
+					callback(false)
+				}
+			}
+		},
+		function(obj) {
+			console.log("Error in writing to sample current characteristic" + obj.error + " - " + obj.message);
+
+			if (callback) {
+				callback(false)
+			}
+		},
+		paramsObj);
+	}
+
+	self.getCurrentCurve = function(callback) {
+		console.log("Read current curve at service " + powerServiceUuid + ' and characteristic ' + currentCurveUuid );
+		var paramsObj = {"serviceUuid": powerServiceUuid, "characteristicUuid": currentCurveUuid };
+		bluetoothle.read(function(obj) {
+			if (obj.status == "read")
+			{
+				var result = bluetoothle.encodedStringToBytes(obj.value);
+
+				// check type ??
+				var length = result[1];
+				if (length > 0) {
+					callback(result);
+				}
 			}
 			else
 			{

@@ -26,6 +26,7 @@
 		<link rel="stylesheet" href="css/jquery.mobile-1.4.2.min.css" />
 		<script src="js/jquery-1.9.1.min.js"></script>
 		<script src="js/jquery.mobile-1.4.2.min.js"></script>
+		<script src="js/jquery.flot.js"></script>
 		<link rel="stylesheet" type="text/css" href="css/crownstone.css" />
 		<script type="text/javascript" src="cordova.js"></script>
 		
@@ -106,9 +107,9 @@
 							<table id="deviceTable" style="display: none; width: 100%"></table>
 							<hr>
 						</div>
-						<div id="powerConsumptionTab" style="display: none">
-							<button id="getPowerConsumption" class="ui-btn-active ui-state-persist" data-role="button">Get Power Consumption</button>
-							<div id="powerConsumption" style="display: none; text-align: center">Power Consumption: ?</div>
+						<div id="currentConsumptionTab" style="display: none">
+							<button id="getCurrentConsumption" class="ui-btn-active ui-state-persist" data-role="button">Get Current Consumption</button>
+							<div id="currentConsumption" style="display: none; text-align: center">Current Consumption: ?</div>
 							<hr>
 						</div>
 						<div id="changeNameTab" style="display: none">
@@ -161,7 +162,11 @@
 							<button id="addTrackedDevice" class="ui-btn-active ui-state-persist" data-role="button">Start tracking</button>
 							<hr>
 						</div>
-
+						<div id="currentCurveTab" style="display: none">
+							<button id="sampleCurrentCurve" class="ui-btn-active ui-state-persist" data-role="button">Sample Current</button>
+							<div id="currentCurve" style="width:100%; height:150px; display:none"></div>
+							<hr>
+						<div>
 						<div>	
 							<img class="scaledLogo" src="img/DObots.png"></img>
 						</div>
