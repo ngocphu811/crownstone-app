@@ -251,7 +251,7 @@ CrownStone.prototype = {
 									list.push([i-2, result[i]]);
 								}
 								$('#currentCurve').show();
-								$.plot("#currentCurve", [list]);
+								$.plot("#currentCurve", [list], {xaxis: {show: false}});
 							});
 						}, 100);
 					} else {
