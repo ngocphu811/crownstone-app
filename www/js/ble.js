@@ -50,7 +50,7 @@ var BLEHandler = function() {
 		bluetoothle.initialize(function(obj) {
 				console.log('Properly connected to BLE chip');
 				console.log("Message " + JSON.stringify(obj));
-				if (obj.status == 'enabled') {
+				if (obj.status == 'enabled' || obj.status == 'initialized') {
 					callback(true);
 				}
 			}, function(obj) {

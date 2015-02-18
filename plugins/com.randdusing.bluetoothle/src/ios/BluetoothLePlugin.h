@@ -3,22 +3,21 @@
 
 @interface BluetoothLePlugin : CDVPlugin <CBCentralManagerDelegate, CBPeripheralDelegate>
 {
+    CBCentralManager *centralManager;
+    NSNumber* statusReceiver;
+    
     NSString* initCallback;
     NSString* scanCallback;
-    NSString* connectCallback;
-    NSString* discoverCallback;
-    NSString* descriptorCallback;
-    NSString* rssiCallback;
-    NSMutableDictionary* operationCallbacks;
-    
-    CBCentralManager *centralManager;
-    
-    CBPeripheral* activePeripheral;
+
+    NSMutableDictionary* connections;
 }
 
 - (void)initialize:(CDVInvokedUrlCommand *)command;
+- (void)enable:(CDVInvokedUrlCommand *)command;
+- (void)disable:(CDVInvokedUrlCommand *)command;
 - (void)startScan:(CDVInvokedUrlCommand *)command;
 - (void)stopScan:(CDVInvokedUrlCommand *)command;
+- (void)retrieveConnected:(CDVInvokedUrlCommand *)command;
 - (void)connect:(CDVInvokedUrlCommand *)command;
 - (void)reconnect:(CDVInvokedUrlCommand *)command;
 - (void)disconnect:(CDVInvokedUrlCommand *)command;
@@ -35,6 +34,7 @@
 - (void)writeDescriptor:(CDVInvokedUrlCommand *)command;
 - (void)rssi:(CDVInvokedUrlCommand *)command;
 - (void)isInitialized:(CDVInvokedUrlCommand *)command;
+- (void)isEnabled:(CDVInvokedUrlCommand *)command;
 - (void)isScanning:(CDVInvokedUrlCommand *)command;
 - (void)isConnected:(CDVInvokedUrlCommand *)command;
 - (void)isDiscovered:(CDVInvokedUrlCommand *)command;
