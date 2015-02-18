@@ -1,6 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 
-cmd=${1:? "$0 requires \"cmd\" as first argument"}
+usage_string="Usage: $0 {build|upload|log|release}"
+cmd=${1:? "$usage_string"}
 
 path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 working_path=$path/..
@@ -77,6 +78,6 @@ case "$cmd" in
 		all
 		;;
 	*)
-		echo $"Usage: $0 {build|upload|log|release}"
+		echo $usage_string
 		exit 1
 esac
