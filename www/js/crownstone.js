@@ -391,6 +391,7 @@ CrownStone.prototype = {
 			$('#currentCurve').hide();
 
 			// discover available services
+			address = "FF:5E:BF:44:D6:6F"
 			discoverServices(function(serviceUuid, characteristicUuid) {
 				console.log("updating: " + serviceUuid + ' : ' + characteristicUuid);
 
@@ -446,7 +447,7 @@ CrownStone.prototype = {
 						$('#currentCurveTab').show();
 					}
 				}
-			});
+			}, address);
 		});
 
 		$('#controlPage').on('pagehide', function(event) {
@@ -660,10 +661,10 @@ CrownStone.prototype = {
 			}
 		}
 
-		discoverServices = function(callback) {
+		discoverServices = function(callback, address) {
 			console.log("discover services");
 			trigger = 0;
-			ble.discoverServices(callback);
+			ble.discoverServices(callback, address);
 		}
 
 		disconnect = function() {
