@@ -37,8 +37,7 @@ build() {
 }
 
 upload() {
-	adb uninstall $package_prefix.$name1
-	adb install platforms/android/ant-build/$name-debug.apk
+	adb install -r platforms/android/ant-build/$name-debug.apk
 	start
 }
 

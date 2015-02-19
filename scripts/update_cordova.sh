@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd ..
+cordova platform add android
 cordova platform update android
 
 echo "Current plugin versions"
