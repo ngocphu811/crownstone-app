@@ -195,10 +195,13 @@ var BLEHandler = function() {
 		}
 	}
 
-	self.discoverServices = function(callback) {
+	self.discoverServices = function(callback, address) {
 		_callback = callback;
-		console.log("Beginning discovery");
-		bluetoothle.discover(self.discoverSuccess, self.discoverError);
+		console.log("Beginning discovery of services");
+		console.log("Discover for", address);
+		var paramsObj = {address: address};
+		//var paramsObj = {"serviceAssignedNumbers":[];
+		bluetoothle.discover(self.discoverSuccess, self.discoverError, paramsObj);
 	}
 
 	/**
