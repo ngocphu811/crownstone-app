@@ -50,6 +50,8 @@ CrownStone.prototype = {
 		var connected = false;
 		var tracking = false;
 
+		var connectedDevice = "";
+
 		start = function() {
 			console.log("Create first page to find crownstones");
 			
@@ -59,8 +61,6 @@ CrownStone.prototype = {
 			});
 
 			$('#findCrownstones').on('click', function(event) {
-				ble.stopScan();
-
 				if (searching) {
 					searching = false;
 					stopSearch();
@@ -127,29 +127,24 @@ CrownStone.prototype = {
 			console.log("Create page to control a crownstone");
 
 			// $('#pwm').on('slidestop focusout', function() {
-			// 	ble.stopScan();
 			// 	setPWM($(this).val());
 			// });
 			$('#setPWM').on('click', function(event) {
-				ble.stopScan();
 				setPWM($('#pwm').val());
 			});
 
 			$('#powerON').on('click', function(event) {
-				ble.stopScan();
 				powerON();
 				$('#pwm').val(255).slider('refresh');
 			});
 
 			$('#powerOFF').on('click', function(event) {
-				ble.stopScan();
 				powerOFF();
 				$('#pwm').val(0).slider('refresh');
 			});
 
 			$('#repeatPowerOnOff').on('click', function(event) {
 				console.log("Stop scan if running");
-				ble.stopScan();
 				if (repeatFunctionHandle) {
 					console.log("Clear repeat action");
 					clearInterval(repeatFunctionHandle);
@@ -166,7 +161,6 @@ CrownStone.prototype = {
 			});	
 
 			$('#getTemperature').on('click', function(event) {
-				ble.stopScan();
 				readTemperature(function(temperature) {
 					$('#temperature').html("Temperature: " + temperature + " °C");
 					$('#temperature').show();
@@ -174,7 +168,6 @@ CrownStone.prototype = {
 			});
 
 			$('#scanDevices').on('click', function(event) {
-				ble.stopScan();
 				// $(this).prop("disabled", true);
 				startDeviceScan(function() {
 					setTimeout(stopDeviceScan, 10000);
@@ -184,64 +177,53 @@ CrownStone.prototype = {
 			});
 
 			$('#getCurrentConsumption').on('click', function(event) {
-				ble.stopScan();
 				getCurrentConsumption(function(currentConsumption) {
-					$('#currentConsumption').html("Current consumption: tbd [unit]");
-					// $('#currentConsumption').html("Current consumption: " + currentConsumption + " [unit]");
+					$('#currentConsumption').html("Current consumption: " + currentConsumption + " [mA]");
 					$('#currentConsumption').show();
 				});
 			});
 
 			$('#setDeviceName').on('click', function(event) {
-				ble.stopScan();
 				setDeviceName($('#deviceName').val());
 			});
 
 			$('#getDeviceName').on('click', function(event) {
-				ble.stopScan();
 				getDeviceName(function(deviceName) {
 					$('#deviceName').val(deviceName);
 				});
 			});
 
 			$('#setDeviceType').on('click', function(event) {
-				ble.stopScan();
 				setDeviceType($('#deviceType').val());
 			});
 
 			$('#getDeviceType').on('click', function(event) {
-				ble.stopScan();
 				getDeviceType(function(deviceType) {
 					$('#deviceType').val(deviceType);
 				});
 			});
 
 			$('#setRoom').on('click', function(event) {
-				ble.stopScan();
 				setRoom($('#room').val());
 			});
 
 			$('#getRoom').on('click', function(event) {
-				ble.stopScan();
 				getRoom(function(room) {
 					$('#room').val(room);
 				});
 			});
 
 			$('#setCurrentLimit').on('click', function(event) {
-				ble.stopScan();
 				setCurrentLimit($('#currentLimit').val());
 			});
 
 			$('#getCurrentLimit').on('click', function(event) {
-				ble.stopScan();
 				getCurrentLimit(function(currentLimit) {
 					$('#currentLimit').val(currentLimit);
 				});
 			});
 
 			$('#sampleCurrentCurve').on('click', function(event) {
-				ble.stopScan();
 				sampleCurrentCurve(function(success) {
 					if (success) {
 						setTimeout(function() {
@@ -261,7 +243,6 @@ CrownStone.prototype = {
 			});
 
 			$('#getTrackedDevices').on('click', function(event) {
-				ble.stopScan();
 				getTrackedDevices(function(list) {
 					var size = Object.size(list);
 					var elements = list[0];
@@ -302,7 +283,6 @@ CrownStone.prototype = {
 			});
 
 			$('#addTrackedDevice').on('click', function(event) {
-				ble.stopScan();
 				addTrackedDevice($('#trackAddress').val(), $('#trackRSSI').val());
 				tracking = !tracking;
 				if (tracking) {
@@ -313,7 +293,6 @@ CrownStone.prototype = {
 			});
 
 			// $('#findCrownstones').on('click', function(event) {
-			// 	ble.stopScan();
 			// 	$('#crownStoneTable').show();
 
 			// 	var r = new Array(), j = -1;
@@ -348,7 +327,6 @@ CrownStone.prototype = {
 			// });
 
 			$('#disconnect').on('click', function(event) {
-				ble.stopScan();
 				disconnect();
 				$('#crownstone').hide();
 				history.back();
@@ -364,6 +342,9 @@ CrownStone.prototype = {
 		var trigger = 0;
 		var triggerDelay = 500;
 		$('#controlPage').on('pageshow', function(event) {
+			if (!connectedDevice) {
+				console.log("no connected device address assigned");
+			}
 
 			// clear fields
 			$('#deviceName').val('');
@@ -391,7 +372,6 @@ CrownStone.prototype = {
 			$('#currentCurve').hide();
 
 			// discover available services
-			address = "FF:5E:BF:44:D6:6F"
 			discoverServices(function(serviceUuid, characteristicUuid) {
 				console.log("updating: " + serviceUuid + ' : ' + characteristicUuid);
 
@@ -447,7 +427,7 @@ CrownStone.prototype = {
 						$('#currentCurveTab').show();
 					}
 				}
-			}, address);
+			});
 		});
 
 		$('#controlPage').on('pagehide', function(event) {
@@ -457,14 +437,24 @@ CrownStone.prototype = {
 		});
 
 		setPWM = function(pwm, callback, cargs) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			console.log("Set pwm to " + pwm);
-			ble.writePWM(pwm);
+			ble.writePWM(connectedDevice, pwm);
 			if (callback) {
 				callback(cargs);
 			}
 		}
 
 		powerON = function(callback, cargs) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			console.log("switch power ON");
 			$('#powerState').html("LED: ON");
 			powerStateOn = true;
@@ -472,6 +462,11 @@ CrownStone.prototype = {
 		}
 
 		powerOFF = function(callback, cargs) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			console.log("switch power OFF");
 			$('#powerState').html("LED: OFF");
 			powerStateOn = false;
@@ -479,6 +474,11 @@ CrownStone.prototype = {
 		}
 
 		togglePower = function(callback, cargs) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			console.log('Switch power event');
 			if (powerStateOn) {
 				powerOFF(callback, cargs);
@@ -488,23 +488,38 @@ CrownStone.prototype = {
 		}
 
 		startDeviceScan = function(callback, cargs) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			navigator.notification.activityStart("Device Scan", "scanning");
 			console.log("Scan for devices");
-			ble.scanDevices(true);
+			ble.scanDevices(connectedDevice, true);
 			if (callback) {
 				callback(cargs);
 			}
 		}
 
 		stopDeviceScan = function(callback) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			console.log("Stop Scan");
-			ble.scanDevices(false);
+			ble.scanDevices(connectedDevice, false);
 		}
 
 		getDeviceList = function() {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			navigator.notification.activityStop();
 			console.log("Get Device List");
-			ble.listDevices(function(list) {
+			ble.listDevices(connectedDevice, function(list) {
 				var size = Object.size(list);
 				var elements = list[0];
 				var deviceList = $('#deviceList');
@@ -550,62 +565,112 @@ CrownStone.prototype = {
 		}
 
 		readTemperature = function(callback) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			console.log("Reading temperature");
-			ble.readTemperature(callback);
+			ble.readTemperature(connectedDevice, callback);
 		}
 
 		getCurrentConsumption = function(callback) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			console.log("Reading consumption");
-			ble.readCurrentConsumption(callback);
+			ble.readCurrentConsumption(connectedDevice, callback);
 		}
 
 		getDeviceName = function(callback) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			console.log("Get device name");
-			ble.readDeviceName(callback);
+			ble.readDeviceName(connectedDevice, callback);
 		}
 
 		setDeviceName = function(deviceName, callback, cargs) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			console.log("Set device name to: " + deviceName);
-			ble.writeDeviceName(deviceName);
+			ble.writeDeviceName(connectedDevice, deviceName);
 			if (callback) {
 				callback(cargs);
 			}
 		}
 
 		getDeviceType = function(callback) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			console.log("Get device type");
-			ble.readDeviceType(callback);
+			ble.readDeviceType(connectedDevice, callback);
 		}
 
 		setDeviceType = function(deviceType, callback, cargs) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			console.log("Set device type to: " + deviceType);
-			ble.writeDeviceType(deviceType);
+			ble.writeDeviceType(connectedDevice, deviceType);
 			if (callback) {
 				callback(cargs);
 			}
 		}
 
 		getRoom = function(callback) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			console.log("Get room");
-			ble.readRoom(callback);
+			ble.readRoom(connectedDevice, callback);
 		}
 
 		setRoom = function(room, callback, cargs) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			console.log("Set room to: " + room);
-			ble.writeRoom(room);
+			ble.writeRoom(connectedDevice, room);
 			if (callback) {
 				callback(cargs);
 			}
 		}
 
 		getCurrentLimit = function(callback) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			console.log("Get current limit");
-			ble.readCurrentLimit(callback);
+			ble.readCurrentLimit(connectedDevice, callback);
 		}
 
 		setCurrentLimit = function(currentLimit, callback, cargs) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			console.log("Set current limit to: " + currentLimit);
-			ble.writeCurrentLimit(currentLimit);
+			ble.writeCurrentLimit(connectedDevice, currentLimit);
 			if (callback) {
 				callback(cargs);
 			}
@@ -648,6 +713,7 @@ CrownStone.prototype = {
 				ble.connectDevice(address, function(connected) {
 
 					if (connected) {
+						connectedDevice = address;
 						$.mobile.changePage("#controlPage", {transition:'slide', hashChange:true});
 					} else {
 						navigator.notification.alert(
@@ -661,26 +727,47 @@ CrownStone.prototype = {
 			}
 		}
 
-		discoverServices = function(callback, address) {
+		discoverServices = function(callback) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			console.log("discover services");
 			trigger = 0;
-			ble.discoverServices(callback, address);
+			ble.discoverServices(connectedDevice, callback);
 		}
 
 		disconnect = function() {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			if (connected) {
 				connected = false;
 				console.log("disconnecting...");
-				ble.disconnectDevice();
+				ble.disconnectDevice(connectedDevice);
+				connectedDevice = null;
 			}
 		}
 
 		getTrackedDevices = function(callback) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			console.log("Get tracked devices");
-			ble.getTrackedDevices(callback);
+			ble.getTrackedDevices(connectedDevice, callback);
 		}
 
 		addTrackedDevice = function(address, rssi) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			if (address.indexOf(':') > -1) {
 				var bt_address = address.split(':');
 				if (bt_address.length != 6) {
@@ -698,17 +785,27 @@ CrownStone.prototype = {
 				}
 			}
 			console.log("Add tracked device");
-			ble.addTrackedDevice(bt_address, rssi);
+			ble.addTrackedDevice(connectedDevice, bt_address, rssi);
 		}
 
 		sampleCurrentCurve = function(callback) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			console.log("Sample current curve");
-			ble.sampleCurrent(0x02, callback);
+			ble.sampleCurrent(connectedDevice, 0x02, callback);
 		}
 
 		getCurrentCurve = function(callback) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
 			console.log("Get current curve");
-			ble.getCurrentCurve(callback);
+			ble.getCurrentCurve(connectedDevice, callback);
 		}
 
 		start();	
