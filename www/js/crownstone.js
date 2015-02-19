@@ -176,13 +176,6 @@ CrownStone.prototype = {
 				// $(this).progressbar("option", "value", false);
 			});
 
-			$('#getCurrentConsumption').on('click', function(event) {
-				getCurrentConsumption(function(currentConsumption) {
-					$('#currentConsumption').html("Current consumption: " + currentConsumption + " [mA]");
-					$('#currentConsumption').show();
-				});
-			});
-
 			$('#setDeviceName').on('click', function(event) {
 				setDeviceName($('#deviceName').val());
 			});
@@ -234,6 +227,21 @@ CrownStone.prototype = {
 								}
 								$('#currentCurve').show();
 								$.plot("#currentCurve", [list], {xaxis: {show: false}});
+							});
+						}, 100);
+					} else {
+
+					}
+				});
+			});
+
+			$('#getCurrentConsumption').on('click', function(event) {
+				sampleCurrentConsumption(function(success) {
+					if (success) {
+						setTimeout(function() {
+							getCurrentConsumption(function(currentConsumption) {
+								$('#currentConsumption').html("Current consumption: " + currentConsumption + " [mA]");
+								$('#currentConsumption').show();
 							});
 						}, 100);
 					} else {
@@ -786,6 +794,16 @@ CrownStone.prototype = {
 			}
 			console.log("Add tracked device");
 			ble.addTrackedDevice(connectedDevice, bt_address, rssi);
+		}
+
+		sampleCurrentConsumption = function(callback) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+
+			console.log("Sample current consumption");
+			ble.sampleCurrent(connectedDevice, 0x01, callback);
 		}
 
 		sampleCurrentCurve = function(callback) {
