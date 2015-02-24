@@ -264,18 +264,25 @@ CrownStone.prototype = {
 						r[++j] = '<col width="50%">';
 						r[++j] = '<col width="30%">';
 						r[++j] = '<tr><th align="left">Nr</th><th align="left">MAC</th><th align="left">RSSI</th></tr>';
+
+						var uint8toString = function(nbr) {
+							var str = nbr.toString(16).toUpperCase();
+							return str.length < 2 ? '0' + str : str;
+						};
 						for (var i = 0; i < elements; i++) {
 							var idx = 1 + i * 9;
-							var mac = "{0}-{1}-{2}-{3}-{4}-{5}".format(list[idx].toString(16).toUpperCase(), list[idx+1].toString(16).toUpperCase(), 
-																	   list[idx+2].toString(16).toUpperCase(), list[idx+3].toString(16).toUpperCase(), 
-																	   list[idx+4].toString(16).toUpperCase(), list[idx+5].toString(16).toUpperCase());
+							var mac = "{0}-{1}-{2}-{3}-{4}-{5}".format(uint8toString(list[idx]), uint8toString(list[idx+1]), 
+																	   uint8toString(list[idx+2]), uint8toString(list[idx+3]), 
+																	   uint8toString(list[idx+4]), uint8toString(list[idx+5]));
 							var rssi = list[idx+6];
 							if (rssi > 127) {
 								rssi -= 256;
 							}
 							console.log("list item {0}: mac={1}, rssi={2}".format(i+1, mac, rssi));
 
-							r[++j] ='<tr><td>';
+							r[++j] ='<tr id="';
+							r[++j] = mac;
+							r[++j] = '"><td>';
 							r[++j] = i+1;
 							r[++j] = '</td><td>';
 							r[++j] = mac;
@@ -286,18 +293,23 @@ CrownStone.prototype = {
 						}
 						trackedDevices.show();
 						trackedDevices.html(r.join(''));
+
+						$(document).on("click", "#trackedDevices tr", function(e) {
+							$('#trackAddress').val(this.id);
+						})
+
 					}
 				});
 			});
 
 			$('#addTrackedDevice').on('click', function(event) {
 				addTrackedDevice($('#trackAddress').val(), $('#trackRSSI').val());
-				tracking = !tracking;
-				if (tracking) {
-					$(this).html('Stop tracking');
-				} else {
-					$(this).html('Start tracking');
-				}
+//				tracking = !tracking;
+//				if (tracking) {
+//					$(this).html('Stop tracking');
+//				} else {
+//					$(this).html('Start tracking');
+//				}
 			});
 
 			// $('#findCrownstones').on('click', function(event) {
