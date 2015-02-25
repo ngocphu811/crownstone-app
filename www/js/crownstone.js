@@ -1,8 +1,3 @@
-function CrownStone() {
-	// globally shared object to get logos etc from partners (and ourselves)
-	this.partnersById = {};
-}
-
 Object.size = function(obj) {
     var size = 0, key;
     for (key in obj) {
@@ -24,18 +19,31 @@ if (!String.prototype.format) {
   };
 }
 
-CrownStone.prototype = {
+var ble;
+
+var crownstone = {
+
+	// globally shared object to get logos etc from partners (and ourselves)
+	partnersById: {},
+
 	/* Start should be called if all plugins are ready and all functionality can be called.
 	 */
 	start:function() {
-		var self = this;
+		// set up bluetooth connection
+		ble.init(function(enabled) {
+			$('#findCrownstones').prop("disabled", !enabled);
+		});
+	},
 
+	create:function() {
+		var self = this;
+	
 		console.log("---------------------------------------------------------");
 		console.log("----- Distributed Organisms B.V. (http://dobots.nl) -----");
 		console.log("---------------------------------------------------------");
 		console.log("Start CrownStone application");
 
-		var ble = new BLEHandler();
+		ble = new BLEHandler();
 
 		var repeatFunctionHandle = null;
 
@@ -48,9 +56,9 @@ CrownStone.prototype = {
 
 		// very important statement to make swiping work: 
 		// https://stackoverflow.com/questions/12838443/swipe-with-jquery-mobile-1-2-phonegap-2-1-and-android-4-0-4-not-working-properl
-		// document.ontouchmove = function(event) {    
+		//document.ontouchmove = function(event) {    
 		//         event.preventDefault();
-		/// };
+		//};
 
 		var powerStateOn = false;
 		var searching = false;
@@ -68,7 +76,7 @@ CrownStone.prototype = {
 			//	$('#findCrownstones').prop("disabled", !enabled);
 			//});
 		
-			// add menu options to side menu 
+			// add menu options to side menu that opens up at swiping
 			$('.sideMenu ul').append('<li><a href="#selectionPage">Overview</a></li>');
 			$('.sideMenu ul').append('<li><a href="#localizationPage">Localization</a></li>');
 			$('.sideMenu ul').append('<li><a href="#aboutPage">About</a></li>');
@@ -99,20 +107,18 @@ CrownStone.prototype = {
 		 	//$.mobile.changePage("#selectionPage", {transition:'slide', hashChange:true});
 		}
 		
-		//$(document).on('pagecreate', '#selectionPage' ,function(){
 		$("#selectionPage").on("pagecreate", function(event) {
 			// get partner information
 			console.log("Get partner information");
-			$.getJSON('data/partners.js', function(data) {
+			$.getJSON('data/partners.js', function(partners) {
 				console.log("Update data structure with partner information");
-				var partners = data;
 
 				for (var c = 0; c < partners.length; c++) {
 					var partner = partners[c];
 					self.partnersById[partner.id] = partner;
 				}
 			}).error(function() {
-				console.log("Does the file data/partners.js exist?");
+				console.log("Did you make an error in the data/partners.js file?");
 			}).success(function() {
 				console.log("Retrieved data structure successfully");
 			});
@@ -148,30 +154,19 @@ CrownStone.prototype = {
 					var closest_name = "";
 					for (var el in map) {
 						r[++j] ='<tr id="'
-					r[++j] = el;
-				r[++j] = '"><td>';
-				r[++j] = ++nr;
-				r[++j] = '</td><td>';
-				r[++j] = map[el]['name'] + '<br/>' + el;
-				r[++j] = '</td><td>';
-				r[++j] = map[el]['rssi'];
-				r[++j] = '</td></tr>';
+						r[++j] = el;
+						r[++j] = '"><td>';
+						r[++j] = ++nr;
+						r[++j] = '</td><td>';
+						r[++j] = map[el]['name'] + '<br/>' + el;
+						r[++j] = '</td><td>';
+						r[++j] = map[el]['rssi'];
+						r[++j] = '</td></tr>';
 
-				if (map[el]['rssi'] > closest_rssi) {
-					closest_rssi = map[el]['rssi'];
-					closest_name = map[el]['name'];
-
-						$(document).on("click", "#crownStoneTable tr", function(e) {
-							if (searching) {
-								searching = false;
-								stopSearch();
-							}
-							console.log('click');
-							connect(this.id);
-							$('#crownstone').show();
-						})
-					});
-				}
+						if (map[el]['rssi'] > closest_rssi) {
+							closest_rssi = map[el]['rssi'];
+							closest_name = map[el]['name'];
+						}
 					}
 					$('#crownStoneTable').show();
 					$('#crownStoneTable').html(r.join(''));
@@ -179,6 +174,7 @@ CrownStone.prototype = {
 					$('#closestCrownstone').html("Closest Crownstone: <b>" + closest_name + "</b>");
 
 					$(document).on("click", "#crownStoneTable tr", function(e) {
+						console.log('click');
 						if (searching) {
 							searching = false;
 							stopSearch();
@@ -633,7 +629,9 @@ CrownStone.prototype = {
 						var occurences = list[idx+7] << 8 || list[idx+8];
 						console.log("list item {0}: mac={1}, rssi={2}, occ={3}".format(i, mac, rssi, occurences));
 
-						r[++j] ='<tr><td>';
+						r[++j] ='<tr id="'
+						r[++j] = mac;
+						r[++j] = '"><td>';
 						r[++j] = i;
 						r[++j] = '</td><td>';
 						r[++j] = mac;
@@ -646,6 +644,11 @@ CrownStone.prototype = {
 					}
 					deviceTable.show();
 					deviceTable.html(r.join(''));
+
+					$(document).on("click", "#deviceTable tr", function(e) {
+						// cordova.plugins.clipboard.copy(this.id);
+					})
+
 					$('#scanDevices').prop("disabled", false);
 				}
 			});
@@ -927,14 +930,13 @@ CrownStone.prototype = {
 		 *
 		 * Shows information about company.
 		 */
-		$('#aboutPage').on("pagebeforeshow", function() {
-			// partner with id == 0, is us, DoBots!
-			var partnerId = 0;
+		$('#aboutPage').on("pagecreate", function() {
+			var partnerId = "dobots";
 			console.log('Show partner ' + partnerId);
 			var partner = self.partnersById[partnerId];
 			if (partner) {
 				if (partner.logo) {
-					$('#allPartnerLogo').attr('src', 'img/logos' + partner.logo);
+					$('#allPartnerLogo').attr('src', 'img/logos/' + partner.logo);
 				}
 				if (partner.name) {
 					$('#allPartnersDetailsPage .ui-title').text(partner.name);
@@ -964,6 +966,8 @@ CrownStone.prototype = {
 				console.error('Could not select ' + partnerId);
 			}
 		});
+
+		// start
 		start();	
 	}
 }

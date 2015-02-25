@@ -487,3 +487,9 @@ body {
 	border: 0px;
 }
 
+/* In general to have some whitespace at the left side for a text block
+ */
+#leftandrightmargins {
+	margin-left: 20px;
+	margin-right: 20px;
+}
