@@ -173,7 +173,7 @@
 								<label for="trackRSSI">RSSI:</label>
 								<input type="number" name="trackRSSI" id="trackRSSI" min="-127" max="127">
 							</form>
-							<button id="addTrackedDevice" class="ui-btn-active ui-state-persist" data-role="button">Start tracking</button>
+							<button id="addTrackedDevice" class="ui-btn-active ui-state-persist" data-role="button">Add/update tracked device</button>
 							<hr>
 						</div>
 						<div id="currentCurveTab" style="display: none">
@@ -222,12 +222,13 @@
 			</div>
 		</div>
 
-		<script type="text/javascript" src="js/index.js"></script>
 		<script type="text/javascript" src="js/ble.js"></script>
 		<script type="text/javascript" src="js/crownstone.js"></script>
+		<script type="text/javascript" src="js/index.js"></script>
 		<script type="text/javascript">
 			app.initialize();
-			
+	
+	/*		
 			function startAppInBrowser() {
 				console.log("In browser, start manually");
 				startApp();
@@ -245,6 +246,7 @@
 				//crownstone.create();
 				crownstone.start();
 			}
+			*/
 		</script>
 	</body>
 </html>
