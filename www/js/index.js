@@ -16,10 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
+// var crownstone;
+
 var app = {
+
 	// Application Constructor
 	initialize: function() {
 		this.bindEvents();
+
+		// crownstone = new CrownStone();
+		crownstone.create();
 	},
 	// Bind Event Listeners
 	//
@@ -39,6 +46,7 @@ var app = {
 				$('body').addClass('phonegap-ios-7');
 			}
 		}
+		crownstone.start();
 	},
 	// Update DOM on a Received Event
 	receivedEvent: function(id) {

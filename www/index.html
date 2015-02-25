@@ -175,21 +175,21 @@
 			</div>
 		</div>
 
-		<script type="text/javascript" src="js/index.js"></script>
 		<script type="text/javascript" src="js/ble.js"></script>
 		<script type="text/javascript" src="js/crownstone.js"></script>
+		<script type="text/javascript" src="js/index.js"></script>
 		<script type="text/javascript">
 			app.initialize();
 
-			function pluginsReady() {
-				console.log("Load plugins");
-				crownstone = new CrownStone();
-				crownstone.start();
-			}
+			// function pluginsReady() {
+			// 	console.log("Load plugins");
+				// crownstone = new CrownStone();
+				// crownstone.start();
+			// }
 
-			setTimeout(function () {
-				pluginsReady();
-			}, 3000);
+			// setTimeout(function () {
+			// 	pluginsReady();
+			// }, 3000);
 		</script>
 	</body>
 </html>

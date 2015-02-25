@@ -1,5 +1,4 @@
-function CrownStone() {
-}
+
 
 Object.size = function(obj) {
     var size = 0, key;
@@ -22,13 +21,23 @@ if (!String.prototype.format) {
   };
 }
 
-CrownStone.prototype = {
+var ble;
+
+var crownstone = {
+
 	start:function() {
+		// set up bluetooth connection
+		ble.init(function(enabled) {
+			$('#findCrownstones').prop("disabled", !enabled);
+		});
+	},
+
+	create:function() {
 		var self = this;
 
 		console.log("Start CrownStone application");
 
-		var ble = new BLEHandler();
+		ble = new BLEHandler();
 
 		var repeatFunctionHandle = null;
 
@@ -53,13 +62,17 @@ CrownStone.prototype = {
 
 		var connectedDevice = "";
 
+		$('#selectionPage').on('pagecreate', function() {
+			console.log("yabbadbabbadoo");
+		});
+
 		start = function() {
 			console.log("Create first page to find crownstones");
 			
-			// set up bluetooth connection
-			ble.init(function(enabled) {
-				$('#findCrownstones').prop("disabled", !enabled);
-			});
+			// // set up bluetooth connection
+			// ble.init(function(enabled) {
+			// 	$('#findCrownstones').prop("disabled", !enabled);
+			// });
 
 			$('#findCrownstones').on('click', function(event) {
 				if (searching) {
@@ -568,7 +581,9 @@ CrownStone.prototype = {
 						var occurences = list[idx+7] << 8 || list[idx+8];
 						console.log("list item {0}: mac={1}, rssi={2}, occ={3}".format(i, mac, rssi, occurences));
 
-						r[++j] ='<tr><td>';
+						r[++j] ='<tr id="'
+						r[++j] = mac;
+						r[++j] = '"><td>';
 						r[++j] = i;
 						r[++j] = '</td><td>';
 						r[++j] = mac;
@@ -581,6 +596,11 @@ CrownStone.prototype = {
 					}
 					deviceTable.show();
 					deviceTable.html(r.join(''));
+
+					$(document).on("click", "#deviceTable tr", function(e) {
+						// cordova.plugins.clipboard.copy(this.id);
+					})
+
 					$('#scanDevices').prop("disabled", false);
 				}
 			});
