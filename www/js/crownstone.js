@@ -48,6 +48,7 @@ CrownStone.prototype = {
 		var powerStateOn = false;
 		var searching = false;
 		var connected = false;
+		var connecting = false;
 		var tracking = false;
 
 		var connectedDevice = "";
@@ -115,6 +116,7 @@ CrownStone.prototype = {
 								searching = false;
 								stopSearch();
 							}
+							console.log('click');
 							connect(this.id);
 							$('#crownstone').show();
 						})
@@ -726,21 +728,35 @@ CrownStone.prototype = {
 		}
 
 		connect = function(address) {
-			if (!connected) {
-				connected = true;
+			if (!(connected || connecting)) {
+				connecting = true;
 				console.log("connecting to " + address);
 				// 
-				ble.connectDevice(address, function(connected) {
+				ble.connectDevice(address, function(success) {
 
-					if (connected) {
+					connecting = false;
+					if (success) {
+						connected = true
 						connectedDevice = address;
 						$.mobile.changePage("#controlPage", {transition:'slide', hashChange:true});
 					} else {
-						navigator.notification.alert(
-							'Could not connect to Crownstone',
-							null,
-							'BLE error',
-							'Sorry!');
+						if (!connected) {
+							navigator.notification.alert(
+								'Could not connect to Crownstone',
+								null,
+								'BLE error',
+								'Sorry!');
+						} else {
+							navigator.notification.alert(
+								'Crownstone disconnected!!',
+								function() {
+									// go back to selection page
+									$('#crownstone').hide();
+									history.back();
+								},
+								'BLE error',
+								'Try again!');
+						}
 					}
 
 				});
