@@ -26,7 +26,7 @@ var crownstone = {
 	// array with info of partners (and ourselves), like address, logo, description, etc.
 	partnersById: {},
 
-	// crownstones in proximity
+	// map of crownstones 
 	crownstones: {},
 
 	/* Start should be called if all plugins are ready and all functionality can be called.
@@ -35,6 +35,7 @@ var crownstone = {
 		// set up bluetooth connection
 		ble.init(function(enabled) {
 			$('#findCrownstones').prop("disabled", !enabled);
+			$('#localizeBtn').prop("disabled", !enabled);
 		});
 	},
 
@@ -68,6 +69,8 @@ var crownstone = {
 		var connected = false;
 		var connecting = false;
 		var tracking = false;
+
+		var localizing = false;
 
 		var connectedDevice = "";
 
@@ -182,10 +185,35 @@ var crownstone = {
 							searching = false;
 							stopSearch();
 						}
-						connect(this.id);
+						connect(this.id, gotoControlPage, connectionFailed);
 						$('#crownstone').show();
 					})
 				});
+			}
+		}
+
+		gotoControlPage = function() {
+			$.mobile.changePage("#controlPage", {transition:'slide', hashChange:true});
+
+		}
+
+		connectionFailed = function() {
+			if (!connected) {
+				navigator.notification.alert(
+						'Could not connect to Crownstone',
+						null,
+						'BLE error',
+						'Sorry!');
+			} else {
+				navigator.notification.alert(
+						'Crownstone disconnected!!',
+						function() {
+							// go back to selection page
+							$('#crownstone').hide();
+							history.back();
+						},
+						'BLE error',
+						'Try again!');
 			}
 		}
 
@@ -782,7 +810,7 @@ var crownstone = {
 			//	 an rssi update every second
 			// if (device.model == "Nexus 4") {
 				findTimer = setInterval(function() {
-					console.log("restart");
+					//console.log("restart");
 					ble.stopEndlessScan();
 					ble.startEndlessScan(callback);
 				}, 1000);
@@ -798,7 +826,7 @@ var crownstone = {
 			$('#findCrownstones').html("Find Crownstones");
 		}
 
-		connect = function(address) {
+		connect = function(address, successCB, errorCB) {
 			if (!(connected || connecting)) {
 				connecting = true;
 				console.log("connecting to " + address);
@@ -809,25 +837,9 @@ var crownstone = {
 					if (success) {
 						connected = true
 						connectedDevice = address;
-						$.mobile.changePage("#controlPage", {transition:'slide', hashChange:true});
+						successCB();
 					} else {
-						if (!connected) {
-							navigator.notification.alert(
-								'Could not connect to Crownstone',
-								null,
-								'BLE error',
-								'Sorry!');
-						} else {
-							navigator.notification.alert(
-								'Crownstone disconnected!!',
-								function() {
-									// go back to selection page
-									$('#crownstone').hide();
-									history.back();
-								},
-								'BLE error',
-								'Try again!');
-						}
+						errorCB();
 					}
 
 				});
@@ -925,6 +937,20 @@ var crownstone = {
 			ble.getCurrentCurve(connectedDevice, callback);
 		}
 
+		/* Getting a floor in the configuration characteristic
+		 *
+		 *  + requires connecting to the device 
+		 */
+		getFloor = function(callback, errorCB) {
+			if (!connectedDevice) {
+				msg = "No device connected";
+				errorCB(msg);
+			} else {
+				console.log("Get floor level");
+				ble.getFloor(connectedDevice, callback, errorCB);
+			}
+		}
+
 		/*******************************************************************************************************
 		 * Create about page
 		 ******************************************************************************************************/
@@ -974,14 +1000,75 @@ var crownstone = {
 		 * Create indoor localization page
 		 ******************************************************************************************************/
 
-		/* About page
+		/* Indoor localization page
 		 *
-		 * Shows information about company.
+		 * Searches for crownstones in the neighborhood
 		 */
 		$('#indoorLocalizationPage').on("pagecreate", function() {
 			console.log("Create indoor localization page");
 
+			$('#localizeBtn').on('click', function(event) {
+				console.log("User clicks button to start or stop localization");
+				if (!localizing) {
+					startLocalization();
+				} else {
+					stopLocalization();
+				}
+			});
 		});
+
+		startLocalization = function() {
+			localizing = true;
+			// find crownstones by scanning for them
+			findCrownstones(function(obj) {
+
+				// update map of crownstones
+				if (!existCrownstone(obj)) {
+					addCrownstone(obj);
+					var address = obj.address;
+					connect(address, 
+						function connectionSuccess() {
+							getFloor(function(floor) {
+								console.log("Floor found: " + floor);
+								disconnect();
+							}, function(msg) {
+								disconnect();
+								generalErrorCB(msg);
+							});
+						},
+						function connectionFailure(msg) {
+							// no need to disconnect
+							generalErrorCB(msg);
+						});
+				} else {
+					updateCrownstone(obj);
+				}
+			});
+		}
+
+		generalErrorCB = function(msg) {
+			console.log(msg);
+		}
+
+		stopLocalization = function() {
+			// stop scanning
+			stopSearch();
+			localizing = false;
+		}
+
+		existCrownstone = function(device) {
+			return (self.crownstones.hasOwnProperty(device.address));
+		}
+
+		addCrownstone = function(device) {
+			console.log("Add crownstone: " + device.address);
+			self.crownstones[device.address] = {'name': device.name, 'rssi': device.rssi};
+		}
+
+		updateCrownstone = function(device) {
+			self.crownstones[device.address]['rssi'] = device.rssi;
+		}
+
 
 		// start
 		start();	
