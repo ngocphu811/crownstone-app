@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////
-// Indoor Localisation Service
-var indoorLocalisationServiceUuid = '7e170000-429c-41aa-83d7-d91220abeb33';
-// Indoor Localisation Service - Characteristics
+// Indoor Localization Service
+var indoorLocalizationServiceUuid = '7e170000-429c-41aa-83d7-d91220abeb33';
+// Indoor Localization Service - Characteristics
 var rssiUuid = '7e170001-429c-41aa-83d7-d91220abeb33';
 var addTrackedDeviceUuid = '7e170002-429c-41aa-83d7-d91220abeb33';
 var deviceScanUuid = '7e170003-429c-41aa-83d7-d91220abeb33';
@@ -332,8 +332,8 @@ var BLEHandler = function() {
 		var u8 = new Uint8Array(1);
 		u8[0] = scan ? 1 : 0;
 		var v = bluetoothle.bytesToEncodedString(u8);
-		console.log("Write " + v + " at service " + indoorLocalisationServiceUuid + ' and characteristic ' + deviceScanUuid );
-		var paramsObj = {"address": address, "serviceUuid": indoorLocalisationServiceUuid, "characteristicUuid": deviceScanUuid , "value" : v};
+		console.log("Write " + v + " at service " + indoorLocalizationServiceUuid + ' and characteristic ' + deviceScanUuid );
+		var paramsObj = {"address": address, "serviceUuid": indoorLocalizationServiceUuid, "characteristicUuid": deviceScanUuid , "value" : v};
 		bluetoothle.write(function(obj) { // write success
 				if (obj.status == 'written') {
 					console.log('Successfully written to device scan characteristic - ' + obj.status);
@@ -348,8 +348,8 @@ var BLEHandler = function() {
 	}
 
 	self.listDevices = function(address, callback) {
-		console.log("Read device list at service " + indoorLocalisationServiceUuid + ' and characteristic ' + deviceListUuid );
-		var paramsObj = {"address": address, "serviceUuid": indoorLocalisationServiceUuid, "characteristicUuid": deviceListUuid };
+		console.log("Read device list at service " + indoorLocalizationServiceUuid + ' and characteristic ' + deviceListUuid );
+		var paramsObj = {"address": address, "serviceUuid": indoorLocalizationServiceUuid, "characteristicUuid": deviceListUuid };
 		bluetoothle.read(function(obj) { // read success
 				if (obj.status == "read")
 				{
@@ -646,8 +646,8 @@ var BLEHandler = function() {
 	}
 
 	self.getTrackedDevices = function(address, callback) {
-		console.log("Read device list at service " + indoorLocalisationServiceUuid + ' and characteristic ' + listTrackedDevicesUuid );
-		var paramsObj = {"address": address, "serviceUuid": indoorLocalisationServiceUuid, "characteristicUuid": listTrackedDevicesUuid };
+		console.log("Read device list at service " + indoorLocalizationServiceUuid + ' and characteristic ' + listTrackedDevicesUuid );
+		var paramsObj = {"address": address, "serviceUuid": indoorLocalizationServiceUuid, "characteristicUuid": listTrackedDevicesUuid };
 		bluetoothle.read(function(obj) { // read success
 				if (obj.status == "read")
 				{
@@ -676,8 +676,8 @@ var BLEHandler = function() {
 		}
 		u8[6] = rssi;
 		var v = bluetoothle.bytesToEncodedString(u8);
-		console.log("Write " + v + " at service " + indoorLocalisationServiceUuid + ' and characteristic ' + addTrackedDeviceUuid );
-		var paramsObj = {"address": address, "serviceUuid": indoorLocalisationServiceUuid, "characteristicUuid": addTrackedDeviceUuid , "value" : v};
+		console.log("Write " + v + " at service " + indoorLocalizationServiceUuid + ' and characteristic ' + addTrackedDeviceUuid );
+		var paramsObj = {"address": address, "serviceUuid": indoorLocalizationServiceUuid, "characteristicUuid": addTrackedDeviceUuid , "value" : v};
 		bluetoothle.write(function(obj) { // write success
 				if (obj.status == 'written') {
 					console.log('Successfully written to add tracked device characteristic - ' + obj.status);

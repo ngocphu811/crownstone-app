@@ -99,6 +99,27 @@
 			</div>
 		</div>
 
+		<!--
+			Indoor localization page
+  			  + Localization on the level of floors
+			Beforehand you will have to set the configuration characteristic to the right floor level.
+		-->
+		<div data-role="page" id="indoorLocalizationPage">
+			<div data-role="header" data-add-back-btn="true" data-position='fixed'>
+				<h1 class="ui-title" role="heading" aria-level="1">Indoor Localization</h1>
+			</div>
+
+			<div>
+				<p>Localization on the moment is on the level of floors.</p>
+			</div>
+
+			<div data-role="panel" class="virtualMemoPanel" data-display="reveal" data-theme="b">
+				<div id="statusBarFill"></div>
+				<ul data-role="listview">
+				</ul>
+			</div>
+		</div>
+
 		<!-- Control switch -->
 		<div data-role="page" id="controlPage">
 			<div data-role="header" data-position='fixed'>

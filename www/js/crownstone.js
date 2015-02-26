@@ -23,8 +23,11 @@ var ble;
 
 var crownstone = {
 
-	// globally shared object to get logos etc from partners (and ourselves)
+	// array with info of partners (and ourselves), like address, logo, description, etc.
 	partnersById: {},
+
+	// crownstones in proximity
+	crownstones: {},
 
 	/* Start should be called if all plugins are ready and all functionality can be called.
 	 */
@@ -78,7 +81,7 @@ var crownstone = {
 		
 			// add menu options to side menu that opens up at swiping
 			$('.sideMenu ul').append('<li><a href="#selectionPage">Overview</a></li>');
-			$('.sideMenu ul').append('<li><a href="#localizationPage">Localization</a></li>');
+			$('.sideMenu ul').append('<li><a href="#indoorLocalizationPage">Localization</a></li>');
 			$('.sideMenu ul').append('<li><a href="#aboutPage">About</a></li>');
 			
 			// add swipe gesture to all pages with a panel
@@ -458,7 +461,7 @@ var crownstone = {
 			discoverServices(function(serviceUuid, characteristicUuid) {
 				console.log("updating: " + serviceUuid + ' : ' + characteristicUuid);
 
-				if (serviceUuid == indoorLocalisationServiceUuid) {
+				if (serviceUuid == indoorLocalizationServiceUuid) {
 					if (characteristicUuid == deviceScanUuid) {
 						$('#scanDevicesTab').show();
 					} 
@@ -965,6 +968,19 @@ var crownstone = {
 			} else {
 				console.error('Could not select ' + partnerId);
 			}
+		});
+
+		/*******************************************************************************************************
+		 * Create indoor localization page
+		 ******************************************************************************************************/
+
+		/* About page
+		 *
+		 * Shows information about company.
+		 */
+		$('#indoorLocalizationPage').on("pagecreate", function() {
+			console.log("Create indoor localization page");
+
 		});
 
 		// start
