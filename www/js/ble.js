@@ -542,7 +542,6 @@ var BLEHandler = function() {
 						errorCB(msg);
 					} else {
 						var floor = configuration.payload[0];
-						console.log("Found floor level: " + floor);
 						successCB(floor);
 					}
 				}, 

@@ -36,6 +36,7 @@ var crownstone = {
 		ble.init(function(enabled) {
 			$('#findCrownstones').prop("disabled", !enabled);
 			$('#localizeBtn').prop("disabled", !enabled);
+			$('#searchFloorBtn').prop("disabled", !enabled);
 		});
 	},
 
@@ -1021,18 +1022,68 @@ var crownstone = {
 		$('#indoorLocalizationPage').on("pagecreate", function() {
 			console.log("Create indoor localization page");
 
-			$('#localizeBtn').on('click', function(event) {
-				console.log("User clicks button to start or stop localization");
+			// create table to represent floor of building
+			var table = $('<table></table>'); //.addClass('buildingTable');
+			var floor_cnt = 5;
+			var column_cnt = 2;
+			var row;
+			var field;
+			var style;
+			style  = $('<col width="20%">');
+			table.append(style);
+			style = $('<col width="80%">');
+			table.append(style);
+			// header
+			row = $('<tr></tr>');
+			// no seperate th fields, first td is automatically header in css
+			field = $('<td></td>').text("Floor"); 
+			row.append(field);
+			field = $('<td></td>').text("Nodes");
+			row.append(field);
+			table.append(row);
+
+			// assume floor starts at -1
+			for (i = floor_cnt-1; i >= -1; i--) {
+				row = $('<tr></tr>');
+				field = $('<td></td>').text(i);
+				row.append(field);
+				field = $('<td></td>').addClass('buildingField').text('');
+				row.append(field);
+				field.prop('id', 'buildingField' + i);
+				table.append(row);
+			}			
+
+			$('#building').append(table);
+
+			$('#searchFloorBtn').on('click', function(event) {
+				console.log("User clicks button to start/stop search crownstones for localization");
 				if (!localizing) {
 					startLocalization();
 				} else {
 					stopLocalization();
 				}
 			});
+
+			$('#localizeBtn').on('click', function(event) {
+				console.log("User clicks button to start/stop to use found crownstones for localization");
+			});
+
 		});
+
+		updateTable = function(floor, device) {
+			console.log("Device", device);
+			var jqueryID = '#buildingField' + floor;
+			var txt = $(jqueryID).text();
+			if (device.name) {
+				$(jqueryID).text(device.name + ' ' + txt);
+			} else {
+				$(jqueryID).text('unknown device ' + txt);
+			}
+		}
 
 		startLocalization = function() {
 			localizing = true;
+
 			// find crownstones by scanning for them
 			findCrownstones(function(obj) {
 
@@ -1047,6 +1098,7 @@ var crownstone = {
 						function() {
 							getFloor(function(floor) {
 								console.log("Floor found: " + floor);
+								updateTable(floor, obj);
 								disconnect();
 							}, function(msg) {
 								generalErrorCB(msg);
