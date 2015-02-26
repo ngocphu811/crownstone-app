@@ -1,3 +1,5 @@
+
+
 Object.size = function(obj) {
     var size = 0, key;
     for (key in obj) {
@@ -68,30 +70,22 @@ var crownstone = {
 
 		var connectedDevice = "";
 
-		start = function() {
-			console.log("Setup general functionality, enable bluetooth, set event handlers, etc.");
-			
-			// set up bluetooth connection
-			//ble.init(function(enabled) {
-			//	$('#findCrownstones').prop("disabled", !enabled);
-			//});
+		// add menu options to side menu that opens up at swiping
+		$('.sideMenu ul').append('<li><a href="#selectionPage">Overview</a></li>');
+		$('.sideMenu ul').append('<li><a href="#localizationPage">Localization</a></li>');
+		$('.sideMenu ul').append('<li><a href="#aboutPage">About</a></li>');
 		
-			// add menu options to side menu that opens up at swiping
-			$('.sideMenu ul').append('<li><a href="#selectionPage">Overview</a></li>');
-			$('.sideMenu ul').append('<li><a href="#localizationPage">Localization</a></li>');
-			$('.sideMenu ul').append('<li><a href="#aboutPage">About</a></li>');
-			
-			// add swipe gesture to all pages with a panel
-			console.log("Add swipe gesture to all pages with side panel");
-			$(document).delegate('[data-role="page"]', 'pageinit', function () {
-				//check for a `data-role="panel"` element to add swiperight action to
-				var $panel = $(this).children('[data-role="panel"]');
-				if ($panel.length) {
-					$(this).on('swiperight', function(event) {
-						$panel.panel("open");
-					});
-				}    
-			});
+		// add swipe gesture to all pages with a panel
+		console.log("Add swipe gesture to all pages with side panel");
+		$(document).delegate('[data-role="page"]', 'pageinit', function () {
+			//check for a `data-role="panel"` element to add swiperight action to
+			var $panel = $(this).children('[data-role="panel"]');
+			if ($panel.length) {
+				$(this).on('swiperight', function(event) {
+					$panel.panel("open");
+				});
+			}    
+		});
 
 //			$.ajaxSetup({
 //				"error": function() {
@@ -99,15 +93,8 @@ var crownstone = {
 //				}
 //			});
 
-			console.log("Add event handler to on-click event for a listed crownstone");
-			$('#findCrownstones').on('click', function(event) {
-				console.log("User clicks button to start searching for crownstones");
-				searchCrownstones();
-			});
-		 	//$.mobile.changePage("#selectionPage", {transition:'slide', hashChange:true});
-		}
-		
-		$("#selectionPage").on("pagecreate", function(event) {
+		$('#selectionPage').on('pagecreate', function() {
+			
 			// get partner information
 			console.log("Get partner information");
 			$.getJSON('data/partners.js', function(partners) {
@@ -122,6 +109,12 @@ var crownstone = {
 			}).success(function() {
 				console.log("Retrieved data structure successfully");
 			});
+
+			console.log("Add event handler to on-click event for a listed crownstone");
+			$('#findCrownstones').on('click', function(event) {
+				searchCrownstones();
+			});
+
 		});
 
 		searchCrownstones = function() {
@@ -313,13 +306,14 @@ var crownstone = {
 				});
 			});
 
+			var TRACK_DEVICE_LEN = 7;
 			$('#getTrackedDevices').on('click', function(event) {
 				getTrackedDevices(function(list) {
 					var size = Object.size(list);
 					var elements = list[0];
 					var trackedDevices = $('#trackedDevices');
-					if (elements * 7 + 1 != size) {
-						console.log("size error, arraySize: " + size + "but should be: " + Number(list[0] * 7 + 1));
+					if (elements * TRACK_DEVICE_LEN + 1 != size) {
+						console.log("size error, arraySize: " + size + "but should be: " + Number(list[0] * TRACK_DEVICE_LEN + 1));
 					} else {
 						// deviceTable.remove();
 						var r = new Array(), j = -1;
@@ -333,7 +327,7 @@ var crownstone = {
 							return str.length < 2 ? '0' + str : str;
 						};
 						for (var i = 0; i < elements; i++) {
-							var idx = 1 + i * 9;
+							var idx = 1 + i * TRACK_DEVICE_LEN;
 							var mac = "{0}-{1}-{2}-{3}-{4}-{5}".format(uint8toString(list[idx]), uint8toString(list[idx+1]), 
 																	   uint8toString(list[idx+2]), uint8toString(list[idx+3]), 
 																	   uint8toString(list[idx+4]), uint8toString(list[idx+5]));
@@ -646,7 +640,7 @@ var crownstone = {
 					deviceTable.html(r.join(''));
 
 					$(document).on("click", "#deviceTable tr", function(e) {
-						// cordova.plugins.clipboard.copy(this.id);
+						cordova.plugins.clipboard.copy(this.id);
 					})
 
 					$('#scanDevices').prop("disabled", false);
@@ -872,6 +866,11 @@ var crownstone = {
 				return;
 			}
 
+			if (address.length == 0) {
+				console.log("no address provided");
+				return;
+			}
+
 			if (address.indexOf(':') > -1) {
 				var bt_address = address.split(':');
 				if (bt_address.length != 6) {
@@ -922,53 +921,6 @@ var crownstone = {
 			ble.getCurrentCurve(connectedDevice, callback);
 		}
 
-		/*******************************************************************************************************
-		 * Create about page
-		 ******************************************************************************************************/
-
-		/* About page
-		 *
-		 * Shows information about company.
-		 */
-		$('#aboutPage').on("pagecreate", function() {
-			var partnerId = "dobots";
-			console.log('Show partner ' + partnerId);
-			var partner = self.partnersById[partnerId];
-			if (partner) {
-				if (partner.logo) {
-					$('#allPartnerLogo').attr('src', 'img/logos/' + partner.logo);
-				}
-				if (partner.name) {
-					$('#allPartnersDetailsPage .ui-title').text(partner.name);
-				}
-				if (partner.description) {
-					$('#allPartnerDescription').text(partner.description);
-				}
-				if (partner.address) {
-					$('#allPartnerAddress').text(partner.address);
-				}
-				if (partner.tel) {
-					var spaceless_tel = partner.tel.replace(/\s+/g, '');
-					var clickable_tel = '<a href="tel:' + spaceless_tel + '">tel: ' + 
-						partner.tel + '</a>';
-					$('#allPartnerTel').html(clickable_tel);
-				}
-				if (partner.website) {
-					$('#allPartnerWebsite').html('<a href="' + partner.website + '">' +
-						partner.website + '</a>');
-				}
-				if (partner.email) {
-					$('#allPartnerEmail').html('<a href="mailto:' + partner.email + 
-						'?Subject=Memo">' +
-						partner.email + '</a>');
-				}
-			} else {
-				console.error('Could not select ' + partnerId);
-			}
-		});
-
-		// start
-		start();	
 	}
 }
 
