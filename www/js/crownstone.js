@@ -1,5 +1,3 @@
-
-
 Object.size = function(obj) {
     var size = 0, key;
     for (key in obj) {
@@ -25,8 +23,11 @@ var ble;
 
 var crownstone = {
 
-	// globally shared object to get logos etc from partners (and ourselves)
+	// array with info of partners (and ourselves), like address, logo, description, etc.
 	partnersById: {},
+
+	// map of crownstones 
+	crownstones: {},
 
 	/* Start should be called if all plugins are ready and all functionality can be called.
 	 */
@@ -34,6 +35,7 @@ var crownstone = {
 		// set up bluetooth connection
 		ble.init(function(enabled) {
 			$('#findCrownstones').prop("disabled", !enabled);
+			$('#localizeBtn').prop("disabled", !enabled);
 		});
 	},
 
@@ -68,24 +70,34 @@ var crownstone = {
 		var connecting = false;
 		var tracking = false;
 
+		var localizing = false;
+
 		var connectedDevice = "";
 
-		// add menu options to side menu that opens up at swiping
-		$('.sideMenu ul').append('<li><a href="#selectionPage">Overview</a></li>');
-		$('.sideMenu ul').append('<li><a href="#localizationPage">Localization</a></li>');
-		$('.sideMenu ul').append('<li><a href="#aboutPage">About</a></li>');
+		start = function() {
+			console.log("Setup general functionality, enable bluetooth, set event handlers, etc.");
+			
+			// set up bluetooth connection
+			//ble.init(function(enabled) {
+			//	$('#findCrownstones').prop("disabled", !enabled);
+			//});
 		
-		// add swipe gesture to all pages with a panel
-		console.log("Add swipe gesture to all pages with side panel");
-		$(document).delegate('[data-role="page"]', 'pageinit', function () {
-			//check for a `data-role="panel"` element to add swiperight action to
-			var $panel = $(this).children('[data-role="panel"]');
-			if ($panel.length) {
-				$(this).on('swiperight', function(event) {
-					$panel.panel("open");
-				});
-			}    
-		});
+			// add menu options to side menu that opens up at swiping
+			$('.sideMenu ul').append('<li><a href="#selectionPage">Overview</a></li>');
+			$('.sideMenu ul').append('<li><a href="#indoorLocalizationPage">Localization</a></li>');
+			$('.sideMenu ul').append('<li><a href="#aboutPage">About</a></li>');
+			
+			// add swipe gesture to all pages with a panel
+			console.log("Add swipe gesture to all pages with side panel");
+			$(document).delegate('[data-role="page"]', 'pageinit', function () {
+				//check for a `data-role="panel"` element to add swiperight action to
+				var $panel = $(this).children('[data-role="panel"]');
+				if ($panel.length) {
+					$(this).on('swiperight', function(event) {
+						$panel.panel("open");
+					});
+				}    
+			});
 
 //			$.ajaxSetup({
 //				"error": function() {
@@ -93,8 +105,15 @@ var crownstone = {
 //				}
 //			});
 
-		$('#selectionPage').on('pagecreate', function() {
-			
+			console.log("Add event handler to on-click event for a listed crownstone");
+			$('#findCrownstones').on('click', function(event) {
+				console.log("User clicks button to start searching for crownstones");
+				searchCrownstones();
+			});
+		 	//$.mobile.changePage("#selectionPage", {transition:'slide', hashChange:true});
+		}
+		
+		$("#selectionPage").on("pagecreate", function(event) {
 			// get partner information
 			console.log("Get partner information");
 			$.getJSON('data/partners.js', function(partners) {
@@ -109,12 +128,6 @@ var crownstone = {
 			}).success(function() {
 				console.log("Retrieved data structure successfully");
 			});
-
-			console.log("Add event handler to on-click event for a listed crownstone");
-			$('#findCrownstones').on('click', function(event) {
-				searchCrownstones();
-			});
-
 		});
 
 		searchCrownstones = function() {
@@ -172,10 +185,35 @@ var crownstone = {
 							searching = false;
 							stopSearch();
 						}
-						connect(this.id);
+						connect(this.id, gotoControlPage, connectionFailed);
 						$('#crownstone').show();
 					})
 				});
+			}
+		}
+
+		gotoControlPage = function() {
+			$.mobile.changePage("#controlPage", {transition:'slide', hashChange:true});
+
+		}
+
+		connectionFailed = function() {
+			if (!connected) {
+				navigator.notification.alert(
+						'Could not connect to Crownstone',
+						null,
+						'BLE error',
+						'Sorry!');
+			} else {
+				navigator.notification.alert(
+						'Crownstone disconnected!!',
+						function() {
+							// go back to selection page
+							$('#crownstone').hide();
+							history.back();
+						},
+						'BLE error',
+						'Try again!');
 			}
 		}
 
@@ -452,7 +490,7 @@ var crownstone = {
 			discoverServices(function(serviceUuid, characteristicUuid) {
 				console.log("updating: " + serviceUuid + ' : ' + characteristicUuid);
 
-				if (serviceUuid == indoorLocalisationServiceUuid) {
+				if (serviceUuid == indoorLocalizationServiceUuid) {
 					if (characteristicUuid == deviceScanUuid) {
 						$('#scanDevicesTab').show();
 					} 
@@ -640,7 +678,7 @@ var crownstone = {
 					deviceTable.html(r.join(''));
 
 					$(document).on("click", "#deviceTable tr", function(e) {
-						cordova.plugins.clipboard.copy(this.id);
+						// cordova.plugins.clipboard.copy(this.id);
 					})
 
 					$('#scanDevices').prop("disabled", false);
@@ -773,7 +811,7 @@ var crownstone = {
 			//	 an rssi update every second
 			// if (device.model == "Nexus 4") {
 				findTimer = setInterval(function() {
-					console.log("restart");
+					//console.log("restart");
 					ble.stopEndlessScan();
 					ble.startEndlessScan(callback);
 				}, 1000);
@@ -789,7 +827,7 @@ var crownstone = {
 			$('#findCrownstones').html("Find Crownstones");
 		}
 
-		connect = function(address) {
+		connect = function(address, successCB, errorCB) {
 			if (!(connected || connecting)) {
 				connecting = true;
 				console.log("connecting to " + address);
@@ -800,25 +838,9 @@ var crownstone = {
 					if (success) {
 						connected = true
 						connectedDevice = address;
-						$.mobile.changePage("#controlPage", {transition:'slide', hashChange:true});
+						successCB();
 					} else {
-						if (!connected) {
-							navigator.notification.alert(
-								'Could not connect to Crownstone',
-								null,
-								'BLE error',
-								'Sorry!');
-						} else {
-							navigator.notification.alert(
-								'Crownstone disconnected!!',
-								function() {
-									// go back to selection page
-									$('#crownstone').hide();
-									history.back();
-								},
-								'BLE error',
-								'Try again!');
-						}
+						errorCB();
 					}
 
 				});
@@ -921,6 +943,141 @@ var crownstone = {
 			ble.getCurrentCurve(connectedDevice, callback);
 		}
 
+		/* Getting a floor in the configuration characteristic
+		 *
+		 *  + requires connecting to the device 
+		 */
+		getFloor = function(callback, errorCB) {
+			if (!connectedDevice) {
+				msg = "No device connected";
+				errorCB(msg);
+			} else {
+				console.log("Get floor level");
+				ble.getFloor(connectedDevice, callback, errorCB);
+			}
+		}
+
+		/*******************************************************************************************************
+		 * Create about page
+		 ******************************************************************************************************/
+
+		/* About page
+		 *
+		 * Shows information about company.
+		 */
+		$('#aboutPage').on("pagecreate", function() {
+			var partnerId = "dobots";
+			console.log('Show partner ' + partnerId);
+			var partner = self.partnersById[partnerId];
+			if (partner) {
+				if (partner.logo) {
+					$('#allPartnerLogo').attr('src', 'img/logos/' + partner.logo);
+				}
+				if (partner.name) {
+					$('#allPartnersDetailsPage .ui-title').text(partner.name);
+				}
+				if (partner.description) {
+					$('#allPartnerDescription').text(partner.description);
+				}
+				if (partner.address) {
+					$('#allPartnerAddress').text(partner.address);
+				}
+				if (partner.tel) {
+					var spaceless_tel = partner.tel.replace(/\s+/g, '');
+					var clickable_tel = '<a href="tel:' + spaceless_tel + '">tel: ' + 
+						partner.tel + '</a>';
+					$('#allPartnerTel').html(clickable_tel);
+				}
+				if (partner.website) {
+					$('#allPartnerWebsite').html('<a href="' + partner.website + '">' +
+						partner.website + '</a>');
+				}
+				if (partner.email) {
+					$('#allPartnerEmail').html('<a href="mailto:' + partner.email + 
+						'?Subject=Memo">' +
+						partner.email + '</a>');
+				}
+			} else {
+				console.error('Could not select ' + partnerId);
+			}
+		});
+
+		/*******************************************************************************************************
+		 * Create indoor localization page
+		 ******************************************************************************************************/
+
+		/* Indoor localization page
+		 *
+		 * Searches for crownstones in the neighborhood
+		 */
+		$('#indoorLocalizationPage').on("pagecreate", function() {
+			console.log("Create indoor localization page");
+
+			$('#localizeBtn').on('click', function(event) {
+				console.log("User clicks button to start or stop localization");
+				if (!localizing) {
+					startLocalization();
+				} else {
+					stopLocalization();
+				}
+			});
+		});
+
+		startLocalization = function() {
+			localizing = true;
+			// find crownstones by scanning for them
+			findCrownstones(function(obj) {
+
+				// update map of crownstones
+				if (!existCrownstone(obj)) {
+					addCrownstone(obj);
+					var address = obj.address;
+					connect(address, 
+						function connectionSuccess() {
+							getFloor(function(floor) {
+								console.log("Floor found: " + floor);
+								disconnect();
+							}, function(msg) {
+								disconnect();
+								generalErrorCB(msg);
+							});
+						},
+						function connectionFailure(msg) {
+							// no need to disconnect
+							generalErrorCB(msg);
+						});
+				} else {
+					updateCrownstone(obj);
+				}
+			});
+		}
+
+		generalErrorCB = function(msg) {
+			console.log(msg);
+		}
+
+		stopLocalization = function() {
+			// stop scanning
+			stopSearch();
+			localizing = false;
+		}
+
+		existCrownstone = function(device) {
+			return (self.crownstones.hasOwnProperty(device.address));
+		}
+
+		addCrownstone = function(device) {
+			console.log("Add crownstone: " + device.address);
+			self.crownstones[device.address] = {'name': device.name, 'rssi': device.rssi};
+		}
+
+		updateCrownstone = function(device) {
+			self.crownstones[device.address]['rssi'] = device.rssi;
+		}
+
+
+		// start
+		start();	
 	}
 }
 

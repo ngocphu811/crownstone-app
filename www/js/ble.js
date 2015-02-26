@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////
-// Indoor Localisation Service
-var indoorLocalisationServiceUuid = '7e170000-429c-41aa-83d7-d91220abeb33';
-// Indoor Localisation Service - Characteristics
+// Indoor Localization Service
+var indoorLocalizationServiceUuid = '7e170000-429c-41aa-83d7-d91220abeb33';
+// Indoor Localization Service - Characteristics
 var rssiUuid = '7e170001-429c-41aa-83d7-d91220abeb33';
 var addTrackedDeviceUuid = '7e170002-429c-41aa-83d7-d91220abeb33';
 var deviceScanUuid = '7e170003-429c-41aa-83d7-d91220abeb33';
@@ -15,6 +15,9 @@ var generalServiceUuid = 'f5f90000-59f9-11e4-aa15-123b93f75cba';
 // General Service - Characteristics
 var temperatureCharacteristicUuid = 'f5f90001-59f9-11e4-aa15-123b93f75cba';
 var changeNameCharacteristicUuid = 'f5f90002-59f9-11e4-aa15-123b93f75cba';
+var setConfigurationCharacteristicUuid = 'f5f90007-59f9-11e4-aa15-123b93f75cba';
+var selectConfigurationCharacteristicUuid = 'f5f90008-59f9-11e4-aa15-123b93f75cba';
+var getConfigurationCharacteristicUuid = 'f5f90009-59f9-11e4-aa15-123b93f75cba';
 var deviceTypeUuid = 'f5f90003-59f9-11e4-aa15-123b93f75cba';
 var roomUuid = 'f5f90004-59f9-11e4-aa15-123b93f75cba';
 //////////////////////////////////////////////////////////////////////////////
@@ -28,6 +31,14 @@ var sampleCurrentUuid = '5b8d0002-6f20-11e4-b116-123b93f75cba';
 var currentCurveUuid = '5b8d0003-6f20-11e4-b116-123b93f75cba';
 var currentConsumptionUuid = '5b8d0004-6f20-11e4-b116-123b93f75cba';
 var currentLimitUuid = '5b8d0005-6f20-11e4-b116-123b93f75cba';
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// Configuration types
+var configNameUuid = 0;
+var configDeviceTypeUuid = 1;
+var configRoomUuid = 2;
+var configFloorUuid = 3;
 //////////////////////////////////////////////////////////////////////////////
 
 
@@ -198,7 +209,7 @@ var BLEHandler = function() {
 	}
 	
 	self.startEndlessScan = function(callback) {
-		console.log('start endless scan');
+		//console.log('start endless scan');
 		var paramsObj = {}
 		bluetoothle.startScan(function(obj) {  // start scan success
 				if (obj.status == 'scanResult') {
@@ -210,7 +221,7 @@ var BLEHandler = function() {
 						}
 					})
 				} else if (obj.status == 'scanStarted') {
-					console.log('Endless scan was started successfully');
+					//console.log('Endless scan was started successfully');
 				} else {
 					console.log('Unexpected start scan status: ' + obj.status);
 					console.log('Stopping scan');
@@ -229,10 +240,10 @@ var BLEHandler = function() {
 	}
 
 	self.stopEndlessScan = function() {
-		console.log("stop endless scan...");
+		//console.log("stop endless scan...");
 		bluetoothle.stopScan(function(obj) { // stop scan success
 				if (obj.status == 'scanStopped') {
-					console.log('Scan was stopped successfully');
+					//console.log('Scan was stopped successfully');
 				} else {
 					console.log('Unexpected stop scan status: ' + obj.status);
 				}
@@ -332,8 +343,8 @@ var BLEHandler = function() {
 		var u8 = new Uint8Array(1);
 		u8[0] = scan ? 1 : 0;
 		var v = bluetoothle.bytesToEncodedString(u8);
-		console.log("Write " + v + " at service " + indoorLocalisationServiceUuid + ' and characteristic ' + deviceScanUuid );
-		var paramsObj = {"address": address, "serviceUuid": indoorLocalisationServiceUuid, "characteristicUuid": deviceScanUuid , "value" : v};
+		console.log("Write " + v + " at service " + indoorLocalizationServiceUuid + ' and characteristic ' + deviceScanUuid );
+		var paramsObj = {"address": address, "serviceUuid": indoorLocalizationServiceUuid, "characteristicUuid": deviceScanUuid , "value" : v};
 		bluetoothle.write(function(obj) { // write success
 				if (obj.status == 'written') {
 					console.log('Successfully written to device scan characteristic - ' + obj.status);
@@ -348,8 +359,8 @@ var BLEHandler = function() {
 	}
 
 	self.listDevices = function(address, callback) {
-		console.log("Read device list at service " + indoorLocalisationServiceUuid + ' and characteristic ' + deviceListUuid );
-		var paramsObj = {"address": address, "serviceUuid": indoorLocalisationServiceUuid, "characteristicUuid": deviceListUuid };
+		console.log("Read device list at service " + indoorLocalizationServiceUuid + ' and characteristic ' + deviceListUuid );
+		var paramsObj = {"address": address, "serviceUuid": indoorLocalizationServiceUuid, "characteristicUuid": deviceListUuid };
 		bluetoothle.read(function(obj) { // read success
 				if (obj.status == "read")
 				{
@@ -493,8 +504,10 @@ var BLEHandler = function() {
 	}
 
 	self.readDeviceName = function(address, callback) {
-		console.log("Read device type at service " + generalServiceUuid + ' and characteristic ' + changeNameCharacteristicUuid );
-		var paramsObj = {"address": address, "serviceUuid": generalServiceUuid, "characteristicUuid": changeNameCharacteristicUuid };
+		console.log("Read device type at service " + generalServiceUuid + 
+				' and characteristic ' + changeNameCharacteristicUuid );
+		var paramsObj = {"address": address, "serviceUuid": generalServiceUuid, 
+			"characteristicUuid": changeNameCharacteristicUuid };
 		bluetoothle.read(function(obj) { // read success
 				if (obj.status == "read")
 				{
@@ -511,7 +524,132 @@ var BLEHandler = function() {
 				}
 			}, 
 			function(obj) { // read error
-				console.log('Error in reading change name characteristic: ' + obj.error + " - " + obj.message);
+				console.log('Error in reading change name characteristic: ' + 
+					obj.error + " - " + obj.message);
+			},
+			paramsObj);
+	}
+
+	/** Get a floor from the connected device
+	 */
+	self.getFloor = function(address, successCB, errorCB) {
+		var configurationType = configFloorUuid;
+		self.selectConfiguration(address, configurationType, function(msg) {
+			console.log(msg);
+			self.getConfiguration(function(configuration) {
+				if (configuration.length != 1) {
+					var msg = "Error: configuration value for floor level should have length 1";
+					errorCB(msg);
+				} else {
+					var floor = configuration.payload[0];
+					successCB(floor);
+				}
+			}, errorCB);
+		}, errorCB);
+	}
+
+	/** Get a specific configuration, selected before in selectConfiguration
+	 */
+	self.getConfiguration = function(address, successCB, errorCB) {
+		console.log("Get configuration at service " + generalServiceUuid + 
+				' and characteristic ' + getConfigurationCharacteristicUuid );
+		var paramsObj = {"address": address, "serviceUuid": generalServiceUuid, 
+			"characteristicUuid": getConfigurationCharacteristicUuid};
+		bluetoothle.read(function(obj) { // read success
+				if (obj.status == "read")
+				{
+					var bytearray = bluetoothle.encodedStringToBytes(obj.value);
+					var configuration;
+					configuration.type = bytes[0];
+					configuration.length = bytes[1];
+					configuration.payload = bytes.splice(0,2);
+					successCB(configuration);
+				}
+				else
+				{
+					var msg = "Unexpected read status: " + obj.status;
+					errorCB();
+				}
+			}, 
+			function(obj) { // read error
+				var msg = 'Error in reading "get configuration" characteristic' +
+					obj.error + " - " + obj.message;
+				errorCB(msg);
+			},
+			paramsObj);
+	}
+
+	/** Writing a configuration
+	 *
+	 * NOT TESTED
+	 */
+	self.writeConfiguration = function(address, configuration, successCB, errorCB) {
+		if (configuration.type != configFloorUuid) {
+			var msg = "Not yet support configuration option";
+			errorCB(msg);
+		}
+
+		// build up a single byte array, prepending payload with type and payload length
+		var u8 = new Uint8Array(configuration.length+2);
+		u8[0] = configuration.type;
+		u8[1] = configuration.length;
+		u8.splice(2,0, configuration.payload);
+
+		var v = bluetoothle.bytesToEncodedString(u8);
+		console.log("Write " + v + " at service " + generalServiceUuid + 
+				' and characteristic ' + writeConfigurationCharacteristicUuid );
+		var paramsObj = {"address": address, "serviceUuid": generalServiceUuid, 
+			"characteristicUuid": writeConfigurationCharacteristicUuid , "value" : v};
+		bluetoothle.write(function(obj) { // write success
+				if (obj.status == 'written') {
+					var msg = 'Successfully written to "write configuration" characteristic - ' +
+						obj.status;
+					successCB(msg);
+				} else {
+					var msg = 'Error in writing to "write configuration" characteristic - ' +
+						obj;
+					errorCB(msg);
+				}
+			},
+			function(obj) { // write error
+				var msg = 'Error in writing to "write configuration" characteristic - ' +
+					obj.error + " - " + obj.message;
+				errorCB(msg);
+			},
+			paramsObj);
+	}
+
+	/** Before getting the value of a specific configuration type, we have to select it.
+	 */
+	self.selectConfiguration = function(address, configurationType, successCB, errorCB) {
+		if (configurationType != configFloorUuid) {
+			var msg = "Not yet support configuration option";
+			errorCB(msg);
+		}
+
+		var u8 = new Uint8Array(1);
+		u8[0] = configurationType;
+
+		var v = bluetoothle.bytesToEncodedString(u8);
+		console.log("Write " + v + " at service " + generalServiceUuid + 
+				' and characteristic ' + selectConfigurationCharacteristicUuid );
+		var paramsObj = {"address": address, "serviceUuid": generalServiceUuid, 
+			"characteristicUuid": selectConfigurationCharacteristicUuid , "value" : v};
+		bluetoothle.write(function(obj) { // write success
+				if (obj.status == 'written') {
+					var msg = 'Successfully written to "select configuration" characteristic - ' +
+						obj.status;
+					successCB(msg);
+				} else {
+					var msg = 'Error in writing to "select configuration" characteristic - ' +
+						obj;
+					errorCB(msg);
+				}
+			},
+			function(obj) { // write error
+				var msg = 'Error in writing to "select configuration" characteristic - ' +
+					obj.error + " - " + obj.message;
+				errorCB(msg);
 			},
 			paramsObj);
 	}
@@ -646,8 +784,8 @@ var BLEHandler = function() {
 	}
 
 	self.getTrackedDevices = function(address, callback) {
-		console.log("Read device list at service " + indoorLocalisationServiceUuid + ' and characteristic ' + listTrackedDevicesUuid );
-		var paramsObj = {"address": address, "serviceUuid": indoorLocalisationServiceUuid, "characteristicUuid": listTrackedDevicesUuid };
+		console.log("Read device list at service " + indoorLocalizationServiceUuid + ' and characteristic ' + listTrackedDevicesUuid );
+		var paramsObj = {"address": address, "serviceUuid": indoorLocalizationServiceUuid, "characteristicUuid": listTrackedDevicesUuid };
 		bluetoothle.read(function(obj) { // read success
 				if (obj.status == "read")
 				{
@@ -676,8 +814,8 @@ var BLEHandler = function() {
 		}
 		u8[6] = rssi;
 		var v = bluetoothle.bytesToEncodedString(u8);
-		console.log("Write " + v + " at service " + indoorLocalisationServiceUuid + ' and characteristic ' + addTrackedDeviceUuid );
-		var paramsObj = {"address": address, "serviceUuid": indoorLocalisationServiceUuid, "characteristicUuid": addTrackedDeviceUuid , "value" : v};
+		console.log("Write " + v + " at service " + indoorLocalizationServiceUuid + ' and characteristic ' + addTrackedDeviceUuid );
+		var paramsObj = {"address": address, "serviceUuid": indoorLocalizationServiceUuid, "characteristicUuid": addTrackedDeviceUuid , "value" : v};
 		bluetoothle.write(function(obj) { // write success
 				if (obj.status == 'written') {
 					console.log('Successfully written to add tracked device characteristic - ' + obj.status);
