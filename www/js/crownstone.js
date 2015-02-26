@@ -344,13 +344,14 @@ var crownstone = {
 				});
 			});
 
+			var TRACK_DEVICE_LEN = 7;
 			$('#getTrackedDevices').on('click', function(event) {
 				getTrackedDevices(function(list) {
 					var size = Object.size(list);
 					var elements = list[0];
 					var trackedDevices = $('#trackedDevices');
-					if (elements * 7 + 1 != size) {
-						console.log("size error, arraySize: " + size + "but should be: " + Number(list[0] * 7 + 1));
+					if (elements * TRACK_DEVICE_LEN + 1 != size) {
+						console.log("size error, arraySize: " + size + "but should be: " + Number(list[0] * TRACK_DEVICE_LEN + 1));
 					} else {
 						// deviceTable.remove();
 						var r = new Array(), j = -1;
@@ -364,7 +365,7 @@ var crownstone = {
 							return str.length < 2 ? '0' + str : str;
 						};
 						for (var i = 0; i < elements; i++) {
-							var idx = 1 + i * 9;
+							var idx = 1 + i * TRACK_DEVICE_LEN;
 							var mac = "{0}-{1}-{2}-{3}-{4}-{5}".format(uint8toString(list[idx]), uint8toString(list[idx+1]), 
 																	   uint8toString(list[idx+2]), uint8toString(list[idx+3]), 
 																	   uint8toString(list[idx+4]), uint8toString(list[idx+5]));
@@ -892,6 +893,11 @@ var crownstone = {
 		addTrackedDevice = function(address, rssi) {
 			if (!connectedDevice) {
 				console.log("no connected device address!!");
+				return;
+			}
+
+			if (address.length == 0) {
+				console.log("no address provided");
 				return;
 			}
 
