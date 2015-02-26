@@ -517,6 +517,11 @@ body {
  *
  *********************************************************************************************************************/
 
+.buildingTable .activeRow {
+	background-color: green !important;
+	color: white !important;
+}
+
 .buildingTable {
 	margin:0px;
 	padding:0px;

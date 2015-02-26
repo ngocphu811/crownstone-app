@@ -29,6 +29,9 @@ var crownstone = {
 	// map of crownstones 
 	crownstones: {},
 
+	// structure to find crownstones per floor
+	floors: {},
+
 	/* Start should be called if all plugins are ready and all functionality can be called.
 	 */
 	start:function() {
@@ -71,6 +74,7 @@ var crownstone = {
 		var connecting = false;
 		var tracking = false;
 
+		var floorsearching = false;
 		var localizing = false;
 
 		var connectedDevice = "";
@@ -1022,8 +1026,16 @@ var crownstone = {
 		$('#indoorLocalizationPage').on("pagecreate", function() {
 			console.log("Create indoor localization page");
 
+			self.floors.count = 5;
+			for (i = -1; i < self.floors.count-1; i++) {
+				self.floors[i] = {};
+				self.floors[i].level = i;
+				self.floors[i].crownstones = {};
+				self.floors[i].count = 0;
+			}
+
 			// create table to represent floor of building
-			var table = $('<table></table>'); //.addClass('buildingTable');
+			var table = $('<table></table>'); 
 			var floor_cnt = 5;
 			var column_cnt = 2;
 			var row;
@@ -1043,8 +1055,9 @@ var crownstone = {
 			table.append(row);
 
 			// assume floor starts at -1
-			for (i = floor_cnt-1; i >= -1; i--) {
+			for (i = self.floors.count-1; i >= -1; i--) {
 				row = $('<tr></tr>');
+				row.prop('id', 'buildingRow' + i);
 				field = $('<td></td>').text(i);
 				row.append(field);
 				field = $('<td></td>').addClass('buildingField').text('');
@@ -1055,23 +1068,49 @@ var crownstone = {
 
 			$('#building').append(table);
 
+			//var obj = {};
+			//obj.name = 'test';
+			//self.floors[2].crownstones[0] = obj;
+			//self.floors[2].count++;
+
 			$('#searchFloorBtn').on('click', function(event) {
 				console.log("User clicks button to start/stop search crownstones for localization");
-				if (!localizing) {
-					startLocalization();
+				if (!floorsearching) {
+					startFloorSearching();
 				} else {
-					stopLocalization();
+					stopFloorSearching();
 				}
 			});
 
 			$('#localizeBtn').on('click', function(event) {
 				console.log("User clicks button to start/stop to use found crownstones for localization");
+				if (floorsearching) {
+					stopFloorSearching();
+				}
+				if (!localizing) {
+					startLocalizing();
+				} else {
+					stopLocalizing();
+				}
 			});
 
 		});
 
+		/** Test function returns the floor with most crownstones
+		 */
+		mostCrownstones = function() {
+			var max_count = -1; var max_level = -1;
+			for (var fl in self.floors) {
+				var f = self.floors[fl];
+				if (f.count > max_count) {
+					max_level = fl;
+					max_count = f.count;
+				}
+			}
+			return max_level;
+		}
+
 		updateTable = function(floor, device) {
-			console.log("Device", device);
 			var jqueryID = '#buildingField' + floor;
 			var txt = $(jqueryID).text();
 			if (device.name) {
@@ -1079,10 +1118,37 @@ var crownstone = {
 			} else {
 				$(jqueryID).text('unknown device ' + txt);
 			}
+			
+			// set currently the level to the one with most crownstones
+			var max_level = mostCrownstones();
+			console.log("Set closest floor level to " + max_level);
+			for (var fl in self.floors) {
+				var f = self.floors[fl];
+				var floor = f.level;
+				if (floor && floor === 'defined') {
+					var jQueryID = '#buildingRow' + floor;
+					var elem = $(jQueryID);
+					elem.removeClass('activeRow');
+				}
+			}
+			var jQueryID = '#buildingRow' + max_level;
+			var elem = $(jQueryID);
+			elem.addClass('activeRow');
 		}
 
-		startLocalization = function() {
+		startLocalizing = function() {
 			localizing = true;
+			$('#localizeBtn').text('Stop localizing');
+		}
+
+		stopLocalizing = function() {
+			$('#localizeBtn').text('Start to localize');
+			localizing = false;
+		}
+
+		startFloorSearching = function() {
+			floorsearching = true;
+			$('#searchFloorBtn').text('Stop searching');
 
 			// find crownstones by scanning for them
 			findCrownstones(function(obj) {
@@ -1098,6 +1164,9 @@ var crownstone = {
 						function() {
 							getFloor(function(floor) {
 								console.log("Floor found: " + floor);
+								var cnt = self.floors[floor].count;
+								self.floors[floor].crownstones[cnt] = obj;
+								self.floors[floor].count++;
 								updateTable(floor, obj);
 								disconnect();
 							}, function(msg) {
@@ -1143,10 +1212,11 @@ var crownstone = {
 			console.log(msg);
 		}
 
-		stopLocalization = function() {
+		stopFloorSearching = function() {
 			// stop scanning
 			stopSearch();
-			localizing = false;
+			floorsearching = false;
+			$('#searchFloorBtn').text('Start to search');
 		}
 
 		existCrownstone = function(device) {
