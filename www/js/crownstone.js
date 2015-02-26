@@ -690,7 +690,7 @@ var crownstone = {
 					deviceTable.html(r.join(''));
 
 					$(document).on("click", "#deviceTable tr", function(e) {
-						// cordova.plugins.clipboard.copy(this.id);
+						cordova.plugins.clipboard.copy(this.id);
 					})
 
 					$('#scanDevices').prop("disabled", false);
