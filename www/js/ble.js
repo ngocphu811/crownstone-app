@@ -127,51 +127,12 @@ var BLEHandler = function() {
 		}
 	}
 
-	// self.reconnect = function() {
-	// 	console.log("Reconnecting with 5 second timeout");
-	// 	bluetoothle.reconnect(self.reconnectSuccess, self.reconnectError);
-	// 	self.reconnectTimer = setTimeout(self.reconnectTimeout, 5000);
-	// }
-
-	// self.reconnectSuccess = function(obj) {
-	// 	if (obj.status == "connected") {
-	// 		console.log("Reconnected to: " + obj.name + " - " + obj.address);
-
-	// 		self.clearReconnectTimeout();
-
-	// 		if (window.device.platform == iOSPlatform) {
-	// 			console.log("Discovering services");
-	// 			// var paramsObj = {"serviceUuids": [alertLevelServiceUuid] };
-	// 			// bluetoothle.services(self.alertLevelSuccess, self.alertLevelError, paramsObj);
-	// 		} else if (window.device.platform == androidPlatform) {
-	// 			console.log("Beginning discovery");
-	// 			bluetoothle.discover(self.discoverSuccess, self.discoverError);
-	// 		}
-	// 	} else if (obj.status == "connecting") {
-	// 		console.log("Reconnecting to : " + obj.name + " - " + obj.address);
-	// 	} else {
-	// 		console.log("Unexpected reconnect status: " + obj.status);
-	// 		self.disconnectDevice();
-	// 	}
-	// }
-
-	// self.reconnectError = function(obj) {
-	// 	console.log("Reconnect error: " + obj.error + " - " + obj.message);
-	// 	disconnectDevice();
-	// }
-
-	// self.reconnectTimeout = function() {
-	// 	console.log("Reconnection timed out");
-	// }
-
-	// self.clearReconnectTimeout = function() { 
-	// 	console.log("Clearing reconnect timeout");
-	// 	if (self.reconnectTimer != null) {
-	// 		clearTimeout(self.reconnectTimer);
-	// 	}
-	// }
-
-	self.discoverServices = function(address, callback) {
+	/** Discovery of services and characteristics on the target device (crownstone). 
+	 *
+	 * Discovery must be run before any of the getters/setters can be used. Or else "Service not found" errors
+	 * will be generated.
+	 */
+	self.discoverServices = function(address, callback, errorCB) {
 		console.log("Beginning discovery of services for device" + address);
 		var paramsObj = {address: address};
 		bluetoothle.discover(function(obj) { // discover success
@@ -194,20 +155,57 @@ var BLEHandler = function() {
 				}
 				else
 				{
-					console.log("Unexpected discover status: " + obj.status);
-					self.disconnectDevice(address);
+					var msg = "Unexpected discover status: " + obj.status;
+					errorCB(msg);
 				}
 			}, 
 			function(obj) { // discover error
-				console.log("Discover error: " + obj.error + " - " + obj.message);
-				self.disconnectDevice(address);	
-				if (callback) {
-					callback(false);
-				}
+				var msg = "Discover error: " + obj.error + " - " + obj.message;
+				errorCB(msg);
 			}, 
 			paramsObj);
 	}
-	
+
+	self.discoverCharacteristic = function(address, serviceUuid, characteristicUuid, callback, errorCB) {
+		var paramsObj = {address: address};
+		bluetoothle.discover(function(obj) { // discover success
+				if (obj.status == "discovered")
+				{
+					var services = obj.services;
+					var success = false;
+					for (var i = 0; i < services.length; ++i) {
+						var sUuid = services[i].serviceUuid;
+						if (sUuid != serviceUuid) continue;
+						var characteristics = services[i].characteristics;
+						for (var j = 0; j < characteristics.length; ++j) {
+							var cUuid = characteristics[j].characteristicUuid;
+							if (cUuid != characteristicUuid) continue;
+							success = true;
+							if (success) break;
+						}
+						if (success) break;
+					}
+					if (success) {
+						callback(serviceUuid, characteristicUuid);
+					} else {
+						var msg = "Could not find service " + serviceUuid + 
+							" or characteristic " + characteristicUuid;
+						errorCB(msg);
+					}
+				}
+				else
+				{
+					var msg = "Unexpected discover status: " + obj.status;
+					errorCB(msg);
+				}
+			}, 
+			function(obj) { // discover error
+				var msg = "Discover error: " + obj.error + " - " + obj.message;
+				errorCB(msg);
+			}, 
+			paramsObj);
+	}
+
 	self.startEndlessScan = function(callback) {
 		//console.log('start endless scan');
 		var paramsObj = {}
@@ -536,15 +534,20 @@ var BLEHandler = function() {
 		var configurationType = configFloorUuid;
 		self.selectConfiguration(address, configurationType, function(msg) {
 			console.log(msg);
-			self.getConfiguration(function(configuration) {
-				if (configuration.length != 1) {
-					var msg = "Error: configuration value for floor level should have length 1";
-					errorCB(msg);
-				} else {
-					var floor = configuration.payload[0];
-					successCB(floor);
-				}
-			}, errorCB);
+			self.getConfiguration(
+				address,
+				function(configuration) {
+					if (configuration.length != 1) {
+						var msg = "Configuration value for floor level should have length 1";
+						errorCB(msg);
+					} else {
+						var floor = configuration.payload[0];
+						console.log("Found floor level: " + floor);
+						successCB(floor);
+					}
+				}, 
+				errorCB
+			);
 		}, errorCB);
 	}
 
@@ -559,10 +562,14 @@ var BLEHandler = function() {
 				if (obj.status == "read")
 				{
 					var bytearray = bluetoothle.encodedStringToBytes(obj.value);
-					var configuration;
-					configuration.type = bytes[0];
-					configuration.length = bytes[1];
-					configuration.payload = bytes.splice(0,2);
+					var str = bluetoothle.bytesToString(bytearray);
+					var configuration = {};
+					configuration.type = bytearray[0];
+					configuration.length = bytearray[1];
+					configuration.payload = new ArrayBuffer(configuration.length);
+					for (var i = 0; i < configuration.length; i++) {
+						configuration.payload[i] = bytearray[i+2];
+					}
 					successCB(configuration);
 				}
 				else
@@ -635,7 +642,8 @@ var BLEHandler = function() {
 				' and characteristic ' + selectConfigurationCharacteristicUuid );
 		var paramsObj = {"address": address, "serviceUuid": generalServiceUuid, 
 			"characteristicUuid": selectConfigurationCharacteristicUuid , "value" : v};
-		bluetoothle.write(function(obj) { // write success
+		bluetoothle.write(
+			function(obj) { // write success
 				if (obj.status == 'written') {
 					var msg = 'Successfully written to "select configuration" characteristic - ' +
 						obj.status;

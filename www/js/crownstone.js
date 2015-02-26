@@ -486,62 +486,69 @@ var crownstone = {
 			$('#currentCurve').hide();
 
 			// discover available services
-			discoverServices(function(serviceUuid, characteristicUuid) {
-				console.log("updating: " + serviceUuid + ' : ' + characteristicUuid);
+			discoverServices(
+				function discoverSuccessful(serviceUuid, characteristicUuid) {
+					console.log("updating: " + serviceUuid + ' : ' + characteristicUuid);
 
-				if (serviceUuid == indoorLocalizationServiceUuid) {
-					if (characteristicUuid == deviceScanUuid) {
-						$('#scanDevicesTab').show();
-					} 
-					if (characteristicUuid == addTrackedDeviceUuid) {
-						$('#trackedDevicesTab').show();
+					if (serviceUuid == indoorLocalizationServiceUuid) {
+						if (characteristicUuid == deviceScanUuid) {
+							$('#scanDevicesTab').show();
+						} 
+						if (characteristicUuid == addTrackedDeviceUuid) {
+							$('#trackedDevicesTab').show();
+						}
 					}
+					if (serviceUuid == generalServiceUuid) {
+						if (characteristicUuid == temperatureCharacteristicUuid) {
+							$('#getTemperatureTab').show();
+						}
+						if (characteristicUuid == changeNameCharacteristicUuid) {
+							$('#changeNameTab').show();
+							// request device name to fill initial value
+							setTimeout(function() {
+								$('#getDeviceName').trigger('click');
+							}, (trigger++) * triggerDelay);
+						}
+						if (characteristicUuid == deviceTypeUuid) {
+							$('#deviceTypeTab').show();
+							// request device type to fill initial value
+							setTimeout(function() {
+								$('#getDeviceType').trigger('click');
+							}, (trigger++) * triggerDelay);
+						}
+						if (characteristicUuid == roomUuid) {
+							$('#roomTab').show();
+							// request room to fill initial value
+							setTimeout(function() {
+								$('#getRoom').trigger('click');
+							}, (trigger++) * triggerDelay);
+						}
+					}
+					if (serviceUuid == powerServiceUuid) {
+						if (characteristicUuid == pwmUuid) {
+							$('#pwmTab').show();
+						}
+						if (characteristicUuid == currentConsumptionUuid) {
+							$('#currentConsumptionTab').show();
+						}
+						if (characteristicUuid == currentLimitUuid) {
+							$('#currentLimitTab').show();
+							// request current limit to fill initial value
+							setTimeout(function() {
+								$('#getCurrentLimit').trigger('click');
+							}, (trigger++) * triggerDelay);
+						}
+						if (characteristicUuid == currentCurveUuid) {
+							$('#currentCurveTab').show();
+						}
+					}
+				},
+				function discoveryFailure(msg) {
+					console.log(msg);
+					// do we really want to disconnect here?
+					disconnect();
 				}
-				if (serviceUuid == generalServiceUuid) {
-					if (characteristicUuid == temperatureCharacteristicUuid) {
-						$('#getTemperatureTab').show();
-					}
-					if (characteristicUuid == changeNameCharacteristicUuid) {
-						$('#changeNameTab').show();
-						// request device name to fill initial value
-						setTimeout(function() {
-							$('#getDeviceName').trigger('click');
-						}, (trigger++) * triggerDelay);
-					}
-					if (characteristicUuid == deviceTypeUuid) {
-						$('#deviceTypeTab').show();
-						// request device type to fill initial value
-						setTimeout(function() {
-							$('#getDeviceType').trigger('click');
-						}, (trigger++) * triggerDelay);
-					}
-					if (characteristicUuid == roomUuid) {
-						$('#roomTab').show();
-						// request room to fill initial value
-						setTimeout(function() {
-							$('#getRoom').trigger('click');
-						}, (trigger++) * triggerDelay);
-					}
-				}
-				if (serviceUuid == powerServiceUuid) {
-					if (characteristicUuid == pwmUuid) {
-						$('#pwmTab').show();
-					}
-					if (characteristicUuid == currentConsumptionUuid) {
-						$('#currentConsumptionTab').show();
-					}
-					if (characteristicUuid == currentLimitUuid) {
-						$('#currentLimitTab').show();
-						// request current limit to fill initial value
-						setTimeout(function() {
-							$('#getCurrentLimit').trigger('click');
-						}, (trigger++) * triggerDelay);
-					}
-					if (characteristicUuid == currentCurveUuid) {
-						$('#currentCurveTab').show();
-					}
-				}
-			});
+			);
 		});
 
 		$('#controlPage').on('pagehide', function(event) {
@@ -839,7 +846,8 @@ var crownstone = {
 						connectedDevice = address;
 						successCB();
 					} else {
-						errorCB();
+						var msg = "Connection failure";
+						errorCB(msg);
 					}
 
 				});
@@ -1026,24 +1034,51 @@ var crownstone = {
 				if (!existCrownstone(obj)) {
 					addCrownstone(obj);
 					var address = obj.address;
-					connect(address, 
-						function connectionSuccess() {
+					connectAndDiscover(
+						address, 
+						generalServiceUuid, 
+						getConfigurationCharacteristicUuid, 
+						function() {
 							getFloor(function(floor) {
 								console.log("Floor found: " + floor);
 								disconnect();
 							}, function(msg) {
-								disconnect();
 								generalErrorCB(msg);
-							});
-						},
-						function connectionFailure(msg) {
-							// no need to disconnect
-							generalErrorCB(msg);
-						});
+								disconnect();
+							})
+						}
+					);
 				} else {
 					updateCrownstone(obj);
 				}
 			});
+		}
+
+		/** Connect and discover 
+		 *
+		 * This function does do the boring connection and discovery work before a characteristic can be read
+		 * or written. It does not disconnect, that's the responsbility of the callee.
+		 */
+		connectAndDiscover = function(address, serviceUuid, characteristicUuid, successCB) {
+			connect(
+				address, 
+				function connectionSuccess() {
+					ble.discoverCharacteristic(
+						address,
+						serviceUuid,
+						characteristicUuid, 
+						successCB,
+						function discoveryFailure(msg) {
+							console.log(msg);
+							disconnect();
+						}
+					)
+				},
+				function connectionFailure(msg) {
+					 // no need to disconnect, because we enter here only when connecting fails
+					 generalErrorCB(msg);
+				}
+			);
 		}
 
 		generalErrorCB = function(msg) {
