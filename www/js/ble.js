@@ -76,6 +76,65 @@ var BLEHandler = function() {
 			{"request": true});
 	}
 
+	self.isConnected = function(address) {
+		if (!address) return false;
+		var paramsObj = {"address": address};
+		var connected;
+		bluetoothle.isConnected(connected, paramsObj);
+		return connected;
+	}
+
+	self.reconnectDevice = function(address, timeout, callback) {
+		console.log("Beginning to reconnect to " + address + " with " + timeout + " second timeout");
+		var paramsObj = {"address": address};
+		bluetoothle.reconnect(function(obj) { // reconnectSuccess
+				if (obj.status == "connected") {
+					console.log("Reconnected to: " + obj.name + " - " + obj.address);
+
+					self.clearReconnectTimeout();
+
+					if (callback) {
+						callback(true);
+					}
+
+				}
+				else if (obj.status == "connecting") {
+					console.log("Reconnecting to: " + obj.name + " - " + obj.address);
+				}
+				else {
+					console.log("Unexpected reconnect status: " + obj.status);
+					self.clearReconnectTimeout();
+					self.closeDevice(obj.address);
+					if (callback) {
+						callback(false);
+					}
+				}
+			}, 
+			function(obj) { // reconnectError
+				console.log("Reconnect error: " + obj.error + " - " + obj.message);
+				self.clearReconnectTimeout();
+				if (callback) {
+					callback(false);
+				}
+			}, 
+			paramsObj);
+
+		self.reconnectTimer = setTimeout(function() { // connectTimeout
+				console.log('Connection timed out, stop connection attempts');
+				if (callback) {
+					callback(false);
+				}
+			}, 
+			timeout * 1000);
+	}
+
+	self.clearReconnectTimeout = function() { 
+		console.log("Clearing reconnect timeout");
+		if (self.reconnectTimer != null) {
+			clearTimeout(self.reconnectTimer);
+		}
+	}
+
 	self.connectDevice = function(address, timeout, callback) {
 		console.log("Beginning to connect to " + address + " with " + timeout + " second timeout");
 		var paramsObj = {"address": address};
@@ -104,9 +163,16 @@ var BLEHandler = function() {
 			}, 
 			function(obj) { // connectError
 				console.log("Connect error: " + obj.error + " - " + obj.message);
-				self.clearConnectTimeout();
-				if (callback) {
-					callback(false);
+				// for now we are gonna attempt a reconnect
+				if (obj.error == 'connect') {
+					console.log("Attempt a disconnect, a reconnect didn't work");
+				//	self.reconnectDevice(address, timeout, callback);
+					self.disconnectDevice(address);
+				} else {
+					self.clearConnectTimeout();
+					if (callback) {
+						callback(false);
+					}
 				}
 			}, 
 			paramsObj);
@@ -275,25 +341,29 @@ var BLEHandler = function() {
 	/*
 	 * Contains bug: when a device is in "disconnecting" state, it will never be closed. 
 	 */
-	self.disconnectDevice = function(address) {
+	self.disconnectDevice = function(address, successCB, errorCB) {
 		var paramsObj = {"address": address}
 		bluetoothle.disconnect(function(obj) { // disconnect success
 				if (obj.status == "disconnected")
 				{
 					console.log("Device " + obj.address + " disconnected");
 					self.closeDevice(obj.address);
+					if (successCB) successCB();
 				}
 				else if (obj.status == "disconnecting")
 				{
 					console.log("Disconnecting device " + obj.address);
+					if (errorCB) errorCB();
 				}
 				else
 				{
 					console.log("Unexpected disconnect status from device " + obj.address + ": " + obj.status);
+					if (errorCB) errorCB();
 				}
 			}, 
 			function(obj) { // disconnect error
 				console.log("Disconnect error from device " + obj.address + ": " + obj.error + " - " + obj.message);
+				if (errorCB) errorCB();
 			}, 
 			paramsObj);
 	}
@@ -331,7 +401,7 @@ var BLEHandler = function() {
 				else
 				{
 					console.log("Unexpected read status: " + obj.status);
-					self.disconnectDevice();
+					self.disconnectDevice(address);
 				}
 			}, 
 			function(obj) { // read error
@@ -373,7 +443,7 @@ var BLEHandler = function() {
 				else
 				{
 					console.log("Unexpected read status: " + obj.status);
-					self.disconnectDevice();
+					self.disconnectDevice(address);
 				}
 			}, 
 			function(obj) { // read error
@@ -415,7 +485,7 @@ var BLEHandler = function() {
 				else
 				{
 					console.log("Unexpected read status: " + obj.status);
-					self.disconnectDevice();
+					self.disconnectDevice(address);
 				}
 			}, 
 			function(obj) { // read error
@@ -472,7 +542,7 @@ var BLEHandler = function() {
 				else
 				{
 					console.log("Unexpected read status: " + obj.status);
-					self.disconnectDevice();
+					self.disconnectDevice(address);
 				}
 			},
 			function(obj) { // read error
@@ -521,7 +591,7 @@ var BLEHandler = function() {
 				else
 				{
 					console.log("Unexpected read status: " + obj.status);
-					self.disconnectDevice();
+					self.disconnectDevice(address);
 				}
 			}, 
 			function(obj) { // read error
@@ -697,7 +767,7 @@ var BLEHandler = function() {
 				else
 				{
 					console.log("Unexpected read status: " + obj.status);
-					self.disconnectDevice();
+					self.disconnectDevice(address);
 				}
 			}, 
 			function(obj) { // read error
@@ -739,7 +809,7 @@ var BLEHandler = function() {
 				else
 				{
 					console.log("Unexpected read status: " + obj.status);
-					self.disconnectDevice();
+					self.disconnectDevice(address);
 				}
 			}, 
 			function(obj) { // read error
@@ -784,7 +854,7 @@ var BLEHandler = function() {
 				else
 				{
 					console.log("Unexpected read status: " + obj.status);
-					self.disconnectDevice();
+					self.disconnectDevice(address);
 				}
 			}, 
 			function(obj) { // read error
@@ -807,7 +877,7 @@ var BLEHandler = function() {
 				else
 				{
 					console.log("Unexpected read status: " + obj.status);
-					self.disconnectDevice();
+					self.disconnectDevice(address);
 				}
 			}, 
 			function(obj) { // read error

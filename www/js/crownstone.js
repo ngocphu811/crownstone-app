@@ -827,12 +827,13 @@ var crownstone = {
 			//   to receive rssi updates for such devices too, we now
 			//   restart the ble scan every second, thus getting at least
 			//	 an rssi update every second
+			var timeout = 1000 * 100;
 			// if (device.model == "Nexus 4") {
 				findTimer = setInterval(function() {
 					//console.log("restart");
 					ble.stopEndlessScan();
 					ble.startEndlessScan(callback);
-				}, 1000);
+				}, timeout);
 			// }
 		}
 
@@ -1038,8 +1039,6 @@ var crownstone = {
 				self.building.floors[i] = {};
 				self.building.floors[i].level = i;
 				self.building.floors[i].devices = [];
-				//self.building.floors[i].devices.crownstones = {};
-				//self.building.floors[i].count = 0;
 			}
 
 			// create table to represent floor of building
@@ -1219,8 +1218,18 @@ var crownstone = {
 				}
 				srssi = srssi / f.devices.length;
 				f.avg_rssi = srssi;
-				console.log("Average for floor " + fl + " is " + f.avg_rssi);
 			}
+			var str = ' ';
+			for (var fl in self.building.floors) {
+				var f = self.building.floors[fl];
+				if (f.avg_rssi) {
+					str += f.avg_rssi + ' ';
+				} else {
+					str += '-?? ';
+				}
+			}
+			console.log("Averages floor RSSI [" + str + "]");
+			
 		}
 
 		getLevel = function(device) {
@@ -1261,10 +1270,7 @@ var crownstone = {
 						function() {
 							getFloor(function(floor) {
 								console.log("Floor found: " + floor);
-								//var cnt = self.building.floors[floor].crownstones.length;
-								//self.building.floors[floor].crownstones[cnt] = obj;
 								self.building.floors[floor].devices.push(obj);
-								//self.building.floors[floor].count++;
 								updateTable(floor, obj);
 								disconnect();
 								addCrownstone(obj);
@@ -1287,6 +1293,13 @@ var crownstone = {
 		 */
 		connectAndDiscover = function(address, serviceUuid, characteristicUuid, successCB) {
 			var timeout = 10; // 10 seconds here
+			/*
+			var connected = ble.isConnected(address);
+			if (connected) {
+				console.log("Device is already connected");
+			} else {
+				console.log("Device is not yet connected");
+			}*/
 			connect(
 				address, 
 				timeout,
