@@ -29,8 +29,8 @@ var crownstone = {
 	// map of crownstones 
 	crownstones: {},
 
-	// structure to find crownstones per floor
-	floors: {},
+	// structure to callect crownstones in a building (per floor)
+	building: {},
 
 	/* Start should be called if all plugins are ready and all functionality can be called.
 	 */
@@ -190,7 +190,8 @@ var crownstone = {
 							searching = false;
 							stopSearch();
 						}
-						connect(this.id, gotoControlPage, connectionFailed);
+						var timeout = 5;
+						connect(this.id, timeout, gotoControlPage, connectionFailed);
 						$('#crownstone').show();
 					})
 				});
@@ -811,6 +812,11 @@ var crownstone = {
 		}
 
 		var findTimer = null;
+
+		/** Find crownstones and report the RSSI strength of the advertisements
+		 *
+		 *
+		 */
 		findCrownstones = function(callback) {
 			console.log("Find crownstones");
 			$('#findCrownstones').html("Stop");
@@ -839,12 +845,12 @@ var crownstone = {
 			$('#findCrownstones').html("Find Crownstones");
 		}
 
-		connect = function(address, successCB, errorCB) {
+		connect = function(address, timeout, successCB, errorCB) {
 			if (!(connected || connecting)) {
 				connecting = true;
 				console.log("connecting to " + address);
 				// 
-				ble.connectDevice(address, function(success) {
+				ble.connectDevice(address, timeout, function(success) {
 
 					connecting = false;
 					if (success) {
@@ -1026,12 +1032,14 @@ var crownstone = {
 		$('#indoorLocalizationPage').on("pagecreate", function() {
 			console.log("Create indoor localization page");
 
-			self.floors.count = 5;
-			for (i = -1; i < self.floors.count-1; i++) {
-				self.floors[i] = {};
-				self.floors[i].level = i;
-				self.floors[i].crownstones = {};
-				self.floors[i].count = 0;
+			self.building.count = 5;
+			self.building.floors = {};
+			for (i = -1; i < self.building.count-1; i++) {
+				self.building.floors[i] = {};
+				self.building.floors[i].level = i;
+				self.building.floors[i].devices = [];
+				//self.building.floors[i].devices.crownstones = {};
+				//self.building.floors[i].count = 0;
 			}
 
 			// create table to represent floor of building
@@ -1055,7 +1063,7 @@ var crownstone = {
 			table.append(row);
 
 			// assume floor starts at -1
-			for (i = self.floors.count-1; i >= -1; i--) {
+			for (i = self.building.count-1; i >= -1; i--) {
 				row = $('<tr></tr>');
 				row.prop('id', 'buildingRow' + i);
 				field = $('<td></td>').text(i);
@@ -1068,13 +1076,13 @@ var crownstone = {
 
 			$('#building').append(table);
 
-			//var obj = {};
-			//obj.name = 'test';
-			//self.floors[2].crownstones[0] = obj;
-			//self.floors[2].count++;
-
 			$('#searchFloorBtn').on('click', function(event) {
 				console.log("User clicks button to start/stop search crownstones for localization");
+
+				if (localizing) {
+					stopLocalizing();
+				}
+
 				if (!floorsearching) {
 					startFloorSearching();
 				} else {
@@ -1094,14 +1102,24 @@ var crownstone = {
 				}
 			});
 
+			var test_dummy_crownstone = false;
+			if (test_dummy_crownstone) {
+				var obj = {};
+				obj.name = "test";
+				obj.rssi = -49;
+				var floor = 0;
+				self.building.floors[floor].devices.push(obj);
+				averageRSSI();
+				updateTable(0,obj);
+			}
 		});
 
 		/** Test function returns the floor with most crownstones
 		 */
 		mostCrownstones = function() {
 			var max_count = -1; var max_level = -1;
-			for (var fl in self.floors) {
-				var f = self.floors[fl];
+			for (var fl in self.building.floors) {
+				var f = self.building.floors[fl];
 				if (f.count > max_count) {
 					max_level = fl;
 					max_count = f.count;
@@ -1118,20 +1136,22 @@ var crownstone = {
 			} else {
 				$(jqueryID).text('unknown device ' + txt);
 			}
-			
-			// set currently the level to the one with most crownstones
-			var max_level = mostCrownstones();
-			console.log("Set closest floor level to " + max_level);
-			for (var fl in self.floors) {
-				var f = self.floors[fl];
+		}
+
+		updateTableActivity = function() {
+			//var select_level = mostCrownstones();
+			var select_level = closestLevel();
+			if (select_level == -255) return;
+
+			console.log("Set closest floor level to " + select_level);
+			for (var fl in self.building.floors) {
+				var f = self.building.floors[fl];
 				var floor = f.level;
-				if (floor && floor === 'defined') {
-					var jQueryID = '#buildingRow' + floor;
-					var elem = $(jQueryID);
-					elem.removeClass('activeRow');
-				}
+				var jQueryID = '#buildingRow' + floor;
+				var elem = $(jQueryID);
+				elem.removeClass('activeRow');
 			}
-			var jQueryID = '#buildingRow' + max_level;
+			var jQueryID = '#buildingRow' + select_level;
 			var elem = $(jQueryID);
 			elem.addClass('activeRow');
 		}
@@ -1139,10 +1159,86 @@ var crownstone = {
 		startLocalizing = function() {
 			localizing = true;
 			$('#localizeBtn').text('Stop localizing');
+			// search for RSSI signals
+			findCrownstones(function(obj) {
+				if (!existCrownstone(obj)) {
+					//console.log("RSSI value from unknown " + obj.name + ": " + obj.rssi);
+					//TODO: in hindsight also add crownstones, but only if connection goes okay
+					// because we have to know what level they are at
+					//   addCrownstone(obj);
+				} else {
+					console.log("New RSSI value for " + obj.name + ": " + obj.rssi);
+					//updateCrownstone(obj);
+					updateRSSI(obj);
+					averageRSSI();
+					updateTableActivity();
+				}
+			});
+		}
+
+		closestLevel = function() {
+			var highest_rssi = -1000;
+			var level = -255;
+			for (var fl in self.building.floors) {
+				var f = self.building.floors[fl];
+				if (f.avg_rssi) {
+					if (f.avg_rssi > highest_rssi) {
+						highest_rssi = f.avg_rssi;
+						level = fl;
+					}
+				}
+			}
+			return level;
+		}
+
+		updateRSSI = function(obj) {
+			var level = getLevel(obj);
+			if (!level) { 
+				console.log("Error: crownstone not found on any floor level");
+				return;
+			}
+			var f = self.building.floors[level];
+			for (var i = 0; i < f.devices.length; i++) {
+				f.devices[i].rssi = obj.rssi;
+			}
+		}
+
+		/* Return the average RSSI value of a floor.
+		 *
+		 */
+		averageRSSI = function() {
+			for (var fl in self.building.floors) {
+				var f = self.building.floors[fl];
+				if (!f.devices.length) continue;
+
+				var srssi = 0;
+				for (var i = 0; i < f.devices.length; i++) {
+					var crownstone = f.devices[i];
+					var rssi = crownstone.rssi;
+					srssi += rssi;
+				}
+				srssi = srssi / f.devices.length;
+				f.avg_rssi = srssi;
+				console.log("Average for floor " + fl + " is " + f.avg_rssi);
+			}
+		}
+
+		getLevel = function(device) {
+			for (var fl in self.building.floors) {
+				var f = self.building.floors[fl];
+				for (var i = 0; i < f.devices.length; i++) {
+					var crownstone = f.devices[i];
+					if (crownstone.address == device.address) {
+						return fl;
+					}
+				}
+			}
+			return null;
 		}
 
 		stopLocalizing = function() {
-			$('#localizeBtn').text('Start to localize');
+			$('#localizeBtn').text('Start localizing');
+			stopSearch();
 			localizing = false;
 		}
 
@@ -1155,8 +1251,9 @@ var crownstone = {
 
 				// update map of crownstones
 				if (!existCrownstone(obj)) {
-					addCrownstone(obj);
 					var address = obj.address;
+					// TODO: if we can not get this service/characteristic multiple times for a specific device
+					// assume it to be not there and don't try to connect to it
 					connectAndDiscover(
 						address, 
 						generalServiceUuid, 
@@ -1164,11 +1261,13 @@ var crownstone = {
 						function() {
 							getFloor(function(floor) {
 								console.log("Floor found: " + floor);
-								var cnt = self.floors[floor].count;
-								self.floors[floor].crownstones[cnt] = obj;
-								self.floors[floor].count++;
+								//var cnt = self.building.floors[floor].crownstones.length;
+								//self.building.floors[floor].crownstones[cnt] = obj;
+								self.building.floors[floor].devices.push(obj);
+								//self.building.floors[floor].count++;
 								updateTable(floor, obj);
 								disconnect();
+								addCrownstone(obj);
 							}, function(msg) {
 								generalErrorCB(msg);
 								disconnect();
@@ -1187,8 +1286,10 @@ var crownstone = {
 		 * or written. It does not disconnect, that's the responsbility of the callee.
 		 */
 		connectAndDiscover = function(address, serviceUuid, characteristicUuid, successCB) {
+			var timeout = 10; // 10 seconds here
 			connect(
 				address, 
+				timeout,
 				function connectionSuccess() {
 					ble.discoverCharacteristic(
 						address,
@@ -1231,7 +1332,6 @@ var crownstone = {
 		updateCrownstone = function(device) {
 			self.crownstones[device.address]['rssi'] = device.rssi;
 		}
-
 
 		// start
 		start();	

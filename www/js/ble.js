@@ -76,8 +76,8 @@ var BLEHandler = function() {
 			{"request": true});
 	}
 
-	self.connectDevice = function(address, callback) {
-		console.log("Beginning to connect to " + address + " with 5 second timeout");
+	self.connectDevice = function(address, timeout, callback) {
+		console.log("Beginning to connect to " + address + " with " + timeout + " second timeout");
 		var paramsObj = {"address": address};
 		bluetoothle.connect(function(obj) { // connectSuccess
 				if (obj.status == "connected") {
@@ -117,7 +117,7 @@ var BLEHandler = function() {
 					callback(false);
 				}
 			}, 
-			5000);
+			timeout * 1000);
 	}
 
 	self.clearConnectTimeout = function() { 
@@ -272,6 +272,9 @@ var BLEHandler = function() {
 		}
 	}
 
+	/*
+	 * Contains bug: when a device is in "disconnecting" state, it will never be closed. 
+	 */
 	self.disconnectDevice = function(address) {
 		var paramsObj = {"address": address}
 		bluetoothle.disconnect(function(obj) { // disconnect success
