@@ -322,11 +322,21 @@ var crownstone = {
 						setTimeout(function() {
 							getCurrentCurve(function(result) {
 								var list = [];
-								for (var i = 2; i < result.length; ++i) {
-									list.push([i-2, result[i]]);
+								// Curve starts after a zero crossing, start with 0 for a nice graph
+								list.push([0, 0]);
+								// First and last number are start and end timestamp, use them to calculate the x values
+								var t_start = result[0];
+								var t_end = result[result.length-1];
+								var t_step = (t_end-t_start) / (result.length -2);
+								// Convert to ms
+								t_step = t_step / 32.768;
+
+								for (var i = 2; i < result.length-1; ++i) {
+									list.push([(i-1)*t_step, result[i]]);
 								}
 								$('#currentCurve').show();
-								$.plot("#currentCurve", [list], {xaxis: {show: false}});
+//								$.plot("#currentCurve", [list], {xaxis: {show: false}});
+								$.plot("#currentCurve", [list]);
 							});
 						}, 100);
 					} else {
