@@ -110,8 +110,17 @@
 			</div>
 
 			<div>
-				<p>Localization on the moment is on the level of floors.</p>
-				<button id="localizeBtn" class="ui-btn-active ui-state-persist" data-role="button" disabled>Search my floor</button>
+				<p>Localization on the moment is on the level of floors. You first need to search
+crownstones before you can use them to localize yourself. This will not be the final implementation.</p>
+				<div class="indoorBtn">
+					<button id="searchFloorBtn" class="ui-btn-active ui-state-persist" data-role="button" disabled>Start searching</button>
+				</div>
+				<br/>
+				<div id="building" class="buildingTable" align="center"></div>
+				<br/>
+				<div class="indoorBtn">
+					<button id="localizeBtn" class="ui-btn-active ui-state-persist" data-role="button" disabled>Start to localize</button>
+				</div>
 			</div>
 
 			<div data-role="panel" class="virtualMemoPanel" data-display="reveal" data-theme="b">

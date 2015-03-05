@@ -29,6 +29,9 @@ var crownstone = {
 	// map of crownstones 
 	crownstones: {},
 
+	// structure to callect crownstones in a building (per floor)
+	building: {},
+
 	/* Start should be called if all plugins are ready and all functionality can be called.
 	 */
 	start:function() {
@@ -36,6 +39,7 @@ var crownstone = {
 		ble.init(function(enabled) {
 			$('#findCrownstones').prop("disabled", !enabled);
 			$('#localizeBtn').prop("disabled", !enabled);
+			$('#searchFloorBtn').prop("disabled", !enabled);
 		});
 	},
 
@@ -70,6 +74,7 @@ var crownstone = {
 		var connecting = false;
 		var tracking = false;
 
+		var floorsearching = false;
 		var localizing = false;
 
 		var connectedDevice = "";
@@ -185,7 +190,8 @@ var crownstone = {
 							searching = false;
 							stopSearch();
 						}
-						connect(this.id, gotoControlPage, connectionFailed);
+						var timeout = 5;
+						connect(this.id, timeout, gotoControlPage, connectionFailed);
 						$('#crownstone').show();
 					})
 				});
@@ -316,11 +322,21 @@ var crownstone = {
 						setTimeout(function() {
 							getCurrentCurve(function(result) {
 								var list = [];
-								for (var i = 2; i < result.length; ++i) {
-									list.push([i-2, result[i]]);
+								// Curve starts after a zero crossing, start with 0 for a nice graph
+								list.push([0, 0]);
+								// First and last number are start and end timestamp, use them to calculate the x values
+								var t_start = result[0];
+								var t_end = result[result.length-1];
+								var t_step = (t_end-t_start) / (result.length -2);
+								// Convert to ms
+								t_step = t_step / 32.768;
+
+								for (var i = 2; i < result.length-1; ++i) {
+									list.push([(i-1)*t_step, result[i]]);
 								}
 								$('#currentCurve').show();
-								$.plot("#currentCurve", [list], {xaxis: {show: false}});
+//								$.plot("#currentCurve", [list], {xaxis: {show: false}});
+								$.plot("#currentCurve", [list]);
 							});
 						}, 100);
 					} else {
@@ -487,62 +503,69 @@ var crownstone = {
 			$('#currentCurve').hide();
 
 			// discover available services
-			discoverServices(function(serviceUuid, characteristicUuid) {
-				console.log("updating: " + serviceUuid + ' : ' + characteristicUuid);
+			discoverServices(
+				function discoverSuccessful(serviceUuid, characteristicUuid) {
+					console.log("updating: " + serviceUuid + ' : ' + characteristicUuid);
 
-				if (serviceUuid == indoorLocalizationServiceUuid) {
-					if (characteristicUuid == deviceScanUuid) {
-						$('#scanDevicesTab').show();
-					} 
-					if (characteristicUuid == addTrackedDeviceUuid) {
-						$('#trackedDevicesTab').show();
+					if (serviceUuid == indoorLocalizationServiceUuid) {
+						if (characteristicUuid == deviceScanUuid) {
+							$('#scanDevicesTab').show();
+						} 
+						if (characteristicUuid == addTrackedDeviceUuid) {
+							$('#trackedDevicesTab').show();
+						}
 					}
+					if (serviceUuid == generalServiceUuid) {
+						if (characteristicUuid == temperatureCharacteristicUuid) {
+							$('#getTemperatureTab').show();
+						}
+						if (characteristicUuid == changeNameCharacteristicUuid) {
+							$('#changeNameTab').show();
+							// request device name to fill initial value
+							setTimeout(function() {
+								$('#getDeviceName').trigger('click');
+							}, (trigger++) * triggerDelay);
+						}
+						if (characteristicUuid == deviceTypeUuid) {
+							$('#deviceTypeTab').show();
+							// request device type to fill initial value
+							setTimeout(function() {
+								$('#getDeviceType').trigger('click');
+							}, (trigger++) * triggerDelay);
+						}
+						if (characteristicUuid == roomUuid) {
+							$('#roomTab').show();
+							// request room to fill initial value
+							setTimeout(function() {
+								$('#getRoom').trigger('click');
+							}, (trigger++) * triggerDelay);
+						}
+					}
+					if (serviceUuid == powerServiceUuid) {
+						if (characteristicUuid == pwmUuid) {
+							$('#pwmTab').show();
+						}
+						if (characteristicUuid == currentConsumptionUuid) {
+							$('#currentConsumptionTab').show();
+						}
+						if (characteristicUuid == currentLimitUuid) {
+							$('#currentLimitTab').show();
+							// request current limit to fill initial value
+							setTimeout(function() {
+								$('#getCurrentLimit').trigger('click');
+							}, (trigger++) * triggerDelay);
+						}
+						if (characteristicUuid == currentCurveUuid) {
+							$('#currentCurveTab').show();
+						}
+					}
+				},
+				function discoveryFailure(msg) {
+					console.log(msg);
+					// do we really want to disconnect here?
+					disconnect();
 				}
-				if (serviceUuid == generalServiceUuid) {
-					if (characteristicUuid == temperatureCharacteristicUuid) {
-						$('#getTemperatureTab').show();
-					}
-					if (characteristicUuid == changeNameCharacteristicUuid) {
-						$('#changeNameTab').show();
-						// request device name to fill initial value
-						setTimeout(function() {
-							$('#getDeviceName').trigger('click');
-						}, (trigger++) * triggerDelay);
-					}
-					if (characteristicUuid == deviceTypeUuid) {
-						$('#deviceTypeTab').show();
-						// request device type to fill initial value
-						setTimeout(function() {
-							$('#getDeviceType').trigger('click');
-						}, (trigger++) * triggerDelay);
-					}
-					if (characteristicUuid == roomUuid) {
-						$('#roomTab').show();
-						// request room to fill initial value
-						setTimeout(function() {
-							$('#getRoom').trigger('click');
-						}, (trigger++) * triggerDelay);
-					}
-				}
-				if (serviceUuid == powerServiceUuid) {
-					if (characteristicUuid == pwmUuid) {
-						$('#pwmTab').show();
-					}
-					if (characteristicUuid == currentConsumptionUuid) {
-						$('#currentConsumptionTab').show();
-					}
-					if (characteristicUuid == currentLimitUuid) {
-						$('#currentLimitTab').show();
-						// request current limit to fill initial value
-						setTimeout(function() {
-							$('#getCurrentLimit').trigger('click');
-						}, (trigger++) * triggerDelay);
-					}
-					if (characteristicUuid == currentCurveUuid) {
-						$('#currentCurveTab').show();
-					}
-				}
-			});
+			);
 		});
 
 		$('#controlPage').on('pagehide', function(event) {
@@ -678,7 +701,7 @@ var crownstone = {
 					deviceTable.html(r.join(''));
 
 					$(document).on("click", "#deviceTable tr", function(e) {
-						// cordova.plugins.clipboard.copy(this.id);
+						cordova.plugins.clipboard.copy(this.id);
 					})
 
 					$('#scanDevices').prop("disabled", false);
@@ -799,6 +822,11 @@ var crownstone = {
 		}
 
 		var findTimer = null;
+
+		/** Find crownstones and report the RSSI strength of the advertisements
+		 *
+		 *
+		 */
 		findCrownstones = function(callback) {
 			console.log("Find crownstones");
 			$('#findCrownstones').html("Stop");
@@ -809,12 +837,13 @@ var crownstone = {
 			//   to receive rssi updates for such devices too, we now
 			//   restart the ble scan every second, thus getting at least
 			//	 an rssi update every second
+			var timeout = 1000 * 100;
 			// if (device.model == "Nexus 4") {
 				findTimer = setInterval(function() {
 					//console.log("restart");
 					ble.stopEndlessScan();
 					ble.startEndlessScan(callback);
-				}, 1000);
+				}, timeout);
 			// }
 		}
 
@@ -827,12 +856,12 @@ var crownstone = {
 			$('#findCrownstones').html("Find Crownstones");
 		}
 
-		connect = function(address, successCB, errorCB) {
+		connect = function(address, timeout, successCB, errorCB) {
 			if (!(connected || connecting)) {
 				connecting = true;
 				console.log("connecting to " + address);
 				// 
-				ble.connectDevice(address, function(success) {
+				ble.connectDevice(address, timeout, function(success) {
 
 					connecting = false;
 					if (success) {
@@ -840,7 +869,8 @@ var crownstone = {
 						connectedDevice = address;
 						successCB();
 					} else {
-						errorCB();
+						var msg = "Connection failure";
+						errorCB(msg);
 					}
 
 				});
@@ -1013,53 +1043,304 @@ var crownstone = {
 		$('#indoorLocalizationPage').on("pagecreate", function() {
 			console.log("Create indoor localization page");
 
-			$('#localizeBtn').on('click', function(event) {
-				console.log("User clicks button to start or stop localization");
-				if (!localizing) {
-					startLocalization();
+			self.building.count = 5;
+			self.building.floors = {};
+			for (i = -1; i < self.building.count-1; i++) {
+				self.building.floors[i] = {};
+				self.building.floors[i].level = i;
+				self.building.floors[i].devices = [];
+			}
+
+			// create table to represent floor of building
+			var table = $('<table></table>'); 
+			var floor_cnt = 5;
+			var column_cnt = 2;
+			var row;
+			var field;
+			var style;
+			style  = $('<col width="20%">');
+			table.append(style);
+			style = $('<col width="80%">');
+			table.append(style);
+			// header
+			row = $('<tr></tr>');
+			// no seperate th fields, first td is automatically header in css
+			field = $('<td></td>').text("Floor"); 
+			row.append(field);
+			field = $('<td></td>').text("Nodes");
+			row.append(field);
+			table.append(row);
+
+			// assume floor starts at -1
+			for (i = self.building.count-1; i >= -1; i--) {
+				row = $('<tr></tr>');
+				row.prop('id', 'buildingRow' + i);
+				field = $('<td></td>').text(i);
+				row.append(field);
+				field = $('<td></td>').addClass('buildingField').text('');
+				row.append(field);
+				field.prop('id', 'buildingField' + i);
+				table.append(row);
+			}			
+
+			$('#building').append(table);
+
+			$('#searchFloorBtn').on('click', function(event) {
+				console.log("User clicks button to start/stop search crownstones for localization");
+
+				if (localizing) {
+					stopLocalizing();
+				}
+
+				if (!floorsearching) {
+					startFloorSearching();
 				} else {
-					stopLocalization();
+					stopFloorSearching();
 				}
 			});
+
+			$('#localizeBtn').on('click', function(event) {
+				console.log("User clicks button to start/stop to use found crownstones for localization");
+				if (floorsearching) {
+					stopFloorSearching();
+				}
+				if (!localizing) {
+					startLocalizing();
+				} else {
+					stopLocalizing();
+				}
+			});
+
+			var test_dummy_crownstone = false;
+			if (test_dummy_crownstone) {
+				var obj = {};
+				obj.name = "test";
+				obj.rssi = -49;
+				var floor = 0;
+				self.building.floors[floor].devices.push(obj);
+				averageRSSI();
+				updateTable(0,obj);
+			}
 		});
 
-		startLocalization = function() {
+		/** Test function returns the floor with most crownstones
+		 */
+		mostCrownstones = function() {
+			var max_count = -1; var max_level = -1;
+			for (var fl in self.building.floors) {
+				var f = self.building.floors[fl];
+				if (f.count > max_count) {
+					max_level = fl;
+					max_count = f.count;
+				}
+			}
+			return max_level;
+		}
+
+		updateTable = function(floor, device) {
+			var jqueryID = '#buildingField' + floor;
+			var txt = $(jqueryID).text();
+			if (device.name) {
+				$(jqueryID).text(device.name + ' ' + txt);
+			} else {
+				$(jqueryID).text('unknown device ' + txt);
+			}
+		}
+
+		updateTableActivity = function() {
+			//var select_level = mostCrownstones();
+			var select_level = closestLevel();
+			if (select_level == -255) return;
+
+			console.log("Set closest floor level to " + select_level);
+			for (var fl in self.building.floors) {
+				var f = self.building.floors[fl];
+				var floor = f.level;
+				var jQueryID = '#buildingRow' + floor;
+				var elem = $(jQueryID);
+				elem.removeClass('activeRow');
+			}
+			var jQueryID = '#buildingRow' + select_level;
+			var elem = $(jQueryID);
+			elem.addClass('activeRow');
+		}
+
+		startLocalizing = function() {
 			localizing = true;
+			$('#localizeBtn').text('Stop localizing');
+			// search for RSSI signals
+			findCrownstones(function(obj) {
+				if (!existCrownstone(obj)) {
+					//console.log("RSSI value from unknown " + obj.name + ": " + obj.rssi);
+					//TODO: in hindsight also add crownstones, but only if connection goes okay
+					// because we have to know what level they are at
+					//   addCrownstone(obj);
+				} else {
+					console.log("New RSSI value for " + obj.name + ": " + obj.rssi);
+					//updateCrownstone(obj);
+					updateRSSI(obj);
+					averageRSSI();
+					updateTableActivity();
+				}
+			});
+		}
+
+		closestLevel = function() {
+			var highest_rssi = -1000;
+			var level = -255;
+			for (var fl in self.building.floors) {
+				var f = self.building.floors[fl];
+				if (f.avg_rssi) {
+					if (f.avg_rssi > highest_rssi) {
+						highest_rssi = f.avg_rssi;
+						level = fl;
+					}
+				}
+			}
+			return level;
+		}
+
+		updateRSSI = function(obj) {
+			var level = getLevel(obj);
+			if (!level) { 
+				console.log("Error: crownstone not found on any floor level");
+				return;
+			}
+			var f = self.building.floors[level];
+			for (var i = 0; i < f.devices.length; i++) {
+				f.devices[i].rssi = obj.rssi;
+			}
+		}
+
+		/* Return the average RSSI value of a floor.
+		 *
+		 */
+		averageRSSI = function() {
+			for (var fl in self.building.floors) {
+				var f = self.building.floors[fl];
+				if (!f.devices.length) continue;
+
+				var srssi = 0;
+				for (var i = 0; i < f.devices.length; i++) {
+					var crownstone = f.devices[i];
+					var rssi = crownstone.rssi;
+					srssi += rssi;
+				}
+				srssi = srssi / f.devices.length;
+				f.avg_rssi = srssi;
+			}
+			var str = ' ';
+			for (var fl in self.building.floors) {
+				var f = self.building.floors[fl];
+				if (f.avg_rssi) {
+					str += f.avg_rssi + ' ';
+				} else {
+					str += '-?? ';
+				}
+			}
+			console.log("Averages floor RSSI [" + str + "]");
+			
+		}
+
+		getLevel = function(device) {
+			for (var fl in self.building.floors) {
+				var f = self.building.floors[fl];
+				for (var i = 0; i < f.devices.length; i++) {
+					var crownstone = f.devices[i];
+					if (crownstone.address == device.address) {
+						return fl;
+					}
+				}
+			}
+			return null;
+		}
+
+		stopLocalizing = function() {
+			$('#localizeBtn').text('Start localizing');
+			stopSearch();
+			localizing = false;
+		}
+
+		startFloorSearching = function() {
+			floorsearching = true;
+			$('#searchFloorBtn').text('Stop searching');
+
 			// find crownstones by scanning for them
 			findCrownstones(function(obj) {
 
 				// update map of crownstones
 				if (!existCrownstone(obj)) {
-					addCrownstone(obj);
 					var address = obj.address;
-					connect(address, 
-						function connectionSuccess() {
+					// TODO: if we can not get this service/characteristic multiple times for a specific device
+					// assume it to be not there and don't try to connect to it
+					connectAndDiscover(
+						address, 
+						generalServiceUuid, 
+						getConfigurationCharacteristicUuid, 
+						function() {
 							getFloor(function(floor) {
 								console.log("Floor found: " + floor);
+								self.building.floors[floor].devices.push(obj);
+								updateTable(floor, obj);
 								disconnect();
+								addCrownstone(obj);
 							}, function(msg) {
-								disconnect();
 								generalErrorCB(msg);
-							});
-						},
-						function connectionFailure(msg) {
-							// no need to disconnect
-							generalErrorCB(msg);
-						});
+								disconnect();
+							})
+						}
+					);
 				} else {
 					updateCrownstone(obj);
 				}
 			});
 		}
 
+		/** Connect and discover 
+		 *
+		 * This function does do the boring connection and discovery work before a characteristic can be read
+		 * or written. It does not disconnect, that's the responsbility of the callee.
+		 */
+		connectAndDiscover = function(address, serviceUuid, characteristicUuid, successCB) {
+			var timeout = 10; // 10 seconds here
+			/*
+			var connected = ble.isConnected(address);
+			if (connected) {
+				console.log("Device is already connected");
+			} else {
+				console.log("Device is not yet connected");
+			}*/
+			connect(
+				address, 
+				timeout,
+				function connectionSuccess() {
+					ble.discoverCharacteristic(
+						address,
+						serviceUuid,
+						characteristicUuid, 
+						successCB,
+						function discoveryFailure(msg) {
+							console.log(msg);
+							disconnect();
+						}
+					)
+				},
+				function connectionFailure(msg) {
+					 // no need to disconnect, because we enter here only when connecting fails
+					 generalErrorCB(msg);
+				}
+			);
+		}
+
 		generalErrorCB = function(msg) {
 			console.log(msg);
 		}
 
-		stopLocalization = function() {
+		stopFloorSearching = function() {
 			// stop scanning
 			stopSearch();
-			localizing = false;
+			floorsearching = false;
+			$('#searchFloorBtn').text('Start to search');
 		}
 
 		existCrownstone = function(device) {
@@ -1074,7 +1355,6 @@ var crownstone = {
 		updateCrownstone = function(device) {
 			self.crownstones[device.address]['rssi'] = device.rssi;
 		}
-
 
 		// start
 		start();	
