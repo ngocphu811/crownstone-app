@@ -497,6 +497,7 @@ var crownstone = {
 			$('#roomTab').hide();
 			$('#pwmTab').hide();
 			$('#currentConsumptionTab').hide();
+			$('#currentConsumption').hide();
 			$('#currentLimitTab').hide();
 			$('#trackedDevicesTab').hide();
 			$('#currentCurveTab').hide();
