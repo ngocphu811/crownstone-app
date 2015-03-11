@@ -547,9 +547,11 @@ var BLEHandler = function() {
 					if (size < 1) {
 						return;
 					}
+
 					var arr16 = new Uint16Array(size);
 					for (var i=0; i<size; ++i) {
-						arr16[size-1-i] = (arr8[2*i+2] << 8) + arr8[2*i+3];
+						// arr16[i] = (arr8[2*i+2] << 8) + arr8[2*i+3];
+						arr16[i] = (arr8[2*i+2] << 8) + arr8[2*i+3];
 					}
 					var arrStr = "";
 					for (var i=0; i<size; ++i) {
