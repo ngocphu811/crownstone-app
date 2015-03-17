@@ -165,9 +165,11 @@ var BLEHandler = function() {
 				console.log("Connect error: " + obj.error + " - " + obj.message);
 				// for now we are gonna attempt a reconnect
 				if (obj.error == 'connect') {
-					console.log("Attempt a disconnect, a reconnect didn't work");
+					// console.log("Attempt a disconnect, a reconnect didn't work");
 				//	self.reconnectDevice(address, timeout, callback);
-					self.disconnectDevice(address);
+					// self.disconnectDevice(address);
+					console.log("close device, try again...");
+					self.closeDevice(address);
 				} else {
 					self.clearConnectTimeout();
 					if (callback) {
@@ -634,7 +636,7 @@ var BLEHandler = function() {
 				function(configuration) {
 					if (configuration.length != 1) {
 						var msg = "Configuration value for floor level should have length 1";
-						errorCB(msg);
+						if (errorCB) errorCB(msg);
 					} else {
 						var floor = configuration.payload[0];
 						successCB(floor);
@@ -643,6 +645,16 @@ var BLEHandler = function() {
 				errorCB
 			);
 		}, errorCB);
+	}
+
+	/* set floor to value
+	 */
+	self.setFloor = function(address, value, successCB, errorCB) {
+		var configuration = {};
+		configuration.type = configFloorUuid;
+		configuration.length = 1;
+		configuration.payload = [value];
+		self.writeConfiguration(address, configuration, successCB, errorCB);
 	}
 
 	/** Get a specific configuration, selected before in selectConfiguration
@@ -669,53 +681,59 @@ var BLEHandler = function() {
 				else
 				{
 					var msg = "Unexpected read status: " + obj.status;
-					errorCB();
+					console.log(msg);
+					if (errorCB) errorCB();
 				}
 			}, 
 			function(obj) { // read error
 				var msg = 'Error in reading "get configuration" characteristic' +
 					obj.error + " - " + obj.message;
-				errorCB(msg);
+				console.log(msg);
+				if (errorCB) errorCB(msg);
 			},
 			paramsObj);
 	}
 
 	/** Writing a configuration
 	 *
-	 * NOT TESTED
 	 */
 	self.writeConfiguration = function(address, configuration, successCB, errorCB) {
 		if (configuration.type != configFloorUuid) {
 			var msg = "Not yet support configuration option";
-			errorCB(msg);
+			console.log(msg);
+			if (errorCB) errorCB(msg);
 		}
 
 		// build up a single byte array, prepending payload with type and payload length
 		var u8 = new Uint8Array(configuration.length+2);
 		u8[0] = configuration.type;
 		u8[1] = configuration.length;
-		u8.splice(2,0, configuration.payload);
+		u8.set(configuration.payload, 2);
+
 
 		var v = bluetoothle.bytesToEncodedString(u8);
 		console.log("Write " + v + " at service " + generalServiceUuid + 
-				' and characteristic ' + writeConfigurationCharacteristicUuid );
+				' and characteristic ' + setConfigurationCharacteristicUuid );
 		var paramsObj = {"address": address, "serviceUuid": generalServiceUuid, 
-			"characteristicUuid": writeConfigurationCharacteristicUuid , "value" : v};
+			"characteristicUuid": setConfigurationCharacteristicUuid , "value" : v};
 		bluetoothle.write(function(obj) { // write success
 				if (obj.status == 'written') {
 					var msg = 'Successfully written to "write configuration" characteristic - ' +
 						obj.status;
-					successCB(msg);
+					console.log(msg);
+					if (successCB) successCB(msg);
 				} else {
 					var msg = 'Error in writing to "write configuration" characteristic - ' +
 						obj;
-					errorCB(msg);
+					console.log(msg);
+					if (errorCB) errorCB(msg);
 				}
 			},
 			function(obj) { // write error
 				var msg = 'Error in writing to "write configuration" characteristic - ' +
 					obj.error + " - " + obj.message;
-				errorCB(msg);
+				console.log(msg);
+				if (errorCB) errorCB(msg);
 			},
 			paramsObj);
 	}
@@ -725,7 +743,7 @@ var BLEHandler = function() {
 	self.selectConfiguration = function(address, configurationType, successCB, errorCB) {
 		if (configurationType != configFloorUuid) {
 			var msg = "Not yet support configuration option";
-			errorCB(msg);
+			if (errorCB) errorCB(msg);
 		}
 
 		var u8 = new Uint8Array(1);
@@ -741,17 +759,20 @@ var BLEHandler = function() {
 				if (obj.status == 'written') {
 					var msg = 'Successfully written to "select configuration" characteristic - ' +
 						obj.status;
-					successCB(msg);
+					console.log(msg);
+					if (successCB) successCB(msg);
 				} else {
 					var msg = 'Error in writing to "select configuration" characteristic - ' +
 						obj;
-					errorCB(msg);
+					console.log(msg);
+					if (errorCB) errorCB(msg);
 				}
 			},
 			function(obj) { // write error
 				var msg = 'Error in writing to "select configuration" characteristic - ' +
 					obj.error + " - " + obj.message;
-				errorCB(msg);
+				console.log(msg);
+				if (errorCB) errorCB(msg);
 			},
 			paramsObj);
 	}

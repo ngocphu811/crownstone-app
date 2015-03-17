@@ -19,6 +19,9 @@ if (!String.prototype.format) {
   };
 }
 
+var TTL = 2000; // time-to-live for RSSI values in localisation, 2 seconds
+var MAX_HISTORY = 20; // number of rssi values kept in history per device for indoor localization
+
 var ble;
 
 var crownstone = {
@@ -29,7 +32,13 @@ var crownstone = {
 	// map of crownstones 
 	crownstones: {},
 
-	// structure to callect crownstones in a building (per floor)
+	// map of crownstones under question
+	underQuestion: {},
+
+	// map of crownstones not supporting indoor localisation
+	blacklist: {},
+
+	// structure to collect crownstones in a building (per floor)
 	building: {},
 
 	/* Start should be called if all plugins are ready and all functionality can be called.
@@ -423,6 +432,17 @@ var crownstone = {
 //				}
 			});
 
+			$('#getFloor').on('click', function(event) {
+				getFloor(function(floor) {
+					$('#floor').val(floor);
+				});
+			});
+
+			$('#setFloor').on('click', function(event) {
+				console.log('click set floor');
+				setFloor($('#floor').val());
+			});
+
 			// $('#findCrownstones').on('click', function(event) {
 			// 	$('#crownStoneTable').show();
 
@@ -487,6 +507,7 @@ var crownstone = {
 
 			$('#deviceTable').html('');
 			$('#trackedDevices').html('');
+			$('#floor').val('');
 
 			// hide all tabs, will be shown only if
 			// service / characteristic is available
@@ -502,6 +523,7 @@ var crownstone = {
 			$('#trackedDevicesTab').hide();
 			$('#currentCurveTab').hide();
 			$('#currentCurve').hide();
+			$('#floorTab').hide();
 
 			// discover available services
 			discoverServices(
@@ -539,6 +561,12 @@ var crownstone = {
 							// request room to fill initial value
 							setTimeout(function() {
 								$('#getRoom').trigger('click');
+							}, (trigger++) * triggerDelay);
+						}
+						if (characteristicUuid == setConfigurationCharacteristicUuid) {
+							$('#floorTab').show();
+							setTimeout(function() {
+								$('#getFloor').trigger('click');
 							}, (trigger++) * triggerDelay);
 						}
 					}
@@ -832,20 +860,6 @@ var crownstone = {
 			console.log("Find crownstones");
 			$('#findCrownstones').html("Stop");
 			ble.startEndlessScan(callback);
-			// [9.12.14] Some devices (such as the Nexus 4) only report
-			//   the first advertisement for each device. all
-			//   subsequently received advertisements are dropped. In order
-			//   to receive rssi updates for such devices too, we now
-			//   restart the ble scan every second, thus getting at least
-			//	 an rssi update every second
-			var timeout = 1000 * 100;
-			// if (device.model == "Nexus 4") {
-				findTimer = setInterval(function() {
-					//console.log("restart");
-					ble.stopEndlessScan();
-					ble.startEndlessScan(callback);
-				}, timeout);
-			// }
 		}
 
 		stopSearch = function() {
@@ -986,6 +1000,14 @@ var crownstone = {
 				console.log("Get floor level");
 				ble.getFloor(connectedDevice, callback, errorCB);
 			}
+		}
+
+		setFloor = function(value) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
+			}
+			ble.setFloor(connectedDevice, value);
 		}
 
 		/*******************************************************************************************************
@@ -1180,6 +1202,7 @@ var crownstone = {
 					console.log("New RSSI value for " + obj.name + ": " + obj.rssi);
 					//updateCrownstone(obj);
 					updateRSSI(obj);
+					updateVisibility();
 					averageRSSI();
 					updateTableActivity();
 				}
@@ -1209,7 +1232,51 @@ var crownstone = {
 			}
 			var f = self.building.floors[level];
 			for (var i = 0; i < f.devices.length; i++) {
-				f.devices[i].rssi = obj.rssi;
+				var device = f.devices[i];
+				if (device.address == obj.address) {
+					device.rssi = obj.rssi;
+					device.rssiHistory.push(obj.rssi);
+
+					// remove oldest element if max history reached
+					if (device.rssiHistory.length > MAX_HISTORY) {
+						device.rssiHistory.shift();
+						console.log("rssiHistory overflow");
+					}
+
+					// update weight. for weight use the frequency with which the device is seen.
+					// this is caluclated per second
+					device.count++;
+					if ($.now() - device.lastWeightUpdate > 1000) {
+						device.weight = device.count / ($.now() - device.lastWeightUpdate) * 1000;
+						device.lastWeightUpdate = $.now();
+						device.count = 0;
+						console.log("weight update: " + device.name + ": " + device.weight);
+					}
+
+					// update last seen and set to visible
+					device.lastSeen = $.now();
+					device.visible = true;
+				}
+			}
+		}
+
+		/* updated visibility of crownstones. check TTL, if time since
+		 * last update is greater than TTL, set visible to false
+		 */
+		updateVisibility = function() {
+			console.log("updateVisibility()");
+			for (var idx in self.building.floors) {
+				var floor = self.building.floors[idx];
+				if (!floor.devices.length) continue;
+
+				for (var i = 0; i < floor.devices.length; ++i) {
+					var device = floor.devices[i];
+					if ($.now() - device.lastSeen > TTL) {
+						console.log("RSSI for " + device.name + " expired!");
+						device.visible = false;
+						initDevice(device);
+					}
+				}
 			}
 		}
 
@@ -1222,19 +1289,30 @@ var crownstone = {
 				if (!f.devices.length) continue;
 
 				var srssi = 0;
+				var count = 0;
 				for (var i = 0; i < f.devices.length; i++) {
 					var crownstone = f.devices[i];
-					var rssi = crownstone.rssi;
-					srssi += rssi;
+					if (crownstone.visible) {
+						var deviceRssiAvg = 0;
+						var deviceCount = 0;
+						for (var j = 0; j < crownstone.rssiHistory.length; j++) {
+							deviceRssiAvg += crownstone.rssiHistory[j];
+							deviceCount++;
+						}
+						srssi += deviceRssiAvg / deviceCount * crownstone.weight;
+						count += crownstone.weight;
+						// srssi += crownstone.rssi;
+						// count++;
+					}
 				}
-				srssi = srssi / f.devices.length;
-				f.avg_rssi = srssi;
+				f.avg_rssi = srssi / count;
+				f.weight = count;
 			}
 			var str = ' ';
 			for (var fl in self.building.floors) {
 				var f = self.building.floors[fl];
 				if (f.avg_rssi) {
-					str += f.avg_rssi + ' ';
+					str += f.avg_rssi.toFixed(2) + ' (' + f.weight.toFixed(2) + ') ';
 				} else {
 					str += '-?? ';
 				}
@@ -1262,6 +1340,13 @@ var crownstone = {
 			localizing = false;
 		}
 
+		initDevice = function(obj) {
+			obj.rssiHistory = [];
+			obj.lastWeightUpdate = $.now()
+			obj.weight = 0;
+			obj.count = 0;
+		}
+
 		startFloorSearching = function() {
 			floorsearching = true;
 			$('#searchFloorBtn').text('Stop searching');
@@ -1270,7 +1355,7 @@ var crownstone = {
 			findCrownstones(function(obj) {
 
 				// update map of crownstones
-				if (!existCrownstone(obj)) {
+				if (!hasSeen(obj)) {
 					var address = obj.address;
 					// TODO: if we can not get this service/characteristic multiple times for a specific device
 					// assume it to be not there and don't try to connect to it
@@ -1281,6 +1366,7 @@ var crownstone = {
 						function() {
 							getFloor(function(floor) {
 								console.log("Floor found: " + floor);
+								initDevice(obj);
 								self.building.floors[floor].devices.push(obj);
 								updateTable(floor, obj);
 								disconnect();
@@ -1289,9 +1375,19 @@ var crownstone = {
 								generalErrorCB(msg);
 								disconnect();
 							})
+						},
+						function(msg) {
+							// addToBlacklist(obj);
+							if ((self.underQuestion.hasOwnProperty(device.address))) {
+								if (++self.underQuestion[device.address].count >= 3) {
+									addToBlacklist(obj);
+								}
+							} else {
+								self.underQuestion[device.address] = {'count' : 0};
+							}
 						}
 					);
-				} else {
+				} else if (!isInBlacklist(obj)) {
 					updateCrownstone(obj);
 				}
 			});
@@ -1302,7 +1398,7 @@ var crownstone = {
 		 * This function does do the boring connection and discovery work before a characteristic can be read
 		 * or written. It does not disconnect, that's the responsbility of the callee.
 		 */
-		connectAndDiscover = function(address, serviceUuid, characteristicUuid, successCB) {
+		connectAndDiscover = function(address, serviceUuid, characteristicUuid, successCB, errorCB) {
 			var timeout = 10; // 10 seconds here
 			/*
 			var connected = ble.isConnected(address);
@@ -1323,12 +1419,12 @@ var crownstone = {
 						function discoveryFailure(msg) {
 							console.log(msg);
 							disconnect();
+							errorCB(msg);
 						}
 					)
 				},
 				function connectionFailure(msg) {
-					 // no need to disconnect, because we enter here only when connecting fails
-					 generalErrorCB(msg);
+					errorCB(msg);
 				}
 			);
 		}
@@ -1344,6 +1440,10 @@ var crownstone = {
 			$('#searchFloorBtn').text('Start to search');
 		}
 
+		hasSeen = function(device) {
+			return existCrownstone(device) || isInBlacklist(device);
+		}
+
 		existCrownstone = function(device) {
 			return (self.crownstones.hasOwnProperty(device.address));
 		}
@@ -1355,6 +1455,15 @@ var crownstone = {
 
 		updateCrownstone = function(device) {
 			self.crownstones[device.address]['rssi'] = device.rssi;
+		}
+
+		addToBlacklist = function(device) {
+			console.log("Crownstone: " + device.name + " does not support indoor localisation. adding to blacklist");
+			self.blacklist[device.address] = {'name': device.name, 'rssi': device.rssi};
+		}
+
+		isInBlacklist = function(device) {
+			return (self.blacklist.hasOwnProperty(device.address));
 		}
 
 		// start
