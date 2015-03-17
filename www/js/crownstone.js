@@ -497,6 +497,8 @@ var crownstone = {
 				console.log("no connected device address assigned");
 			}
 
+			shake.startWatch(onShake, 30);
+
 			// clear fields
 			$('#deviceName').val('');
 			$('#deviceType').val('');
@@ -601,7 +603,19 @@ var crownstone = {
 			if (connected) {
 				disconnect();
 			}
+
+			shake.stopWatch();
 		});
+
+		var lastShake = $.now();
+		var SHAKE_TIMEOUT = 1000; // 1 second timeout before handling the next shake event
+		onShake = function() {
+			if ($.now() - lastShake > SHAKE_TIMEOUT) {
+				console.log("on shake, toggle Power!!");
+				togglePower();
+				lastShake = $.now();
+			}
+		}
 
 		setPWM = function(pwm, callback, cargs) {
 			if (!connectedDevice) {

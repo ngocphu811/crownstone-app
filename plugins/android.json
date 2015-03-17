@@ -23,6 +23,10 @@
                         {
                             "xml": "<feature name=\"Clipboard\"><param name=\"android-package\" value=\"com.verso.cordova.clipboard.Clipboard\" /></feature>",
                             "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"Accelerometer\"><param name=\"android-package\" value=\"org.apache.cordova.devicemotion.AccelListener\" /></feature>",
+                            "count": 1
                         }
                     ]
                 }
@@ -55,7 +59,14 @@
         },
         "com.verso.cordova.clipboard": {
             "PACKAGE_NAME": "nl.dobots.CrownStone"
+        },
+        "uk.co.ilee.shake": {
+            "PACKAGE_NAME": "nl.dobots.CrownStone"
         }
     },
-    "dependent_plugins": {}
+    "dependent_plugins": {
+        "org.apache.cordova.device-motion": {
+            "PACKAGE_NAME": "nl.dobots.CrownStone"
+        }
+    }
 }
