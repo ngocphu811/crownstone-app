@@ -454,7 +454,7 @@ var BLEHandler = function() {
 			paramsObj);
 	}
 
-	self.writePWM = function(address, value) {
+	self.writePWM = function(address, value, successCB, errorCB) {
 		var u8 = new Uint8Array(1);
 		u8[0] = value;
 		var v = bluetoothle.bytesToEncodedString(u8);
@@ -463,12 +463,41 @@ var BLEHandler = function() {
 		bluetoothle.write(function(obj) { // write success
 				if (obj.status == 'written') {
 					console.log('Successfully written to pwm characteristic - ' + obj.status);
+
+					if (successCB) successCB();
 				} else {
 					console.log('Writing to pwm characteristic was not successful' + obj);
+				
+					if (errorCB) errorCB();
 				}
 			},
 			function(obj) { // wrtie error
 				console.log("Error in writing to pwm characteristic: " + obj.error + " - " + obj.message);
+			
+				if (errorCB) errorCB();
+			},
+			paramsObj);
+	}
+
+	self.readPWM = function(address, callback) {
+		console.log("Read current consumption at service " + powerServiceUuid + ' and characteristic ' + pwmUuid);
+		var paramsObj = {"address": address, "serviceUuid": powerServiceUuid, "characteristicUuid": pwmUuid};
+		bluetoothle.read(function(obj) { // read success
+				if (obj.status == "read")
+				{
+					var pwm = bluetoothle.encodedStringToBytes(obj.value);
+					console.log("pwm: " + pwm[0]);
+
+					callback(pwm[0]);
+				}
+				else
+				{
+					console.log("Unexpected read status: " + obj.status);
+					self.disconnectDevice(address);
+				}
+			}, 
+			function(obj) { // read error
+				console.log('Error in reading current consumption: ' + obj.error + " - " + obj.message);
 			},
 			paramsObj);
 	}

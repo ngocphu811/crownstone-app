@@ -20,7 +20,7 @@ if (!String.prototype.format) {
 }
 
 var TTL = 2000; // time-to-live for RSSI values in localisation, 2 seconds
-var MAX_HISTORY = 20; // number of rssi values kept in history per device for indoor localization
+var MAX_HISTORY = 20; // number of rssi values kept in history per device
 
 var ble;
 
@@ -49,7 +49,10 @@ var crownstone = {
 			$('#findCrownstones').prop("disabled", !enabled);
 			$('#localizeBtn').prop("disabled", !enabled);
 			$('#searchFloorBtn').prop("disabled", !enabled);
+			$('#rcTogglePower').prop("disabled", !enabled);
 		});
+
+	 	$.mobile.changePage("#remoteControlPage", {transition:'slide', hashChange:true});
 	},
 
 	create:function() {
@@ -99,6 +102,7 @@ var crownstone = {
 			// add menu options to side menu that opens up at swiping
 			$('.sideMenu ul').append('<li><a href="#selectionPage">Overview</a></li>');
 			$('.sideMenu ul').append('<li><a href="#indoorLocalizationPage">Localization</a></li>');
+			$('.sideMenu ul').append('<li><a href="#remoteControlPage">Remote Control</a></li>');
 			$('.sideMenu ul').append('<li><a href="#aboutPage">About</a></li>');
 			
 			// add swipe gesture to all pages with a panel
@@ -120,13 +124,208 @@ var crownstone = {
 //			});
 
 			console.log("Add event handler to on-click event for a listed crownstone");
+
 			$('#findCrownstones').on('click', function(event) {
 				console.log("User clicks button to start searching for crownstones");
-				searchCrownstones();
+
+				if (!searching) {
+					$('#findCrownstones').html("Stop");
+					searching = true;
+					searchCrownstones();
+				} else {
+					$('#findCrownstones').html("Find Crownstones");
+					searching = false;
+					stopSearch();
+				}
 			});
-		 	//$.mobile.changePage("#selectionPage", {transition:'slide', hashChange:true});
+
 		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		var closestCrownstone;
+		$('#remoteControlPage').on("pagecreate", function(event) {
+			console.log("create remote control page");
+
+			$('#rcTogglePower').on('click', function(event) {
+				var rssi = -255;
+				for (var addr in self.crownstones) {
+					var device = self.crownstones[addr];
+					console.log("dev: " + device.name + ", rssi: " + device.rssi);
+					if (!device.ignore && device.rssi > rssi) {
+						rssi = device.rssi;
+						closestCrownstone = device;
+						console.log("min rssi: " + rssi + ", dev: " + closestCrownstone);
+					}
+				}
+
+				$('#switchedCrownstone').html("Switched Crownstone: <b>" + closestCrownstone.name + "</b>");
+				console.log("Switched addr: " + closestCrownstone.address);
+
+				// connectAndDiscover(
+				// 	closestCrownstone.address, 
+				// 	powerServiceUuid, 
+				// 	pwmUuid, 
+				// 	function() {//success
+				// 		self.switchedCrownstone = closestCrownstone;
+				// 		togglePower(function() {
+				// 			$('#feedback').show();
+				// 			disconnect();
+				// 		});
+				// 	},
+				// 	function(msg) {//error
+				// 		console.log("failed to connect");
+				// 	}
+				// );
+				connectAndTogglePower(closestCrownstone, function() {
+					self.switchedCrownstone = closestCrownstone;
+					$('#feedback').show();
+				})
+			});
+
+			$('#fbYes').on('click', function() {
+				console.log('got the right one!!!');
+				for (var addr in self.crownstones) {
+					self.crownstones[addr].ignore = false;
+				}
+				$('#feedback').hide();
+			});
+
+			$('#fbNo').on('click', function() {
+				console.log("addr: " + closestCrownstone.address);
+				self.crownstones[closestCrownstone.address].ignore = true;
+
+				// connectAndDiscover(
+				// 	closestCrownstone.address, 
+				// 	powerServiceUuid, 
+				// 	pwmUuid, 
+				// 	function() {//success
+				// 		self.switchedCrownstone = closestCrownstone;
+				// 		togglePower(function() {
+				// 			disconnect();
+				// 			$('#rcTogglePower').trigger('click');
+				// 		});
+				// 	},
+				// 	function(msg) {//error
+				// 		console.log("failed to connect");
+				// 	}
+				// );
+				connectAndTogglePower(closestCrownstone, function() {
+					self.switchedCrownstone = closestCrownstone;
+					$('#rcTogglePower').trigger('click');
+				});
+
+			});
+		});
+
+
+		connectAndTogglePower = function(device, successCB, errorCB) {
+			connectAndDiscover(
+				device.address, 
+				powerServiceUuid, 
+				pwmUuid, 
+				function() {//success
+					function callback() {
+						disconnect();
+						if (successCB) successCB();
+					}
+
+					getPWM(function(value) {
+						if (value == 0) {
+							// $('#remoteControlPage').css("backgroundColor", "rgb(255, 0, 0)");
+							powerON(callback);
+						} else {
+							// $('#remoteControlPage').css("backgroundColor", "rgb(0, 255, 0)");
+							powerOFF(callback);
+						}
+					});
+				},
+				function(msg) {//error
+					console.log("failed to connect");
+					if (errorCB) errorCB();
+				}
+			);
+		}
+
+		var closestRSSI;
+		var closestCR;
+		updateClosestCrownstone = function() {
+			closestRSSI = -255;
+			for (var addr in self.crownstones) {
+				var device = self.crownstones[addr];
+				if (device.avgRSSI > closestRSSI) {
+					closestRSSI = device.avgRSSI;
+					closestCR = device;
+				}
+			}
+		}
+
+		var MIN_RSSI = -50;
+		var MAX_RSSI = -100;
+		var rgb = "rgb(0,0,0)";
+		updateScreen = function() {
+			// console.log("rssi: " + closestRSSI);
+			var perc = Math.abs((closestRSSI - MIN_RSSI) / (MAX_RSSI - MIN_RSSI));
+			// console.log("perc: " + perc)
+			var red = Math.floor(Math.max(Math.min(255, (1-perc) * 255), 0));
+			var blue = Math.floor(Math.max(Math.min(255, perc * 255), 0));
+
+			rgb = "rgb({0},{1},{2})".format(red, 0, blue);
+			// console.log("rgb: " + rgb);
+			$('#remoteControlPage').css("backgroundColor", rgb);
+		}
+
+		$('#remoteControlPage').on("pageshow", function(event) {
+
+			self.crownstones = {};
+			findCrownstones(function(obj) {
+				if (!existCrownstone(obj)) {
+					addCrownstone(obj);
+				} else {
+					updateCrownstone(obj);
+				}
+
+				updateClosestCrownstone();
+				updateScreen();
+			});
+		});
+
+		$('#remoteControlPage').on("pagehide", function(event) {
+			stopSearch();
+		});
 		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		$("#selectionPage").on("pagecreate", function(event) {
 			// get partner information
 			console.log("Get partner information");
@@ -145,66 +344,60 @@ var crownstone = {
 		});
 
 		searchCrownstones = function() {
-			if (searching) {
-				searching = false;
-				stopSearch();
-			} else {
-				searching = true;
 
-				$('#crownStoneTable').hide();
-				$('#closestCrownstone').html("Closest Crownstone: ");
-				var map = {};
+			$('#crownStoneTable').hide();
+			$('#closestCrownstone').html("Closest Crownstone: ");
+			var map = {};
 
-				findCrownstones(function(obj) {
+			findCrownstones(function(obj) {
 
-					if (!map.hasOwnProperty(obj.address)) {
-						map[obj.address] = {'name': obj.name, 'rssi': obj.rssi};
-					} else {
-						map[obj.address]['rssi'] = obj.rssi;
+				if (!map.hasOwnProperty(obj.address)) {
+					map[obj.address] = {'name': obj.name, 'rssi': obj.rssi};
+				} else {
+					map[obj.address]['rssi'] = obj.rssi;
+				}
+
+				var r = new Array(), j = -1;
+				r[++j] = '<col width="20%">';
+				r[++j] = '<col width="60%">';
+				r[++j] = '<col width="20%">';
+				r[++j] = '<tr><th align="left">Nr</th><th align="left">MAC</th><th align="left">RSSI</th></tr>';
+
+				var nr = 0;
+				var closest_rssi = -128;
+				var closest_name = "";
+				for (var el in map) {
+					r[++j] ='<tr id="'
+					r[++j] = el;
+					r[++j] = '"><td>';
+					r[++j] = ++nr;
+					r[++j] = '</td><td>';
+					r[++j] = map[el]['name'] + '<br/>' + el;
+					r[++j] = '</td><td>';
+					r[++j] = map[el]['rssi'];
+					r[++j] = '</td></tr>';
+
+					if (map[el]['rssi'] > closest_rssi) {
+						closest_rssi = map[el]['rssi'];
+						closest_name = map[el]['name'];
 					}
+				}
+				$('#crownStoneTable').show();
+				$('#crownStoneTable').html(r.join(''));
 
-					var r = new Array(), j = -1;
-					r[++j] = '<col width="20%">';
-					r[++j] = '<col width="60%">';
-					r[++j] = '<col width="20%">';
-					r[++j] = '<tr><th align="left">Nr</th><th align="left">MAC</th><th align="left">RSSI</th></tr>';
+				$('#closestCrownstone').html("Closest Crownstone: <b>" + closest_name + "</b>");
 
-					var nr = 0;
-					var closest_rssi = -128;
-					var closest_name = "";
-					for (var el in map) {
-						r[++j] ='<tr id="'
-						r[++j] = el;
-						r[++j] = '"><td>';
-						r[++j] = ++nr;
-						r[++j] = '</td><td>';
-						r[++j] = map[el]['name'] + '<br/>' + el;
-						r[++j] = '</td><td>';
-						r[++j] = map[el]['rssi'];
-						r[++j] = '</td></tr>';
-
-						if (map[el]['rssi'] > closest_rssi) {
-							closest_rssi = map[el]['rssi'];
-							closest_name = map[el]['name'];
-						}
+				$(document).on("click", "#crownStoneTable tr", function(e) {
+					console.log('click');
+					if (searching) {
+						searching = false;
+						stopSearch();
 					}
-					$('#crownStoneTable').show();
-					$('#crownStoneTable').html(r.join(''));
-
-					$('#closestCrownstone').html("Closest Crownstone: <b>" + closest_name + "</b>");
-
-					$(document).on("click", "#crownStoneTable tr", function(e) {
-						console.log('click');
-						if (searching) {
-							searching = false;
-							stopSearch();
-						}
-						var timeout = 5;
-						connect(this.id, timeout, gotoControlPage, connectionFailed);
-						$('#crownstone').show();
-					})
-				});
-			}
+					var timeout = 5;
+					connect(this.id, timeout, gotoControlPage, connectionFailed);
+					$('#crownstone').show();
+				})
+			});
 		}
 
 		gotoControlPage = function() {
@@ -624,10 +817,21 @@ var crownstone = {
 			}
 
 			console.log("Set pwm to " + pwm);
-			ble.writePWM(connectedDevice, pwm);
-			if (callback) {
-				callback(cargs);
+			ble.writePWM(connectedDevice, pwm, function() {
+				if (callback) {
+					callback(cargs);
+				}
+			});
+		}
+
+		getPWM = function(callback) {
+			if (!connectedDevice) {
+				console.log("no connected device address!!");
+				return;
 			}
+
+			console.log("Reading current PWM value");
+			ble.readPWM(connectedDevice, callback);
 		}
 
 		powerON = function(callback, cargs) {
@@ -864,25 +1068,18 @@ var crownstone = {
 			}
 		}
 
-		var findTimer = null;
-
 		/** Find crownstones and report the RSSI strength of the advertisements
 		 *
 		 *
 		 */
 		findCrownstones = function(callback) {
 			console.log("Find crownstones");
-			$('#findCrownstones').html("Stop");
 			ble.startEndlessScan(callback);
 		}
 
 		stopSearch = function() {
 			console.log("stop search");
-			if (findTimer != null) {
-				clearInterval(findTimer);
-			}
 			ble.stopEndlessScan();
-			$('#findCrownstones').html("Find Crownstones");
 		}
 
 		connect = function(address, timeout, successCB, errorCB) {
@@ -1239,6 +1436,7 @@ var crownstone = {
 		}
 
 		updateRSSI = function(obj) {
+			console.log("updateRSSI()");
 			var level = getLevel(obj);
 			if (!level) { 
 				console.log("Error: crownstone not found on any floor level");
@@ -1463,17 +1661,32 @@ var crownstone = {
 		}
 
 		addCrownstone = function(device) {
-			console.log("Add crownstone: " + device.address);
-			self.crownstones[device.address] = {'name': device.name, 'rssi': device.rssi};
+			console.log("Add crownstone: " + device.name);
+			self.crownstones[device.address] = device;
+			self.crownstones[device.address].rssiHistory = [];
 		}
 
 		updateCrownstone = function(device) {
-			self.crownstones[device.address]['rssi'] = device.rssi;
+			// console.log("Update crownstone: " + device.address);
+			var crownstone = self.crownstones[device.address];
+			crownstone['rssi'] = device.rssi;
+
+			// remove oldest element if max history reached
+			crownstone.rssiHistory.push(device.rssi);
+			if (crownstone.rssiHistory.length > MAX_HISTORY) {
+				crownstone.rssiHistory.shift();
+			}
+
+			var avgRSSI = 0;
+			for (var i = 0; i < crownstone.rssiHistory.length; ++i) {
+				avgRSSI += crownstone.rssiHistory[i];
+			}
+			crownstone.avgRSSI = avgRSSI / crownstone.rssiHistory.length;
 		}
 
 		addToBlacklist = function(device) {
 			console.log("Crownstone: " + device.name + " does not support indoor localisation. adding to blacklist");
-			self.blacklist[device.address] = {'name': device.name, 'rssi': device.rssi};
+			self.blacklist[device.address] = device;
 		}
 
 		isInBlacklist = function(device) {

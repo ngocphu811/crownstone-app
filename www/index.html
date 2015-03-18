@@ -130,6 +130,32 @@ crownstones before you can use them to localize yourself. This will not be the f
 			</div>
 		</div>
 
+		<!-- Remote Control
+		-->
+		<div data-role="page" id="remoteControlPage">
+			<div data-role="header" data-add-back-btn="true" data-position='fixed'>
+				<h1 class="ui-title" role="heading" aria-level="1">Remote Control</h1>
+			</div>
+
+			<div>
+				<p>Control the closest crownstone</p>
+				<div class="indoorBtn">
+					<button id="rcTogglePower" class="ui-btn-active ui-state-persist" data-role="button" disabled>Toggle Power</button>
+				</div>
+				<br/>
+				<div id="feedback" style="display: none">
+					<div id="switchedCrownstone">Switched Crownstone:</div>
+					<p>Was it the correct crownstone?</p>
+					<table width="100%">
+						<tr>
+							<td><button id="fbYes" class="ui-btn-active ui-state-persist" data-role="button">Yes</button></td>
+							<td><button id="fbNo" class="ui-btn-active ui-state-persist" data-role="button">No</button></td>
+						</tr>
+					</table>
+				</div>
+			</div>
+		</div>
+
 		<!-- Control switch -->
 		<div data-role="page" id="controlPage">
 			<div data-role="header" data-position='fixed'>
