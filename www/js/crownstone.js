@@ -524,18 +524,67 @@ var crownstone = {
 						setTimeout(function() {
 							getCurrentCurve(function(result) {
 								var list = [];
-								// Curve starts after a zero crossing, start with 0 for a nice graph
-								list.push([0, 0]);
-								// First and last number are start and end timestamp, use them to calculate the x values
-								var t_start = result[0];
-								var t_end = result[result.length-1];
-								var t_step = (t_end-t_start) / (result.length -2);
-								// Convert to ms
-								t_step = t_step / 32.768;
-
-								for (var i = 2; i < result.length-1; ++i) {
-									list.push([(i-1)*t_step, result[i]]);
+								// Number of incremental values:
+								var size=(result[2] << 8) + result[3];
+								if (!size) {
+									console.log("0 samples!");
+									console.log(JSON.stringify(list));
+									return;
 								}
+								var i=4;
+								var v = (result[i] << 8) + result[i+1];
+								i+=2;
+								var j=2+2+2+size-1;
+								var t_start = (result[j] << 24) + (result[j+1] << 16) + (result[j+2] << 8) + result[j+3];
+								j+=4;
+								var t_end = (result[j] << 24) + (result[j+1] << 16) + (result[j+2] << 8) + result[j+3];
+								// Convert timestamp to seconds, divide by clock rate (32768Hz)
+								var t_step = (t_end-t_start) / size / 32768;
+								list.push([0, v]);
+								for (var k=1;k<size; ++k, ++i) {
+									var dv=result[i];
+									if (dv > 127) dv-=256;
+									v+=dv;
+									list.push([k*t_step, v]);
+								}
+								console.log(JSON.stringify(list));
+								
+								
+//								var list = [];
+//								// Number of incremental values:
+//								var size=(result.length-2-2-4)/2;
+//								var i=2;
+//								var j=2+2+size;
+//								var v = (result[i] << 8) + result[i+1];
+//								var t = (result[j] << 24) + (result[j+1] << 16) + (result[j+2] << 8) + result[j+3];
+//								var t_start = t;
+//								i+=2;
+//								j+=4;
+//								// Convert timestamp to seconds, divide by clock rate (32768Hz)
+//								list.push([(t-t_start)/32768, v]);
+//								for (var k=0;k<size; ++k, ++i, ++j) {
+//									var dv=result[i];
+//									if (dv > 127) dv-=256;
+//									v+=dv;
+//									var dt=result[j];
+//									if (dt > 127) dt-=256;
+//									t+=dt;
+//									list.push([(t-t_start)/32768, v]);
+//								}
+//								//console.log(JSON.stringify(list));
+
+//								// Curve starts after a zero crossing, start with 0 for a nice graph
+//								list.push([0, 0]);
+//								// First and last number are start and end timestamp, use them to calculate the x values
+//								var t_start = result[0];
+//								var t_end = result[result.length-1];
+//								var t_step = (t_end-t_start) / (result.length -2);
+//								// Convert to ms
+//								t_step = t_step / 32.768;
+//								for (var i = 2; i < result.length-1; ++i) {
+//									list.push([(i-1)*t_step, result[i]]);
+//								}
+
 								$('#currentCurve').show();
 //								$.plot("#currentCurve", [list], {xaxis: {show: false}});
 								$.plot("#currentCurve", [list]);

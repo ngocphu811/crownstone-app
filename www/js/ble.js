@@ -563,14 +563,14 @@ var BLEHandler = function() {
 				if (obj.status == "read")
 				{
 					var arr8 = bluetoothle.encodedStringToBytes(obj.value);
-
+					console.log(JSON.stringify(arr8));
 					if (arr8.length < 2) {
 						console.log("Invalid current curve data (too short): ");
 						console.log(JSON.stringify(arr8));
 						return;
 					}
 					var size = (arr8[0] << 8) + arr8[1];
-					if (size != arr8.length/2-1) {
+					if (size != arr8.length-2) {
 						console.log("Invalid current curve data (size mismatch): ");
 						console.log(JSON.stringify(arr8));
 						return;
@@ -578,19 +578,36 @@ var BLEHandler = function() {
 					if (size < 1) {
 						return;
 					}
+					callback(arr8);
+					
+					
+					//if (arr8.length < 2) {
+						//console.log("Invalid current curve data (too short): ");
+						//console.log(JSON.stringify(arr8));
+						//return;
+					//}
+					//var size = (arr8[0] << 8) + arr8[1];
+					//if (size != arr8.length/2-1) {
+						//console.log("Invalid current curve data (size mismatch): ");
+						//console.log(JSON.stringify(arr8));
+						//return;
+					//}
+					//if (size < 1) {
+						//return;
+					//}
 
-					var arr16 = new Uint16Array(size);
-					for (var i=0; i<size; ++i) {
-						// arr16[i] = (arr8[2*i+2] << 8) + arr8[2*i+3];
-						arr16[i] = (arr8[2*i+2] << 8) + arr8[2*i+3];
-					}
-					var arrStr = "";
-					for (var i=0; i<size; ++i) {
-						arrStr = arrStr + " " + arr16[i];
-					}
-					console.log("Result:" + arrStr);
+					//var arr16 = new Uint16Array(size);
+					//for (var i=0; i<size; ++i) {
+						//// arr16[i] = (arr8[2*i+2] << 8) + arr8[2*i+3];
+						//arr16[i] = (arr8[2*i+2] << 8) + arr8[2*i+3];
+					//}
+					//var arrStr = "";
+					//for (var i=0; i<size; ++i) {
+						//arrStr = arrStr + " " + arr16[i];
+					//}
+					//console.log("Result:" + arrStr);
 
-					callback(arr16);
+					//callback(arr16);
 				}
 				else
 				{
