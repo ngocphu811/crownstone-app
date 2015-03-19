@@ -7,6 +7,10 @@
  * Date: 1st July, 2014
  */
 
+* {
+	text-shadow: none
+}
+
 .exhibitorLogo {
 	width:100%;
 }
@@ -651,4 +655,25 @@ body {
 
 .buildingTable tr:first-child td:last-child{
 	border-width:0px 0px 1px 1px;
+}
+
+/**********************************************************************************************************************
+ *
+ * Hot Or Cold
+ *
+ *********************************************************************************************************************/
+
+.blink {
+  animation: blink 1s steps(5, start) infinite;
+  -webkit-animation: blink 1s steps(5, start) infinite;
+}
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}
+@-webkit-keyframes blink {
+  to {
+    visibility: hidden;
+  }
 }
