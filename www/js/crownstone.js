@@ -20,7 +20,10 @@ if (!String.prototype.format) {
 }
 
 var TTL = 2000; // time-to-live for RSSI values in localisation, 2 seconds
-var MAX_HISTORY = 20; // number of rssi values kept in history per device
+var MAX_HISTORY = 100; // number of rssi values kept in history per device to average
+
+var DEBUG = true; // enable debug, some UI elements are only shown if DEBUG is set to true
+
 
 var ble;
 
@@ -41,6 +44,9 @@ var crownstone = {
 	// structure to collect crownstones in a building (per floor)
 	building: {},
 
+	// store the device which is currently closest
+	closestCrownstone : {},
+
 	/* Start should be called if all plugins are ready and all functionality can be called.
 	 */
 	start:function() {
@@ -50,9 +56,10 @@ var crownstone = {
 			$('#localizeBtn').prop("disabled", !enabled);
 			$('#searchFloorBtn').prop("disabled", !enabled);
 			$('#rcTogglePower').prop("disabled", !enabled);
+			$('#hocBinaryBtn').prop("disabled", !enabled);
 		});
 
-	 	$.mobile.changePage("#remoteControlPage", {transition:'slide', hashChange:true});
+	 	// $.mobile.changePage("#hotOrColdPage", {transition:'slide', hashChange:true});
 	},
 
 	create:function() {
@@ -66,6 +73,11 @@ var crownstone = {
 		ble = new BLEHandler();
 
 		var repeatFunctionHandle = null;
+
+		// if debug is disabled, hide everything with class debug
+		if (!DEBUG) {
+			$(".debug").hide();
+		}
 
 		// $.ajaxSetup({ cache: false });
 
@@ -103,6 +115,7 @@ var crownstone = {
 			$('.sideMenu ul').append('<li><a href="#selectionPage">Overview</a></li>');
 			$('.sideMenu ul').append('<li><a href="#indoorLocalizationPage">Localization</a></li>');
 			$('.sideMenu ul').append('<li><a href="#remoteControlPage">Remote Control</a></li>');
+			$('.sideMenu ul').append('<li><a href="#hotOrColdPage">Hot or Cold</a></li>');
 			$('.sideMenu ul').append('<li><a href="#aboutPage">About</a></li>');
 			
 			// add swipe gesture to all pages with a panel
@@ -123,76 +136,23 @@ var crownstone = {
 //				}
 //			});
 
-			console.log("Add event handler to on-click event for a listed crownstone");
-
-			$('#findCrownstones').on('click', function(event) {
-				console.log("User clicks button to start searching for crownstones");
-
-				if (!searching) {
-					$('#findCrownstones').html("Stop");
-					searching = true;
-					searchCrownstones();
-				} else {
-					$('#findCrownstones').html("Find Crownstones");
-					searching = false;
-					stopSearch();
-				}
-			});
-
 		}
 
 
+		/*******************************************************************************************************
+		 * Remote Control
+		 ******************************************************************************************************/
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-		var closestCrownstone;
 		$('#remoteControlPage').on("pagecreate", function(event) {
 			console.log("create remote control page");
-
+			
 			$('#rcTogglePower').on('click', function(event) {
-				var rssi = -255;
-				for (var addr in self.crownstones) {
-					var device = self.crownstones[addr];
-					console.log("dev: " + device.name + ", rssi: " + device.rssi);
-					if (!device.ignore && device.rssi > rssi) {
-						rssi = device.rssi;
-						closestCrownstone = device;
-						console.log("min rssi: " + rssi + ", dev: " + closestCrownstone);
-					}
-				}
+				$('#switchedCrownstone').html("Switched Crownstone: <b>" + self.closestCrownstone.name + "</b>");
+				console.log("Switched crownstone: " + self.closestCrownstone.name);
 
-				$('#switchedCrownstone').html("Switched Crownstone: <b>" + closestCrownstone.name + "</b>");
-				console.log("Switched addr: " + closestCrownstone.address);
-
-				// connectAndDiscover(
-				// 	closestCrownstone.address, 
-				// 	powerServiceUuid, 
-				// 	pwmUuid, 
-				// 	function() {//success
-				// 		self.switchedCrownstone = closestCrownstone;
-				// 		togglePower(function() {
-				// 			$('#feedback').show();
-				// 			disconnect();
-				// 		});
-				// 	},
-				// 	function(msg) {//error
-				// 		console.log("failed to connect");
-				// 	}
-				// );
-				connectAndTogglePower(closestCrownstone, function() {
-					self.switchedCrownstone = closestCrownstone;
+				connectAndTogglePower(self.closestCrownstone, function() {
+					self.switchedCrownstone = self.closestCrownstone;
 					$('#feedback').show();
 				})
 			});
@@ -206,32 +166,16 @@ var crownstone = {
 			});
 
 			$('#fbNo').on('click', function() {
-				console.log("addr: " + closestCrownstone.address);
-				self.crownstones[closestCrownstone.address].ignore = true;
+				console.log("addr: " + self.closestCrownstone.address);
+				self.crownstones[self.closestCrownstone.address].ignore = true;
 
-				// connectAndDiscover(
-				// 	closestCrownstone.address, 
-				// 	powerServiceUuid, 
-				// 	pwmUuid, 
-				// 	function() {//success
-				// 		self.switchedCrownstone = closestCrownstone;
-				// 		togglePower(function() {
-				// 			disconnect();
-				// 			$('#rcTogglePower').trigger('click');
-				// 		});
-				// 	},
-				// 	function(msg) {//error
-				// 		console.log("failed to connect");
-				// 	}
-				// );
-				connectAndTogglePower(closestCrownstone, function() {
-					self.switchedCrownstone = closestCrownstone;
+				connectAndTogglePower(self.closestCrownstone, function() {
+					self.switchedCrownstone = self.closestCrownstone;
 					$('#rcTogglePower').trigger('click');
 				});
 
 			});
 		});
-
 
 		connectAndTogglePower = function(device, successCB, errorCB) {
 			connectAndDiscover(
@@ -246,10 +190,8 @@ var crownstone = {
 
 					getPWM(function(value) {
 						if (value == 0) {
-							// $('#remoteControlPage').css("backgroundColor", "rgb(255, 0, 0)");
 							powerON(callback);
 						} else {
-							// $('#remoteControlPage').css("backgroundColor", "rgb(0, 255, 0)");
 							powerOFF(callback);
 						}
 					});
@@ -261,46 +203,44 @@ var crownstone = {
 			);
 		}
 
-		var closestRSSI;
-		var closestCR;
-		updateClosestCrownstone = function() {
-			closestRSSI = -255;
-			for (var addr in self.crownstones) {
-				var device = self.crownstones[addr];
-				if (device.avgRSSI > closestRSSI) {
-					closestRSSI = device.avgRSSI;
-					closestCR = device;
-				}
-			}
-		}
-
-		var MIN_RSSI = -50;
-		var MAX_RSSI = -100;
-		var rgb = "rgb(0,0,0)";
-		updateScreen = function() {
-			// console.log("rssi: " + closestRSSI);
-			var perc = Math.abs((closestRSSI - MIN_RSSI) / (MAX_RSSI - MIN_RSSI));
-			// console.log("perc: " + perc)
-			var red = Math.floor(Math.max(Math.min(255, (1-perc) * 255), 0));
-			var blue = Math.floor(Math.max(Math.min(255, perc * 255), 0));
-
-			rgb = "rgb({0},{1},{2})".format(red, 0, blue);
-			// console.log("rgb: " + rgb);
-			$('#remoteControlPage').css("backgroundColor", rgb);
-		}
-
 		$('#remoteControlPage').on("pageshow", function(event) {
 
-			self.crownstones = {};
+			resetCrownstoneList();
 			findCrownstones(function(obj) {
-				if (!existCrownstone(obj)) {
-					addCrownstone(obj);
-				} else {
-					updateCrownstone(obj);
+				updateCrownstoneList(obj, 100);
+
+				var options = {
+					valueNames: ['mac', 'rssi', 'avgRSSI']
 				}
 
-				updateClosestCrownstone();
-				updateScreen();
+				var r = new Array(), j = -1;
+
+				r[++j] = '<thead>';
+				r[++j] = '<col style="width: 60%">';
+				r[++j] = '<col style="width: 20%">';
+				r[++j] = '<col style="width: 20%">';
+				r[++j] = '<tr><th align="left">MAC</th><th align="left">RSSI</th><th align="left">AVG</th></tr>';
+				r[++j] = '</thead><tbody class="list">';
+
+				var nr = 0;
+				for (var el in self.crownstones) {
+					r[++j] ='<tr><td class="mac">';
+					r[++j] = self.crownstones[el]['name'] + '<br/>' + el;
+					r[++j] = '</td><td class="rssi">';
+					r[++j] = self.crownstones[el]['rssi'];
+					r[++j] = '</td><td class="avgRSSI">';
+					r[++j] = Math.floor(self.crownstones[el]['avgRSSI']);
+					r[++j] = '</td></tr>';
+				}
+				r[++j] = '</tbody>';
+
+				$('#rcCrownStoneTable').show();
+				$('#rcCrownStoneTable').html(r.join(''));
+
+				// order the table in a descending order (highest RSSI at the top)
+				new List('rcCrownStoneTable', options).sort('avgRSSI', { order: "desc"});
+
+				$('#rcClosestCrownstone').html("Closest Crownstone: <b>" + self.closestCrownstone.name + "</b>");
 			});
 		});
 
@@ -309,21 +249,121 @@ var crownstone = {
 		});
 		
 
+		/*******************************************************************************************************
+		 * Hot or Cold
+		 ******************************************************************************************************/
 
 
+		// CONSTANT
+		var MIN_RSSI = -55;
+		var MAX_RSSI = -100;
+
+		// VARIABLE
+		var binary = false;
+		var rgb = "rgb(0,0,0)";
+
+		$('#hotOrColdPage').on("pagecreate", function(event) {
+
+			$('#hocBinaryBtn').on('click', function(event) {
+				if (binary) {
+					$('#hocBinaryBtn').html('Binary');
+					$('#hocBinaryThresholdForm').hide();
+					binary = false;
+				} else {
+					$('#hocBinaryBtn').html('Gradual');
+					$('#hocBinaryThresholdForm').show();
+					binary = true;
+				}
+			});	
+
+			$('#hocBinaryThreshold').val(-65);
+		});
+
+		$('#hotOrColdPage').on("pageshow", function(event) {
+
+			resetCrownstoneList();
+			findCrownstones(function(obj) {
+				updateCrownstoneList(obj, 10);
+
+				var options = {
+					valueNames: ['mac', 'rssi', 'avgRSSI']
+				}
+
+				var r = new Array(), j = -1;
+
+				r[++j] = '<thead>';
+				r[++j] = '<col style="width: 60%">';
+				r[++j] = '<col style="width: 20%">';
+				r[++j] = '<col style="width: 20%">';
+				r[++j] = '<tr><th align="left">MAC</th><th align="left">RSSI</th><th align="left">AVG</th></tr>';
+				r[++j] = '</thead><tbody class="list">';
+
+				var nr = 0;
+				for (var el in self.crownstones) {
+					r[++j] ='<tr><td class="mac">';
+					r[++j] = self.crownstones[el]['name'] + '<br/>' + el;
+					r[++j] = '</td><td class="rssi">';
+					r[++j] = self.crownstones[el]['rssi'];
+					r[++j] = '</td><td class="avgRSSI">';
+					r[++j] = Math.floor(self.crownstones[el]['avgRSSI']);
+					r[++j] = '</td></tr>';
+				}
+				r[++j] = '</tbody>';
+
+				$('#hocCrownStoneTable').show();
+				$('#hocCrownStoneTable').html(r.join(''));
+
+				// order the table in a descending order (highest RSSI at the top)
+				new List('hocCrownStoneTable', options).sort('avgRSSI', { order: "desc"});
+
+				$('#hocClosestCrownstone').html("Closest Crownstone: <b>" + self.closestCrownstone.name + "</b>");
+
+				updateScreen();
+			});
+		});
+
+		$('#hotOrColdPage').on("pagehide", function(event) {
+			stopSearch();
+		});
+		
+		updateScreen = function() {
+
+			// if (self.closestCrownstone.avgRSSI > MIN_RSSI) {
+			// 	MIN_RSSI = self.closestCrownstone.avgRSSI;
+			// }
+
+			if (binary) {
+				if (self.closestCrownstone.avgRSSI > $('#hocBinaryThreshold').val()) {
+					rgb = "rgb(255,0,0)";
+				} else {
+					rgb = "rgb(0,0,255)";
+				}
+			} else {
+				// console.log("rssi: " + self.closestCrownstone.avgRSSI);
+				var perc = Math.abs((self.closestCrownstone.avgRSSI - MIN_RSSI) / (MAX_RSSI - MIN_RSSI));
+				// console.log("perc: " + perc)
+				var red = Math.floor(Math.max(Math.min(255, (1-perc) * 255), 0));
+				var blue = Math.floor(Math.max(Math.min(255, perc * 255), 0));
+
+				rgb = "rgb({0},{1},{2})".format(red, 0, blue);
+			}
+			// console.log("rgb: " + rgb);
+			$('#hotOrColdPage').css("backgroundColor", rgb);
+				
+			if (self.closestCrownstone.avgRSSI > MIN_RSSI - 10) {
+				$('#hocFoundCrownstone').html("<b>" + self.closestCrownstone.name + "</b>");
+				if (!$('#hocFoundCrownstone').is(':visible')) {
+					$('#hocFoundCrownstone').show();
+				}
+			} else {
+				$('#hocFoundCrownstone').hide();
+			}
+		}
 
 
-
-
-
-
-
-
-
-
-
-
-
+		/*******************************************************************************************************
+		 * Selection page
+		 ******************************************************************************************************/
 
 
 		$("#selectionPage").on("pagecreate", function(event) {
@@ -341,9 +381,25 @@ var crownstone = {
 			}).success(function() {
 				console.log("Retrieved data structure successfully");
 			});
+
+			console.log("Add event handler to on-click event for a listed crownstone");
+			$('#findCrownstones').on('click', function(event) {
+				console.log("User clicks button to start searching for crownstones");
+
+				if (!searching) {
+					searching = true;
+					searchCrownstones();
+				} else {
+					searching = false;
+					stopSearch();
+					console.log("sort");
+				}
+			});
 		});
 
 		searchCrownstones = function() {
+
+			$('#findCrownstones').html("Stop");
 
 			$('#crownStoneTable').hide();
 			$('#closestCrownstone').html("Closest Crownstone: ");
@@ -1127,6 +1183,7 @@ var crownstone = {
 		}
 
 		stopSearch = function() {
+			$('#findCrownstones').html("Find Crownstones");
 			console.log("stop search");
 			ble.stopEndlessScan();
 		}
@@ -1649,7 +1706,7 @@ var crownstone = {
 						}
 					);
 				} else if (!isInBlacklist(obj)) {
-					updateCrownstone(obj);
+					updateCrownstone(obj, 100);
 				}
 			});
 		}
@@ -1711,26 +1768,67 @@ var crownstone = {
 
 		addCrownstone = function(device) {
 			console.log("Add crownstone: " + device.name);
+			// initialize rssi history and average value to current rssi
+			device.rssiHistory = [device.rssi];
+			device.avgRSSI = device.rssi;
+			device.lastSeen = $.now();
 			self.crownstones[device.address] = device;
-			self.crownstones[device.address].rssiHistory = [];
 		}
 
-		updateCrownstone = function(device) {
+		updateCrownstone = function(device, max_history) {
 			// console.log("Update crownstone: " + device.address);
 			var crownstone = self.crownstones[device.address];
-			crownstone['rssi'] = device.rssi;
+			crownstone.rssi = device.rssi;
+			crownstone.lastSeen = $.now();
 
 			// remove oldest element if max history reached
 			crownstone.rssiHistory.push(device.rssi);
-			if (crownstone.rssiHistory.length > MAX_HISTORY) {
+			if (crownstone.rssiHistory.length > max_history) {
 				crownstone.rssiHistory.shift();
 			}
 
+			// calculate average rssi value
 			var avgRSSI = 0;
 			for (var i = 0; i < crownstone.rssiHistory.length; ++i) {
 				avgRSSI += crownstone.rssiHistory[i];
 			}
 			crownstone.avgRSSI = avgRSSI / crownstone.rssiHistory.length;
+		}
+
+		updateClosestCrownstone = function() {
+			self.closestCrownstone = {avgRSSI: -255};
+			
+			for (var addr in self.crownstones) {
+				var device = self.crownstones[addr];
+				if (!device.ignore && device.avgRSSI > self.closestCrownstone.avgRSSI) {
+					self.closestCrownstone = device;
+				}
+			}
+		}
+
+		updateTTL = function() {
+			for (var addr in self.crownstones) {
+				var device = self.crownstones[addr];
+				if ($.now() - device.lastSeen > TTL) {
+					delete self.crownstones[addr];
+				}
+			}
+		}
+
+		updateCrownstoneList = function(device, max_history) {
+			if (!existCrownstone(device)) {
+				addCrownstone(device);
+			} else {
+				updateCrownstone(device, max_history);
+			}
+
+			updateTTL();
+			updateClosestCrownstone();
+		}
+
+		resetCrownstoneList = function() {
+			self.crownstones = {};
+			self.closestCrownstone = {avgRSSI: -255};
 		}
 
 		addToBlacklist = function(device) {
