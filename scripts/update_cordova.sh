@@ -6,7 +6,7 @@ cordova platform update android
 echo "Current plugin versions"
 cordova plugin
 cordova plugin remove org.apache.cordova.device-motion
-cordova plugin org.apache.cordova.device-motion
+cordova plugin add org.apache.cordova.device-motion
 cordova plugin remove com.randdusing.bluetoothle
 cordova plugin add com.randdusing.bluetoothle
 cordova plugin remove org.apache.cordova.device
