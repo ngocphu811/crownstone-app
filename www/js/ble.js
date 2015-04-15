@@ -569,15 +569,6 @@ var BLEHandler = function() {
 						console.log(JSON.stringify(arr8));
 						return;
 					}
-					var size = (arr8[0] << 8) + arr8[1];
-					if (size != arr8.length-2) {
-						console.log("Invalid current curve data (size mismatch): ");
-						console.log(JSON.stringify(arr8));
-						return;
-					}
-					if (size < 1) {
-						return;
-					}
 					callback(arr8);
 					
 					

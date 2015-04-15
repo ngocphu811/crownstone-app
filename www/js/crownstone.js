@@ -581,19 +581,26 @@ var crownstone = {
 							getCurrentCurve(function(result) {
 								var list = [];
 								// Number of incremental values:
-								var size=(result[2] << 8) + result[3];
+								var i=0;
+								var size=(result[i+1] << 8) + result[i];
+								i+=2;
 								if (!size) {
 									console.log("0 samples!");
 									console.log(JSON.stringify(list));
 									return;
 								}
-								var i=4;
-								var v = (result[i] << 8) + result[i+1];
+								if (result.length < 2+2+2+4+4+size-1) {
+									console.log("Invalid current curve data (size mismatch)")
+									console.log(JSON.stringify(list));
+									return;
+								}
+								var v = (result[i+1] << 8) + result[i];
 								i+=2;
-								var j=2+2+2+size-1;
-								var t_start = (result[j] << 24) + (result[j+1] << 16) + (result[j+2] << 8) + result[j+3];
-								j+=4;
-								var t_end = (result[j] << 24) + (result[j+1] << 16) + (result[j+2] << 8) + result[j+3];
+								i+=2;
+								var t_start = (result[i+3] << 24) + (result[i+2] << 16) + (result[i+1] << 8) + result[i];
+								i+=4;
+								var t_end =   (result[i+3] << 24) + (result[i+2] << 16) + (result[i+1] << 8) + result[i];
+								i+=4;
 								// Convert timestamp to seconds, divide by clock rate (32768Hz)
 								var t_step = (t_end-t_start) / size / 32768;
 								list.push([0, v]);
