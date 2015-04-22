@@ -602,13 +602,18 @@ var crownstone = {
 								var t_end =   (result[i+3] << 24) + (result[i+2] << 16) + (result[i+1] << 8) + result[i];
 								i+=4;
 								// Convert timestamp to seconds, divide by clock rate (32768Hz)
-								var t_step = (t_end-t_start) / size / 32768;
-								list.push([0, v]);
+								var t_step = (t_end-t_start) / (size-1) / 32768;
+								var t=t_start;
+								list.push([(t-t_start)/32768, v]);
 								for (var k=1;k<size; ++k, ++i) {
 									var dv=result[i];
 									if (dv > 127) dv-=256;
 									v+=dv;
-									list.push([k*t_step, v]);
+									var dt=result[i+size-1];
+									if (dt > 127) dt-=256;
+									t+=dt
+									list.push([(t-t_start)/32768, v]);
+									//list.push([k*t_step, v]);
 								}
 								console.log(JSON.stringify(list));
 								
