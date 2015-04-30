@@ -10,7 +10,7 @@ Object.size = function(obj) {
 if (!String.prototype.format) {
   String.prototype.format = function() {
     var args = arguments;
-    return this.replace(/{(\d+)}/g, function(match, number) { 
+    return this.replace(/{(\d+)}/g, function(match, number) {
       return typeof args[number] != 'undefined'
         ? args[number]
         : match
@@ -32,7 +32,7 @@ var crownstone = {
 	// array with info of partners (and ourselves), like address, logo, description, etc.
 	partnersById: {},
 
-	// map of crownstones 
+	// map of crownstones
 	crownstones: {},
 
 	// map of crownstones under question
@@ -64,7 +64,7 @@ var crownstone = {
 
 	create:function() {
 		var self = this;
-	
+
 		console.log("---------------------------------------------------------");
 		console.log("----- Distributed Organisms B.V. (http://dobots.nl) -----");
 		console.log("---------------------------------------------------------");
@@ -86,9 +86,9 @@ var crownstone = {
 		// 	$.mobile.changePage("#controlPage", {transition:'slide', hashChange:true});
 		// }
 
-		// very important statement to make swiping work: 
+		// very important statement to make swiping work:
 		// https://stackoverflow.com/questions/12838443/swipe-with-jquery-mobile-1-2-phonegap-2-1-and-android-4-0-4-not-working-properl
-		//document.ontouchmove = function(event) {    
+		//document.ontouchmove = function(event) {
 		//         event.preventDefault();
 		//};
 
@@ -105,19 +105,19 @@ var crownstone = {
 
 		start = function() {
 			console.log("Setup general functionality, enable bluetooth, set event handlers, etc.");
-			
+
 			// set up bluetooth connection
 			//ble.init(function(enabled) {
 			//	$('#findCrownstones').prop("disabled", !enabled);
 			//});
-		
+
 			// add menu options to side menu that opens up at swiping
 			$('.sideMenu ul').append('<li><a href="#selectionPage">Overview</a></li>');
 			$('.sideMenu ul').append('<li><a href="#indoorLocalizationPage">Localization</a></li>');
 			$('.sideMenu ul').append('<li><a href="#remoteControlPage">Remote Control</a></li>');
 			$('.sideMenu ul').append('<li><a href="#hotOrColdPage">Hot or Cold</a></li>');
 			$('.sideMenu ul').append('<li><a href="#aboutPage">About</a></li>');
-			
+
 			// add swipe gesture to all pages with a panel
 			console.log("Add swipe gesture to all pages with side panel");
 			$(document).delegate('[data-role="page"]', 'pageinit', function () {
@@ -127,7 +127,7 @@ var crownstone = {
 					$(this).on('swiperight', function(event) {
 						$panel.panel("open");
 					});
-				}    
+				}
 			});
 
 //			$.ajaxSetup({
@@ -146,7 +146,7 @@ var crownstone = {
 
 		$('#remoteControlPage').on("pagecreate", function(event) {
 			console.log("create remote control page");
-			
+
 			$('#rcTogglePower').on('click', function(event) {
 				$('#switchedCrownstone').html("Switched Crownstone: <b>" + self.closestCrownstone.name + "</b>");
 				console.log("Switched crownstone: " + self.closestCrownstone.name);
@@ -179,9 +179,9 @@ var crownstone = {
 
 		connectAndTogglePower = function(device, successCB, errorCB) {
 			connectAndDiscover(
-				device.address, 
-				powerServiceUuid, 
-				pwmUuid, 
+				device.address,
+				powerServiceUuid,
+				pwmUuid,
 				function() {//success
 					function callback() {
 						disconnect();
@@ -247,7 +247,7 @@ var crownstone = {
 		$('#remoteControlPage').on("pagehide", function(event) {
 			stopSearch();
 		});
-		
+
 
 		/*******************************************************************************************************
 		 * Hot or Cold
@@ -274,7 +274,7 @@ var crownstone = {
 					$('#hocBinaryThresholdForm').show();
 					binary = true;
 				}
-			});	
+			});
 
 			$('#hocBinaryThreshold').val(-65);
 		});
@@ -325,7 +325,7 @@ var crownstone = {
 		$('#hotOrColdPage').on("pagehide", function(event) {
 			stopSearch();
 		});
-		
+
 		updateScreen = function() {
 
 			// if (self.closestCrownstone.avgRSSI > MIN_RSSI) {
@@ -349,7 +349,7 @@ var crownstone = {
 			}
 			// console.log("rgb: " + rgb);
 			$('#hotOrColdPage').css("backgroundColor", rgb);
-				
+
 			if (self.closestCrownstone.avgRSSI > MIN_RSSI - 10) {
 				$('#hocFoundCrownstone').html("<b>" + self.closestCrownstone.name + "</b>");
 				if (!$('#hocFoundCrownstone').is(':visible')) {
@@ -516,7 +516,7 @@ var crownstone = {
 					$('#powerState').show();
 					repeatFunctionHandle = setInterval(togglePower, 4000);
 				});
-			});	
+			});
 
 			$('#getTemperature').on('click', function(event) {
 				readTemperature(function(temperature) {
@@ -616,8 +616,8 @@ var crownstone = {
 									//list.push([k*t_step, v]);
 								}
 								console.log(JSON.stringify(list));
-								
-								
+
+
 //								var list = [];
 //								// Number of incremental values:
 //								var size=(result.length-2-2-4)/2;
@@ -701,8 +701,8 @@ var crownstone = {
 						};
 						for (var i = 0; i < elements; i++) {
 							var idx = 1 + i * TRACK_DEVICE_LEN;
-							var mac = "{0}-{1}-{2}-{3}-{4}-{5}".format(uint8toString(list[idx]), uint8toString(list[idx+1]), 
-																	   uint8toString(list[idx+2]), uint8toString(list[idx+3]), 
+							var mac = "{0}-{1}-{2}-{3}-{4}-{5}".format(uint8toString(list[idx]), uint8toString(list[idx+1]),
+																	   uint8toString(list[idx+2]), uint8toString(list[idx+3]),
 																	   uint8toString(list[idx+4]), uint8toString(list[idx+5]));
 							var rssi = list[idx+6];
 							if (rssi > 127) {
@@ -777,7 +777,7 @@ var crownstone = {
 			// 		r[++j] = '</td><td>';
 			// 		r[++j] = obj.rssi;
 			// 		r[++j] = '</td></tr>';
-						
+
 			// 		$('#crownStoneTable').html(existing + r.join(''));
 
 			// 		if (obj.rssi > closest_rssi) {
@@ -793,12 +793,12 @@ var crownstone = {
 				history.back();
 			})
 
-			
+
 		});
 
 		// triggering of get characteristics for the initial value
-		// needs to be delayed. if all are requested at the same 
-		// time then some will get lost, so we trigger each get 
+		// needs to be delayed. if all are requested at the same
+		// time then some will get lost, so we trigger each get
 		// at a different time
 		var trigger = 0;
 		var triggerDelay = 500;
@@ -807,7 +807,9 @@ var crownstone = {
 				console.log("no connected device address assigned");
 			}
 
-			shake.startWatch(onShake, 30);
+			if (typeof shake !== 'undefined') {
+				shake.startWatch(onShake, 30);
+			}
 
 			// clear fields
 			$('#deviceName').val('');
@@ -845,7 +847,7 @@ var crownstone = {
 					if (serviceUuid == indoorLocalizationServiceUuid) {
 						if (characteristicUuid == deviceScanUuid) {
 							$('#scanDevicesTab').show();
-						} 
+						}
 						if (characteristicUuid == addTrackedDeviceUuid) {
 							$('#trackedDevicesTab').show();
 						}
@@ -914,7 +916,9 @@ var crownstone = {
 				disconnect();
 			}
 
-			shake.stopWatch();
+			if (typeof shake !== 'undefined') {
+				shake.stopWatch();
+			}
 		});
 
 		var lastShake = $.now();
@@ -1038,8 +1042,8 @@ var crownstone = {
 					r[++j] = '<tr><th align="left">Nr</th><th align="left">MAC</th><th align="left">RSSI</th><th align="left">Occur</th>';
 					for (var i = 0; i < elements; i++) {
 						var idx = 1 + i * 9;
-						var mac = "{0}-{1}-{2}-{3}-{4}-{5}".format(list[idx].toString(16).toUpperCase(), list[idx+1].toString(16).toUpperCase(), 
-																   list[idx+2].toString(16).toUpperCase(), list[idx+3].toString(16).toUpperCase(), 
+						var mac = "{0}-{1}-{2}-{3}-{4}-{5}".format(list[idx].toString(16).toUpperCase(), list[idx+1].toString(16).toUpperCase(),
+																   list[idx+2].toString(16).toUpperCase(), list[idx+3].toString(16).toUpperCase(),
 																   list[idx+4].toString(16).toUpperCase(), list[idx+5].toString(16).toUpperCase());
 						var rssi = list[idx+6];
 						if (rssi > 127) {
@@ -1204,7 +1208,7 @@ var crownstone = {
 			if (!(connected || connecting)) {
 				connecting = true;
 				console.log("connecting to " + address);
-				// 
+				//
 				ble.connectDevice(address, timeout, function(success) {
 
 					connecting = false;
@@ -1319,7 +1323,7 @@ var crownstone = {
 
 		/* Getting a floor in the configuration characteristic
 		 *
-		 *  + requires connecting to the device 
+		 *  + requires connecting to the device
 		 */
 		getFloor = function(callback, errorCB) {
 			if (!connectedDevice) {
@@ -1366,7 +1370,7 @@ var crownstone = {
 				}
 				if (partner.tel) {
 					var spaceless_tel = partner.tel.replace(/\s+/g, '');
-					var clickable_tel = '<a href="tel:' + spaceless_tel + '">tel: ' + 
+					var clickable_tel = '<a href="tel:' + spaceless_tel + '">tel: ' +
 						partner.tel + '</a>';
 					$('#allPartnerTel').html(clickable_tel);
 				}
@@ -1375,7 +1379,7 @@ var crownstone = {
 						partner.website + '</a>');
 				}
 				if (partner.email) {
-					$('#allPartnerEmail').html('<a href="mailto:' + partner.email + 
+					$('#allPartnerEmail').html('<a href="mailto:' + partner.email +
 						'?Subject=Memo">' +
 						partner.email + '</a>');
 				}
@@ -1404,7 +1408,7 @@ var crownstone = {
 			}
 
 			// create table to represent floor of building
-			var table = $('<table></table>'); 
+			var table = $('<table></table>');
 			var floor_cnt = 5;
 			var column_cnt = 2;
 			var row;
@@ -1417,7 +1421,7 @@ var crownstone = {
 			// header
 			row = $('<tr></tr>');
 			// no seperate th fields, first td is automatically header in css
-			field = $('<td></td>').text("Floor"); 
+			field = $('<td></td>').text("Floor");
 			row.append(field);
 			field = $('<td></td>').text("Nodes");
 			row.append(field);
@@ -1433,7 +1437,7 @@ var crownstone = {
 				row.append(field);
 				field.prop('id', 'buildingField' + i);
 				table.append(row);
-			}			
+			}
 
 			$('#building').append(table);
 
@@ -1556,7 +1560,7 @@ var crownstone = {
 		updateRSSI = function(obj) {
 			console.log("updateRSSI()");
 			var level = getLevel(obj);
-			if (!level) { 
+			if (!level) {
 				console.log("Error: crownstone not found on any floor level");
 				return;
 			}
@@ -1648,7 +1652,7 @@ var crownstone = {
 				}
 			}
 			console.log("Averages floor RSSI [" + str + "]");
-			
+
 		}
 
 		getLevel = function(device) {
@@ -1690,9 +1694,9 @@ var crownstone = {
 					// TODO: if we can not get this service/characteristic multiple times for a specific device
 					// assume it to be not there and don't try to connect to it
 					connectAndDiscover(
-						address, 
-						generalServiceUuid, 
-						getConfigurationCharacteristicUuid, 
+						address,
+						generalServiceUuid,
+						getConfigurationCharacteristicUuid,
 						function() {
 							getFloor(function(floor) {
 								console.log("Floor found: " + floor);
@@ -1723,7 +1727,7 @@ var crownstone = {
 			});
 		}
 
-		/** Connect and discover 
+		/** Connect and discover
 		 *
 		 * This function does do the boring connection and discovery work before a characteristic can be read
 		 * or written. It does not disconnect, that's the responsbility of the callee.
@@ -1738,13 +1742,13 @@ var crownstone = {
 				console.log("Device is not yet connected");
 			}*/
 			connect(
-				address, 
+				address,
 				timeout,
 				function connectionSuccess() {
 					ble.discoverCharacteristic(
 						address,
 						serviceUuid,
-						characteristicUuid, 
+						characteristicUuid,
 						successCB,
 						function discoveryFailure(msg) {
 							console.log(msg);
@@ -1809,7 +1813,7 @@ var crownstone = {
 
 		updateClosestCrownstone = function() {
 			self.closestCrownstone = {avgRSSI: -255};
-			
+
 			for (var addr in self.crownstones) {
 				var device = self.crownstones[addr];
 				if (!device.ignore && device.avgRSSI > self.closestCrownstone.avgRSSI) {
@@ -1853,7 +1857,7 @@ var crownstone = {
 		}
 
 		// start
-		start();	
+		start();
 	}
 }
 
