@@ -1,22 +1,22 @@
 Object.size = function(obj) {
-    var size = 0, key;
-    for (key in obj) {
-        if (obj.hasOwnProperty(key)) size++;
-    }
-    return size;
+   var size = 0, key;
+   for (key in obj) {
+      if (obj.hasOwnProperty(key)) size++;
+   }
+   return size;
 };
 
 // First, checks if it isn't implemented yet.
 if (!String.prototype.format) {
-  String.prototype.format = function() {
-    var args = arguments;
-    return this.replace(/{(\d+)}/g, function(match, number) {
-      return typeof args[number] != 'undefined'
-        ? args[number]
-        : match
-      ;
-    });
-  };
+  	String.prototype.format = function() {
+    	var args = arguments;
+    	return this.replace(/{(\d+)}/g, function(match, number) {
+      	return typeof args[number] != 'undefined'
+        		? args[number]
+        		: match
+      		;
+    	});
+  	};
 }
 
 var TTL = 2000; // time-to-live for RSSI values in localisation, 2 seconds
@@ -35,22 +35,22 @@ var crownstone = {
 	// map of crownstones
 	crownstones: {},
 
-	// map of crownstones under question
+		// map of crownstones under question
 	underQuestion: {},
 
-	// map of crownstones not supporting indoor localisation
+		// map of crownstones not supporting indoor localisation
 	blacklist: {},
 
-	// structure to collect crownstones in a building (per floor)
+		// structure to collect crownstones in a building (per floor)
 	building: {},
 
-	// store the device which is currently closest
+		// store the device which is currently closest
 	closestCrownstone : {},
 
 	mobilePlatform: false,
 
-	/* Start should be called if all plugins are ready and all functionality can be called.
-	 */
+		/* Start should be called if all plugins are ready and all functionality can be called.
+	 	*/
 	start:function() {
 		console.log("Start Crownstone application");
 		// set platform
@@ -152,11 +152,11 @@ var crownstone = {
 				}
 			});
 
-//			$.ajaxSetup({
-//				"error": function() {
-//					console.log("General error with one of the ajax calls");
-//				}
-//			});
+			//			$.ajaxSetup({
+			//				"error": function() {
+			//					console.log("General error with one of the ajax calls");
+			//				}
+			//			});
 
 		}
 
@@ -165,6 +165,8 @@ var crownstone = {
 		 * Remote Control
 		 ******************************************************************************************************/
 
+		var obj = $('#remoteControlPage');
+		console.log("Object: " + obj);
 
 		$('#remoteControlPage').on("pagecreate", function(event) {
 			console.log("create remote control page");
@@ -202,27 +204,27 @@ var crownstone = {
 		connectAndTogglePower = function(device, successCB, errorCB) {
 			console.log("Connect and toggle power");
 			connectAndDiscover(
-				device.address,
-				powerServiceUuid,
-				pwmUuid,
-				function() {//success
-					function callback() {
-						disconnect();
-						if (successCB) successCB();
-					}
-
-					getPWM(function(value) {
-						if (value == 0) {
-							powerON(callback);
-						} else {
-							powerOFF(callback);
+					device.address,
+					powerServiceUuid,
+					pwmUuid,
+					function() {//success
+						function callback() {
+							disconnect();
+							if (successCB) successCB();
 						}
-					});
-				},
-				function(msg) {//error
-					console.log("failed to connect");
-					if (errorCB) errorCB();
-				}
+
+						getPWM(function(value) {
+							if (value == 0) {
+								powerON(callback);
+							} else {
+								powerOFF(callback);
+							}
+						});
+					},
+					function(msg) {//error
+						console.log("failed to connect");
+						if (errorCB) errorCB();
+					}
 			);
 		}
 		$('#remoteControlPage').on("pageshow", function(event) {
@@ -236,7 +238,7 @@ var crownstone = {
 		});
 
 		/* Function that populates all .rcCrownstoneTable divs.
-		 */
+		*/
 		showCrownstones = function() {
 			var options = {
 				valueNames: ['mac', 'rssi', 'avgRSSI']
@@ -375,7 +377,7 @@ var crownstone = {
 							console.error("Connection can not be established");
 							if (errorCB) errorCB();
 						}
-				);
+						);
 			}
 		}
 
@@ -558,7 +560,7 @@ var crownstone = {
 				var closest_name = "";
 				for (var el in map) {
 					r[++j] ='<tr id="'
-					r[++j] = el;
+						r[++j] = el;
 					r[++j] = '"><td>';
 					r[++j] = ++nr;
 					r[++j] = '</td><td>';
@@ -725,7 +727,7 @@ var crownstone = {
 								}
 								if (result.length < 2+2+2+4+4+size-1) {
 									console.log("Invalid current curve data (size mismatch)")
-									console.log(JSON.stringify(list));
+										console.log(JSON.stringify(list));
 									return;
 								}
 								var v = (result[i+1] << 8) + result[i];
@@ -746,49 +748,49 @@ var crownstone = {
 									var dt=result[i+size-1];
 									if (dt > 127) dt-=256;
 									t+=dt
-									list.push([(t-t_start)/32768, v]);
+										list.push([(t-t_start)/32768, v]);
 									//list.push([k*t_step, v]);
 								}
 								console.log(JSON.stringify(list));
 
 
-//								var list = [];
-//								// Number of incremental values:
-//								var size=(result.length-2-2-4)/2;
-//								var i=2;
-//								var j=2+2+size;
-//								var v = (result[i] << 8) + result[i+1];
-//								var t = (result[j] << 24) + (result[j+1] << 16) + (result[j+2] << 8) + result[j+3];
-//								var t_start = t;
-//								i+=2;
-//								j+=4;
-//								// Convert timestamp to seconds, divide by clock rate (32768Hz)
-//								list.push([(t-t_start)/32768, v]);
-//								for (var k=0;k<size; ++k, ++i, ++j) {
-//									var dv=result[i];
-//									if (dv > 127) dv-=256;
-//									v+=dv;
-//									var dt=result[j];
-//									if (dt > 127) dt-=256;
-//									t+=dt;
-//									list.push([(t-t_start)/32768, v]);
-//								}
-//								//console.log(JSON.stringify(list));
+								//								var list = [];
+								//								// Number of incremental values:
+								//								var size=(result.length-2-2-4)/2;
+								//								var i=2;
+								//								var j=2+2+size;
+								//								var v = (result[i] << 8) + result[i+1];
+								//								var t = (result[j] << 24) + (result[j+1] << 16) + (result[j+2] << 8) + result[j+3];
+								//								var t_start = t;
+								//								i+=2;
+								//								j+=4;
+								//								// Convert timestamp to seconds, divide by clock rate (32768Hz)
+								//								list.push([(t-t_start)/32768, v]);
+								//								for (var k=0;k<size; ++k, ++i, ++j) {
+								//									var dv=result[i];
+								//									if (dv > 127) dv-=256;
+								//									v+=dv;
+								//									var dt=result[j];
+								//									if (dt > 127) dt-=256;
+								//									t+=dt;
+								//									list.push([(t-t_start)/32768, v]);
+								//								}
+								//								//console.log(JSON.stringify(list));
 
-//								// Curve starts after a zero crossing, start with 0 for a nice graph
-//								list.push([0, 0]);
-//								// First and last number are start and end timestamp, use them to calculate the x values
-//								var t_start = result[0];
-//								var t_end = result[result.length-1];
-//								var t_step = (t_end-t_start) / (result.length -2);
-//								// Convert to ms
-//								t_step = t_step / 32.768;
-//								for (var i = 2; i < result.length-1; ++i) {
-//									list.push([(i-1)*t_step, result[i]]);
-//								}
+								//								// Curve starts after a zero crossing, start with 0 for a nice graph
+								//								list.push([0, 0]);
+								//								// First and last number are start and end timestamp, use them to calculate the x values
+								//								var t_start = result[0];
+								//								var t_end = result[result.length-1];
+								//								var t_step = (t_end-t_start) / (result.length -2);
+								//								// Convert to ms
+								//								t_step = t_step / 32.768;
+								//								for (var i = 2; i < result.length-1; ++i) {
+								//									list.push([(i-1)*t_step, result[i]]);
+								//								}
 
 								$('#currentCurve').show();
-//								$.plot("#currentCurve", [list], {xaxis: {show: false}});
+								//								$.plot("#currentCurve", [list], {xaxis: {show: false}});
 								$.plot("#currentCurve", [list]);
 							});
 						}, 100);
@@ -836,8 +838,8 @@ var crownstone = {
 						for (var i = 0; i < elements; i++) {
 							var idx = 1 + i * TRACK_DEVICE_LEN;
 							var mac = "{0}-{1}-{2}-{3}-{4}-{5}".format(uint8toString(list[idx]), uint8toString(list[idx+1]),
-																	   uint8toString(list[idx+2]), uint8toString(list[idx+3]),
-																	   uint8toString(list[idx+4]), uint8toString(list[idx+5]));
+									uint8toString(list[idx+2]), uint8toString(list[idx+3]),
+									uint8toString(list[idx+4]), uint8toString(list[idx+5]));
 							var rssi = list[idx+6];
 							if (rssi > 127) {
 								rssi -= 256;
@@ -868,12 +870,12 @@ var crownstone = {
 
 			$('#addTrackedDevice').on('click', function(event) {
 				addTrackedDevice($('#trackAddress').val(), $('#trackRSSI').val());
-//				tracking = !tracking;
-//				if (tracking) {
-//					$(this).html('Stop tracking');
-//				} else {
-//					$(this).html('Start tracking');
-//				}
+				//				tracking = !tracking;
+				//				if (tracking) {
+				//					$(this).html('Stop tracking');
+				//				} else {
+				//					$(this).html('Start tracking');
+				//				}
 			});
 
 			$('#getFloor').on('click', function(event) {
@@ -975,73 +977,73 @@ var crownstone = {
 
 			// discover available services
 			discoverServices(
-				function discoverSuccessful(serviceUuid, characteristicUuid) {
-					console.log("updating: " + serviceUuid + ' : ' + characteristicUuid);
+					function discoverSuccessful(serviceUuid, characteristicUuid) {
+						console.log("updating: " + serviceUuid + ' : ' + characteristicUuid);
 
-					if (serviceUuid == indoorLocalizationServiceUuid) {
-						if (characteristicUuid == deviceScanUuid) {
-							$('#scanDevicesTab').show();
+						if (serviceUuid == indoorLocalizationServiceUuid) {
+							if (characteristicUuid == deviceScanUuid) {
+								$('#scanDevicesTab').show();
+							}
+							if (characteristicUuid == addTrackedDeviceUuid) {
+								$('#trackedDevicesTab').show();
+							}
 						}
-						if (characteristicUuid == addTrackedDeviceUuid) {
-							$('#trackedDevicesTab').show();
+						if (serviceUuid == generalServiceUuid) {
+							if (characteristicUuid == temperatureCharacteristicUuid) {
+								$('#getTemperatureTab').show();
+							}
+							if (characteristicUuid == changeNameCharacteristicUuid) {
+								$('#changeNameTab').show();
+								// request device name to fill initial value
+								setTimeout(function() {
+									$('#getDeviceName').trigger('click');
+								}, (trigger++) * triggerDelay);
+							}
+							if (characteristicUuid == deviceTypeUuid) {
+								$('#deviceTypeTab').show();
+								// request device type to fill initial value
+								setTimeout(function() {
+									$('#getDeviceType').trigger('click');
+								}, (trigger++) * triggerDelay);
+							}
+							if (characteristicUuid == roomUuid) {
+								$('#roomTab').show();
+								// request room to fill initial value
+								setTimeout(function() {
+									$('#getRoom').trigger('click');
+								}, (trigger++) * triggerDelay);
+							}
+							if (characteristicUuid == setConfigurationCharacteristicUuid) {
+								$('#floorTab').show();
+								setTimeout(function() {
+									$('#getFloor').trigger('click');
+								}, (trigger++) * triggerDelay);
+							}
 						}
+						if (serviceUuid == powerServiceUuid) {
+							if (characteristicUuid == pwmUuid) {
+								$('#pwmTab').show();
+							}
+							if (characteristicUuid == currentConsumptionUuid) {
+								$('#currentConsumptionTab').show();
+							}
+							if (characteristicUuid == currentLimitUuid) {
+								$('#currentLimitTab').show();
+								// request current limit to fill initial value
+								setTimeout(function() {
+									$('#getCurrentLimit').trigger('click');
+								}, (trigger++) * triggerDelay);
+							}
+							if (characteristicUuid == currentCurveUuid) {
+								$('#currentCurveTab').show();
+							}
+						}
+					},
+					function discoveryFailure(msg) {
+						console.log(msg);
+						// do we really want to disconnect here?
+						disconnect();
 					}
-					if (serviceUuid == generalServiceUuid) {
-						if (characteristicUuid == temperatureCharacteristicUuid) {
-							$('#getTemperatureTab').show();
-						}
-						if (characteristicUuid == changeNameCharacteristicUuid) {
-							$('#changeNameTab').show();
-							// request device name to fill initial value
-							setTimeout(function() {
-								$('#getDeviceName').trigger('click');
-							}, (trigger++) * triggerDelay);
-						}
-						if (characteristicUuid == deviceTypeUuid) {
-							$('#deviceTypeTab').show();
-							// request device type to fill initial value
-							setTimeout(function() {
-								$('#getDeviceType').trigger('click');
-							}, (trigger++) * triggerDelay);
-						}
-						if (characteristicUuid == roomUuid) {
-							$('#roomTab').show();
-							// request room to fill initial value
-							setTimeout(function() {
-								$('#getRoom').trigger('click');
-							}, (trigger++) * triggerDelay);
-						}
-						if (characteristicUuid == setConfigurationCharacteristicUuid) {
-							$('#floorTab').show();
-							setTimeout(function() {
-								$('#getFloor').trigger('click');
-							}, (trigger++) * triggerDelay);
-						}
-					}
-					if (serviceUuid == powerServiceUuid) {
-						if (characteristicUuid == pwmUuid) {
-							$('#pwmTab').show();
-						}
-						if (characteristicUuid == currentConsumptionUuid) {
-							$('#currentConsumptionTab').show();
-						}
-						if (characteristicUuid == currentLimitUuid) {
-							$('#currentLimitTab').show();
-							// request current limit to fill initial value
-							setTimeout(function() {
-								$('#getCurrentLimit').trigger('click');
-							}, (trigger++) * triggerDelay);
-						}
-						if (characteristicUuid == currentCurveUuid) {
-							$('#currentCurveTab').show();
-						}
-					}
-				},
-				function discoveryFailure(msg) {
-					console.log(msg);
-					// do we really want to disconnect here?
-					disconnect();
-				}
 			);
 		});
 
@@ -1177,8 +1179,8 @@ var crownstone = {
 					for (var i = 0; i < elements; i++) {
 						var idx = 1 + i * 9;
 						var mac = "{0}-{1}-{2}-{3}-{4}-{5}".format(list[idx].toString(16).toUpperCase(), list[idx+1].toString(16).toUpperCase(),
-																   list[idx+2].toString(16).toUpperCase(), list[idx+3].toString(16).toUpperCase(),
-																   list[idx+4].toString(16).toUpperCase(), list[idx+5].toString(16).toUpperCase());
+								list[idx+2].toString(16).toUpperCase(), list[idx+3].toString(16).toUpperCase(),
+								list[idx+4].toString(16).toUpperCase(), list[idx+5].toString(16).toUpperCase());
 						var rssi = list[idx+6];
 						if (rssi > 127) {
 							rssi -= 256;
@@ -1187,7 +1189,7 @@ var crownstone = {
 						console.log("list item {0}: mac={1}, rssi={2}, occ={3}".format(i, mac, rssi, occurences));
 
 						r[++j] ='<tr id="'
-						r[++j] = mac;
+							r[++j] = mac;
 						r[++j] = '"><td>';
 						r[++j] = i;
 						r[++j] = '</td><td>';
@@ -1352,7 +1354,7 @@ var crownstone = {
 					connecting = false;
 					if (success) {
 						connected = true
-						connectedDevice = address;
+							connectedDevice = address;
 						if (succesCB) successCB();
 					} else {
 						var msg = "Connection failure";
@@ -1514,12 +1516,12 @@ var crownstone = {
 				}
 				if (partner.website) {
 					$('#allPartnerWebsite').html('<a href="' + partner.website + '">' +
-						partner.website + '</a>');
+							partner.website + '</a>');
 				}
 				if (partner.email) {
 					$('#allPartnerEmail').html('<a href="mailto:' + partner.email +
-						'?Subject=Memo">' +
-						partner.email + '</a>');
+							'?Subject=Memo">' +
+							partner.email + '</a>');
 				}
 			} else {
 				console.error('Could not select ' + partnerId);
@@ -1618,7 +1620,7 @@ var crownstone = {
 		});
 
 		/** Test function returns the floor with most crownstones
-		 */
+		*/
 		mostCrownstones = function() {
 			var max_count = -1; var max_level = -1;
 			for (var fl in self.building.floors) {
@@ -1815,7 +1817,7 @@ var crownstone = {
 		initDevice = function(obj) {
 			obj.rssiHistory = [];
 			obj.lastWeightUpdate = $.now()
-			obj.weight = 0;
+				obj.weight = 0;
 			obj.count = 0;
 		}
 
@@ -1833,32 +1835,32 @@ var crownstone = {
 					// assume it to be not there and don't try to connect to it
 					console.log("Connect and get floor");
 					connectAndDiscover(
-						address,
-						generalServiceUuid,
-						getConfigurationCharacteristicUuid,
-						function() {
-							getFloor(function(floor) {
-								console.log("Floor found: " + floor);
-								initDevice(obj);
-								self.building.floors[floor].devices.push(obj);
-								updateTable(floor, obj);
-								disconnect();
-								addCrownstone(obj);
-							}, function(msg) {
-								generalErrorCB(msg);
-								disconnect();
-							})
-						},
-						function(msg) {
-							// addToBlacklist(obj);
-							if ((self.underQuestion.hasOwnProperty(device.address))) {
-								if (++self.underQuestion[device.address].count >= 3) {
-									addToBlacklist(obj);
+							address,
+							generalServiceUuid,
+							getConfigurationCharacteristicUuid,
+							function() {
+								getFloor(function(floor) {
+									console.log("Floor found: " + floor);
+									initDevice(obj);
+									self.building.floors[floor].devices.push(obj);
+									updateTable(floor, obj);
+									disconnect();
+									addCrownstone(obj);
+								}, function(msg) {
+									generalErrorCB(msg);
+									disconnect();
+								})
+							},
+							function(msg) {
+								// addToBlacklist(obj);
+								if ((self.underQuestion.hasOwnProperty(device.address))) {
+									if (++self.underQuestion[device.address].count >= 3) {
+										addToBlacklist(obj);
+									}
+								} else {
+									self.underQuestion[device.address] = {'count' : 0};
 								}
-							} else {
-								self.underQuestion[device.address] = {'count' : 0};
 							}
-						}
 					);
 				} else if (!isInBlacklist(obj)) {
 					updateCrownstone(obj, 100);
@@ -1874,33 +1876,33 @@ var crownstone = {
 		connectAndDiscover = function(address, serviceUuid, characteristicUuid, successCB, errorCB) {
 			var timeout = 10; // 10 seconds here
 			/*
-			var connected = ble.isConnected(address);
-			if (connected) {
+				var connected = ble.isConnected(address);
+				if (connected) {
 				console.log("Device is already connected");
-			} else {
+				} else {
 				console.log("Device is not yet connected");
-			}*/
+				}*/
 			console.log("Connect to service " + serviceUuid + " and characteristic " + characteristicUuid);
 			connect(
-				address,
-				timeout,
-				function connectionSuccess() {
-					ble.discoverCharacteristic(
-						address,
-						serviceUuid,
-						characteristicUuid,
-						successCB,
-						function discoveryFailure(msg) {
-							console.log(msg);
-							disconnect();
-							errorCB(msg);
-						}
-					)
-				},
-				function connectionFailure(msg) {
-					errorCB(msg);
-				}
-			);
+					address,
+					timeout,
+					function connectionSuccess() {
+						ble.discoverCharacteristic(
+								address,
+								serviceUuid,
+								characteristicUuid,
+								successCB,
+								function discoveryFailure(msg) {
+									console.log(msg);
+									disconnect();
+									errorCB(msg);
+								}
+								)
+					},
+					function connectionFailure(msg) {
+						errorCB(msg);
+					}
+					);
 		}
 
 		generalErrorCB = function(msg) {

@@ -71,7 +71,6 @@ var app = {
 	receivedEvent: function(event) {
       switch(event) {
          case 'deviceready':
-
 	    		pgReady.resolve();
 	    		break;
       }
