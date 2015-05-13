@@ -47,10 +47,29 @@ var crownstone = {
 	// store the device which is currently closest
 	closestCrownstone : {},
 
+	mobilePlatform: false,
+
 	/* Start should be called if all plugins are ready and all functionality can be called.
 	 */
 	start:function() {
+		console.log("Start Crownstone application");
+		// set platform
+		var device = window.device;
+		if (typeof device !== 'undefined') {
+			console.log("Device platform: " + device.platform);
+			if (device.platform === "Android" || device.platform === "iOS" || device.platform === "Tizen" ||
+					device.platform === "webOS") {
+				self.mobilePlatform = true;
+			}
+		}
+
+		if (!self.mobilePlatform) {
+			console.log("Not a mobile platform, do not initialize ble");
+			return;
+		}
+
 		// set up bluetooth connection
+		console.log("Initialize ble");
 		ble.init(function(enabled) {
 			$('#findCrownstones').prop("disabled", !enabled);
 			$('#localizeBtn').prop("disabled", !enabled);
@@ -59,7 +78,7 @@ var crownstone = {
 			$('#hocBinaryBtn').prop("disabled", !enabled);
 		});
 
-	 	// $.mobile.changePage("#hotOrColdPage", {transition:'slide', hashChange:true});
+		//$.mobile.changePage("#hotOrColdPage", {transition:'slide', hashChange:true});
 	},
 
 	create:function() {
@@ -68,8 +87,9 @@ var crownstone = {
 		console.log("---------------------------------------------------------");
 		console.log("----- Distributed Organisms B.V. (http://dobots.nl) -----");
 		console.log("---------------------------------------------------------");
-		console.log("Start CrownStone application");
+		console.log("Create Crownstone application");
 
+		// creates BLE object, does nothing with it yet
 		ble = new BLEHandler();
 
 		var repeatFunctionHandle = null;
@@ -104,7 +124,7 @@ var crownstone = {
 		var connectedDevice = "";
 
 		start = function() {
-			console.log("Setup general functionality, enable bluetooth, set event handlers, etc.");
+			console.log("Set side menu event handlers, swipe gestures, etc.");
 
 			// set up bluetooth connection
 			//ble.init(function(enabled) {
@@ -116,6 +136,8 @@ var crownstone = {
 			$('.sideMenu ul').append('<li><a href="#indoorLocalizationPage">Localization</a></li>');
 			$('.sideMenu ul').append('<li><a href="#remoteControlPage">Remote Control</a></li>');
 			$('.sideMenu ul').append('<li><a href="#hotOrColdPage">Hot or Cold</a></li>');
+			$('.sideMenu ul').append('<li><a href="#webrtcPage">Webrtc</a></li>');
+			$('.sideMenu ul').append('<li><a href="#hubPage">Hub</a></li>');
 			$('.sideMenu ul').append('<li><a href="#aboutPage">About</a></li>');
 
 			// add swipe gesture to all pages with a panel
@@ -178,6 +200,7 @@ var crownstone = {
 		});
 
 		connectAndTogglePower = function(device, successCB, errorCB) {
+			console.log("Connect and toggle power");
 			connectAndDiscover(
 				device.address,
 				powerServiceUuid,
@@ -202,51 +225,159 @@ var crownstone = {
 				}
 			);
 		}
-
 		$('#remoteControlPage').on("pageshow", function(event) {
 
 			resetCrownstoneList();
 			findCrownstones(function(obj) {
 				updateCrownstoneList(obj, 100);
 
-				var options = {
-					valueNames: ['mac', 'rssi', 'avgRSSI']
-				}
-
-				var r = new Array(), j = -1;
-
-				r[++j] = '<thead>';
-				r[++j] = '<col style="width: 60%">';
-				r[++j] = '<col style="width: 20%">';
-				r[++j] = '<col style="width: 20%">';
-				r[++j] = '<tr><th align="left">MAC</th><th align="left">RSSI</th><th align="left">AVG</th></tr>';
-				r[++j] = '</thead><tbody class="list">';
-
-				var nr = 0;
-				for (var el in self.crownstones) {
-					r[++j] ='<tr><td class="mac">';
-					r[++j] = self.crownstones[el]['name'] + '<br/>' + el;
-					r[++j] = '</td><td class="rssi">';
-					r[++j] = self.crownstones[el]['rssi'];
-					r[++j] = '</td><td class="avgRSSI">';
-					r[++j] = Math.floor(self.crownstones[el]['avgRSSI']);
-					r[++j] = '</td></tr>';
-				}
-				r[++j] = '</tbody>';
-
-				$('#rcCrownStoneTable').show();
-				$('#rcCrownStoneTable').html(r.join(''));
-
-				// order the table in a descending order (highest RSSI at the top)
-				new List('rcCrownStoneTable', options).sort('avgRSSI', { order: "desc"});
-
-				$('#rcClosestCrownstone').html("Closest Crownstone: <b>" + self.closestCrownstone.name + "</b>");
+				showCrownstones();
 			});
 		});
+
+		/* Function that populates all .rcCrownstoneTable divs.
+		 */
+		showCrownstones = function() {
+			var options = {
+				valueNames: ['mac', 'rssi', 'avgRSSI']
+			}
+
+			var r = new Array(), j = -1;
+
+			r[++j] = '<thead>';
+			r[++j] = '<col style="width: 60%">';
+			r[++j] = '<col style="width: 20%">';
+			r[++j] = '<col style="width: 20%">';
+			r[++j] = '<tr><th align="left">MAC</th><th align="left">RSSI</th><th align="left">AVG</th></tr>';
+			r[++j] = '</thead><tbody class="list">';
+
+			var nr = 0;
+			for (var el in self.crownstones) {
+				r[++j] ='<tr><td class="mac">';
+				r[++j] = self.crownstones[el]['name'] + '<br/>' + el;
+				r[++j] = '</td><td class="rssi">';
+				r[++j] = self.crownstones[el]['rssi'];
+				r[++j] = '</td><td class="avgRSSI">';
+				r[++j] = Math.floor(self.crownstones[el]['avgRSSI']);
+				r[++j] = '</td></tr>';
+			}
+			r[++j] = '</tbody>';
+
+			$('.rcCrownstoneTable').show();
+			$('.rcCrownstoneTable').html(r.join(''));
+
+			// order the table in a descending order (highest RSSI at the top)
+			new List('rcCrownstoneTable', options).sort('avgRSSI', { order: "desc"});
+
+			$('.rcClosestCrownstone').html("Closest Crownstone: <b>" + self.closestCrownstone.name + "</b>");
+		};
 
 		$('#remoteControlPage').on("pagehide", function(event) {
 			stopSearch();
 		});
+
+
+
+		/*******************************************************************************************************
+		 * Hub
+		 ******************************************************************************************************/
+
+		$('#hubPage').on('pagecreate', function(event) {
+
+			console.log("Create hub page");
+
+			console.log("Add event handler to button to send wifi info");
+
+			// add event handler to send wifi config to crownstone
+			$('#wifiBtn').on('click', function(event) {
+				if (self.closestCrownstone.name) {
+					console.log("Send information to: " + self.closestCrownstone.name);
+					var wifiSSID = $('#wifiSSID').val();
+					var wifiPassword = $('#wifiPassword').val();
+					if (wifiSSID == '') {
+						console.error("A wifi SSID should be set");
+					} else if ((wifiSSID.length > 32) || (wifiPassword.length > 32)) {
+						console.error("Wifi or password length larger than 32 bytes");
+					} else {
+						var string = '{ "ssid":"' + wifiSSID + '", "key":"' + wifiPassword + '"}';
+						setWifi(string);
+					}
+				} else {
+					console.error("There is no closest crownstone available");
+				}
+			});
+		});
+
+		$('#hubPage').on('pageshow', function(event) {
+			console.log("Show hub page");
+			// TODO: do we need to reset the list?
+			resetCrownstoneList();
+
+			// drop out if there is no BLE
+			if (!self.mobilePlatform) {
+				console.error("Do not start to find the hub. We're not a mobile device.");
+				return;
+			}
+
+			// Find closest crownstone to connect with
+			console.log("Try to find some crownstones");
+			findCrownstones(function(obj) {
+				console.log("Found indeed some crownstones, update the list");
+				updateCrownstoneList(obj, 100);
+				showCrownstones();
+			});
+
+		});
+
+		setWifi = function(value) {
+			function func(argCB, callback) {
+				ble.setWifi(argCB.connectedDevice, argCB.value);
+				callback();
+			}
+			var argcB;
+			argCB.connectedDevice = connectedDevice;
+			argCB.value = value;
+
+			function successCB() {
+				console.log("Written wifi config successfully");
+			}
+			function errorCB() {
+				console.error("Mistake in writing wifi config");
+			}
+			executeFunction(self.closestCrownstone, func, argCB, generalServiceUuid, setConfigurationCharacteristicUuid,
+					successCB, errorCB);
+		}
+
+		executeFunction = function(device, func, argCB, serviceUuid, characteristicUuid, successCB, errorCB) {
+			if (connectedDevice) {
+				function callback() {
+					disconnect();
+					if (successCB) successCB();
+				}
+				func(argCB, callback);
+			} else {
+				console.log("Connect and execute function");
+				connectAndDiscover(
+						device.address,
+						serviceUuid,
+						characteristicUuid,
+						function() { // successfully connected
+							// TODO: make sure the disconnect is not too fast
+							function callback() {
+								disconnect();
+								if (successCB) successCB();
+							}
+							// enforce callback as argument, if not called by callee, connection will not be closed, nor
+							// successCB be called
+							func(argCB, callback);
+						},
+						function(msg) { // error in connecting
+							console.error("Connection can not be established");
+							if (errorCB) errorCB();
+						}
+				);
+			}
+		}
 
 
 		/*******************************************************************************************************
@@ -263,7 +394,7 @@ var crownstone = {
 		var rgb = "rgb(0,0,0)";
 
 		$('#hotOrColdPage').on("pagecreate", function(event) {
-
+			console.log("Create hot or cold page");
 			$('#hocBinaryBtn').on('click', function(event) {
 				if (binary) {
 					$('#hocBinaryBtn').html('Binary');
@@ -279,6 +410,9 @@ var crownstone = {
 			$('#hocBinaryThreshold').val(-65);
 		});
 
+		/* TODO: Do we need an entire new table here? Or can we use showCrownstones again? Is there something special about
+		 * the formatting? Then a .css identifier as argument to showCrownstones is enough.
+		 */
 		$('#hotOrColdPage').on("pageshow", function(event) {
 
 			resetCrownstoneList();
@@ -310,11 +444,11 @@ var crownstone = {
 				}
 				r[++j] = '</tbody>';
 
-				$('#hocCrownStoneTable').show();
-				$('#hocCrownStoneTable').html(r.join(''));
+				$('#hocCrownstoneTable').show();
+				$('#hocCrownstoneTable').html(r.join(''));
 
 				// order the table in a descending order (highest RSSI at the top)
-				new List('hocCrownStoneTable', options).sort('avgRSSI', { order: "desc"});
+				new List('hocCrownstoneTable', options).sort('avgRSSI', { order: "desc"});
 
 				$('#hocClosestCrownstone').html("Closest Crownstone: <b>" + self.closestCrownstone.name + "</b>");
 
@@ -444,7 +578,7 @@ var crownstone = {
 				$('#closestCrownstone').html("Closest Crownstone: <b>" + closest_name + "</b>");
 
 				$(document).on("click", "#crownStoneTable tr", function(e) {
-					console.log('click');
+					console.log('Clicked on a crownstone in table, stop searching and connect');
 					if (searching) {
 						searching = false;
 						stopSearch();
@@ -1205,6 +1339,10 @@ var crownstone = {
 		}
 
 		connect = function(address, timeout, successCB, errorCB) {
+			if (typeof address === 'undefined') {
+				console.error("Huh, address is undefined");
+				return;
+			}
 			if (!(connected || connecting)) {
 				connecting = true;
 				console.log("connecting to " + address);
@@ -1215,10 +1353,10 @@ var crownstone = {
 					if (success) {
 						connected = true
 						connectedDevice = address;
-						successCB();
+						if (succesCB) successCB();
 					} else {
 						var msg = "Connection failure";
-						errorCB(msg);
+						if (errorCB) errorCB(msg);
 					}
 
 				});
@@ -1693,6 +1831,7 @@ var crownstone = {
 					var address = obj.address;
 					// TODO: if we can not get this service/characteristic multiple times for a specific device
 					// assume it to be not there and don't try to connect to it
+					console.log("Connect and get floor");
 					connectAndDiscover(
 						address,
 						generalServiceUuid,
@@ -1741,6 +1880,7 @@ var crownstone = {
 			} else {
 				console.log("Device is not yet connected");
 			}*/
+			console.log("Connect to service " + serviceUuid + " and characteristic " + characteristicUuid);
 			connect(
 				address,
 				timeout,

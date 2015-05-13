@@ -17,15 +17,34 @@
  * under the License.
  */
 
+/**
+ * Using the setup by Chris Hjorth from http://www.chrishjorth.com and Roman Zhovnirchyk from http://rmn.im/.
+ */
+
+var jqmReady = $.Deferred();
+var pgReady = $.Deferred();
+
 var app = {
 
-	// Application Constructor
-	initialize: function() {
-		//the following might be necessary for iOS
-		//window.localStorage.clear(); 
-		this.bindEvents();
+	callback: null,
 
-		crownstone.create();
+	// Application Constructor
+	initialize: function(callback) {
+		//the following might be necessary for iOS
+		//window.localStorage.clear();
+
+		this.callback = callback;
+
+      var browser = document.URL.match(/^https?:/);
+      if(browser) {
+         console.log("Is web.");
+         //In case of web we ignore PG but resolve the Deferred Object to trigger initialization
+	 		pgReady.resolve();
+      }
+      else {
+         console.log("Is not web.");
+	 		this.bindEvents();
+      }
 	},
 	// Bind Event Listeners
 	//
@@ -39,16 +58,39 @@ var app = {
 	// The scope of 'this' is the event. In order to call the 'receivedEvent'
 	// function, we must explicity call 'app.receivedEvent(...);'
 	onDeviceReady: function() {
-		app.receivedEvent('deviceready');
+		console.log("Device ready event received. Only now is e.g. device.* available");
 		if(window && window.device) {
 			if(window.device.platform == 'iOS' && parseFloat(window.device.version) >= 7.0) {
 				$('body').addClass('phonegap-ios-7');
 			}
 		}
-		crownstone.start();
+		app.receivedEvent('deviceready');
 	},
-	// Update DOM on a Received Event
-	receivedEvent: function(id) {
 
+	// Update DOM on a Received Event
+	receivedEvent: function(event) {
+      switch(event) {
+         case 'deviceready':
+
+	    		pgReady.resolve();
+	    		break;
+      }
 	}
 };
+
+$(document).on("pageinit", function(event, ui) {
+   jqmReady.resolve();
+});
+
+
+/**
+ * General initialization.
+ */
+$.when(jqmReady, pgReady).then(function() {
+   //Initialization code here
+   console.log("Start app.");
+   if(app.callback) {
+      app.callback();
+   }
+   console.log("Frameworks ready.");
+});

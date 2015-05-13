@@ -23,25 +23,59 @@
 		<meta name="format-detection" content="telephone=no" />
 		<!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes.
 			See https://issues.apache.org/jira/browse/CB-4323 -->
-		<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, target-densitydpi=device-dpi" />
-		<link rel="stylesheet" href="css/jquery.mobile-1.4.2.min.css" />
-		<script src="js/third/jquery-1.9.1.min.js"></script>
-		<script src="js/third/jquery.mobile-1.4.2.min.js"></script>
-		<script src="js/third/list.min.js"></script>
-		<script src="js/third/jquery.flot.js"></script>
-		<link rel="stylesheet" type="text/css" href="css/crownstone.css" />
+		<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+
+		<script type="text/javascript" src="js/third/jquery-2.1.4.min.js"></script>
+		<script type="text/javascript" src="js/third/jquery.mobile-1.4.5.min.js"></script>
+		<script type="text/javascript" src="js/third/list.min.js"></script>
+		<script type="text/javascript" src="js/third/jquery.flot.js"></script>
 		<script type="text/javascript" src="cordova.js"></script>
 
+		<link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css" />
+		<link rel="stylesheet" type="text/css" href="css/crownstone.css" />
 		<link rel="stylesheet" type="text/css" href="css/easyrtc.css" />
-
+		<!--
 		<script type="text/javascript" src="js/third/socket.io.js"></script>
 		<script type="text/javascript" src="js/third/easyrtc.js"></script>
 		<script type="text/javascript" src="js/third/demo_data_channel_messaging.js"></script>
-
+		-->
 		<title>Crownstone</title>
 	</head>
 
-	<body class="ui-body-a" onload="connect()">
+	<body class="ui-body-a"> <!-- onload="connect()"> -->
+		<!--
+			Hub settings
+	  	-->
+		<div data-role="page" id="hubPage">
+			<div data-role="header" data-position='fixed'>
+				<h1 class="ui-title" role="heading" aria-level="1">Bluetooth Hub</h1>
+			</div>
+
+			<div class="scrollable" role="main">
+				<div style="opacity: 0.3" class="debug">
+					<table class="rcCrownstoneTable" style="display: none; width: 100%; margin: 0px 10px 0px"></table>
+					<p/>
+					<div class="rcClosestCrownstone">Closest Crownstone:</div>
+					<p/>
+				</div>
+				<hr/>
+				<div class="wifiBtn">
+					<button id="wifiBtn" class="ui-btn-active ui-state-persist" data-role="button">Send</button>
+					<form id="wifiSettingsForm" action="">
+						<label for="wifiSSID">WIFI name:</label>
+						<input type="string" name="wifiSSID" id="wifiSSID">
+						<label for="wifiPassword">WIFI password:</label>
+						<input type="password" name="wifiPassword" id="wifiPassword">
+					</form>
+				</div>
+
+			</div>
+			<div data-role="panel" class="sideMenu" data-display="reveal" data-theme="b">
+				<div id="statusBarFill"></div>
+				<ul data-role="listview">
+				</ul>
+			</div>
+		</div>
 		<!--
 			The first page to be shown to the user, at the moment.
 			From here:
@@ -98,6 +132,7 @@
 				</ul>
 			</div>
 		</div>
+
 
 		<!--
 			About the company and the application. Note that the defaults do not need to be used. They
@@ -188,9 +223,9 @@ crownstones before you can use them to localize yourself. This will not be the f
 					</table>
 				</div>
 				<div style="opacity: 0.3" class="debug">
-					<table id="rcCrownStoneTable" style="display: none; width: 100%; margin: 0px 10px 0px"></table>
+					<table class="rcCrownstoneTable" style="display: none; width: 100%; margin: 0px 10px 0px"></table>
 					<p/>
-					<div id="rcClosestCrownstone">Closest Crownstone:</div>
+					<div class="rcClosestCrownstone">Closest Crownstone:</div>
 					<p/>
 				</div>
 			</div>
@@ -206,7 +241,7 @@ crownstones before you can use them to localize yourself. This will not be the f
 				<div id="hocFoundCrownstone" style="text-align: center; font-size: 200%;" class="blink"></div>
 				<p>
 				<div style="opacity: 0.3" class="debug">
-					<table id="hocCrownStoneTable" style="display: none; width: 100%; margin: 0px 10px 0px"></table>
+					<table id="hocCrownstoneTable" style="display: none; width: 100%; margin: 0px 10px 0px"></table>
 					<p/>
 					<div id="hocClosestCrownstone">Closest Crownstone:</div>
 					<p/>
@@ -344,7 +379,11 @@ crownstones before you can use them to localize yourself. This will not be the f
 		<script type="text/javascript" src="js/crownstone.js"></script>
 		<script type="text/javascript" src="js/index.js"></script>
 		<script type="text/javascript">
-			app.initialize();
+			start = function() {
+				crownstone.create();
+				crownstone.start();
+			}
+			app.initialize(start);
 		</script>
 	</body>
 </html>

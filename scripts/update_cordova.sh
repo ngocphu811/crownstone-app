@@ -22,6 +22,7 @@ cordova plugin add org.apache.cordova.device
 cordova plugin add org.apache.cordova.dialogs
 cordova plugin add com.verso.cordova.clipboard
 cordova plugin add uk.co.ilee.shake
+# cordova plugin add https://git-wip-us.apache.org/repos/asf/cordova-plugin-device.git
 
 echo "New plugin versions"
 cordova plugin
