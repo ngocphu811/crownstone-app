@@ -21,7 +21,7 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="format-detection" content="telephone=no" />
-		<!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. 
+		<!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes.
 			See https://issues.apache.org/jira/browse/CB-4323 -->
 		<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, target-densitydpi=device-dpi" />
 		<link rel="stylesheet" href="css/jquery.mobile-1.4.2.min.css" />
@@ -31,11 +31,17 @@
 		<script src="js/third/jquery.flot.js"></script>
 		<link rel="stylesheet" type="text/css" href="css/crownstone.css" />
 		<script type="text/javascript" src="cordova.js"></script>
-		
+
+		<link rel="stylesheet" type="text/css" href="css/easyrtc.css" />
+
+		<script type="text/javascript" src="js/third/socket.io.js"></script>
+		<script type="text/javascript" src="js/third/easyrtc.js"></script>
+		<script type="text/javascript" src="js/third/demo_data_channel_messaging.js"></script>
+
 		<title>Crownstone</title>
 	</head>
 
-	<body class="ui-body-a">
+	<body class="ui-body-a" onload="connect()">
 		<!--
 			The first page to be shown to the user, at the moment.
 			From here:
@@ -56,8 +62,34 @@
 					<p/>
 					<div id="closestCrownstone">Closest Crownstone:</div>
 				</div>
-				<div>	
+				<div>
 					<img class="scaledLogo" src="img/logos/DoBots.png"></img>
+				</div>
+			</div>
+			<div data-role="panel" class="sideMenu" data-display="reveal" data-theme="b">
+				<div id="statusBarFill"></div>
+				<ul data-role="listview">
+				</ul>
+			</div>
+		</div>
+
+		<!--
+			Not necessarily enabled... Send a message to the crownstone
+	  	-->
+		<div data-role="page" id="webrtcPage">
+			<div data-role="header" data-position='fixed'>
+				<h1 class="ui-title" role="heading" aria-level="1">WebRTC</h1>
+			</div>
+
+			<div class="scrollable" role="main">
+				<div id="sendMessageArea">
+					<div id="iam">Obtaining ID...</div>
+					<textarea id="sendMessageText"></textarea>
+					<div id="otherClients"></div>
+				</div>
+				<div id="receiveMessageArea">
+					Received Messages:
+					<div id="conversation"></div>
 				</div>
 			</div>
 			<div data-role="panel" class="sideMenu" data-display="reveal" data-theme="b">
