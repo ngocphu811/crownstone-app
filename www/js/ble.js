@@ -289,15 +289,18 @@ var BLEHandler = function() {
 		var paramsObj = {}
 		bluetoothle.startScan(function(obj) {  // start scan success
 				if (obj.status == 'scanResult') {
+					console.log('Found device, parse and call callback if company id == ' + dobotsCompanyId);
 					var arr = bluetoothle.encodedStringToBytes(obj.advertisement);
 					self.parseAdvertisement(arr, 0xFF, function(data) {
 						var value = data[0] << 8 | data[1];
 						if (value == dobotsCompanyId) {
 							callback(obj);
+						} else {
+							console.log("Found device but does have company id: " + value);
 						}
 					})
 				} else if (obj.status == 'scanStarted') {
-					//console.log('Endless scan was started successfully');
+					console.log('Endless scan was started successfully');
 				} else {
 					console.log('Unexpected start scan status: ' + obj.status);
 					console.log('Stopping scan');
