@@ -285,7 +285,7 @@ var BLEHandler = function() {
 	}
 
 	self.startEndlessScan = function(callback) {
-		//console.log('start endless scan');
+		console.log('Start endless scan');
 		var paramsObj = {}
 		bluetoothle.startScan(function(obj) {  // start scan success
 				if (obj.status == 'scanResult') {

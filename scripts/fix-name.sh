@@ -16,7 +16,7 @@ sed -i -re 's/MainActivity/Crownstone/g' platforms/android/AndroidManifest.xml
 #sed -i -re 's/CordovaApp/Crownstone/g' platforms/android/build.xml
 
 #echo "Fix platforms/android/CordovaLib/src/org/apache/cordovaApp.java"
-#sed -i -re 's/CordovaApp/Crownstone/g' platforms/android/CordovaLib/src/org/apache/cordovaApp.java
+#sed -i -re 's/CordovaApp/Crownstone/g' platforms/android/CordovaLib/src/org/apache/cordova/App.java
 
 echo "Fix platforms/android/src/nl/dobots/CrownStone/MainActivity.java"
 sed -i -re 's/MainActivity/Crownstone/g' platforms/android/src/nl/dobots/CrownStone/MainActivity.java

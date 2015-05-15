@@ -17,11 +17,22 @@
  * under the License.
  */
 
-/**
- * Using the setup by Chris Hjorth from http://www.chrishjorth.com and Roman Zhovnirchyk from http://rmn.im/.
+/*
+ * In JQuery things are called on $(document).ready(). This is in JQuery Mobile (JQM) only when a page is ready. In JQM
+ * before 1.4 this used to be $(document).on('pageinit'). Now this is $(document).on('pagecreate'); You see in [2]
+ * what should be done at which event. In 'pagebeforecreate' elements should be added dynamically. In 'pagecreate'
+ * event listeners should be added and plugins initialized.
+ *
+ * In the following we use the setup by Chris Hjorth from http://www.chrishjorth.com and Roman Zhovnirchyk from
+ * http://rmn.im/.
+ *
+ * [1]: http://stackoverflow.com/questions/14468659/jquery-mobile-document-ready-vs-page-events
+ * [2]: http://www.gajotres.net/page-events-order-in-jquery-mobile-version-1-4-update/
  */
 
+// Flag that indicates that JQuery Mobile (jqm) is ready
 var jqmReady = $.Deferred();
+// Flag that indicates that PhoneGap (pg) is ready
 var pgReady = $.Deferred();
 
 var app = {
@@ -71,13 +82,18 @@ var app = {
 	receivedEvent: function(event) {
       switch(event) {
          case 'deviceready':
+         	// phonegap is ready on deviceready
 	    		pgReady.resolve();
 	    		break;
       }
 	}
 };
 
-$(document).on("pageinit", function(event, ui) {
+/*
+ * When the pagecreate event is generated, we can assume JQuery Mobile is ready.
+ */
+$(document).on("pagecreate", function(event, ui) {
+	console.log("Resolve jqmReady");
    jqmReady.resolve();
 });
 

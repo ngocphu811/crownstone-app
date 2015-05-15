@@ -53,20 +53,6 @@ var crownstone = {
 	 	*/
 	start:function() {
 		console.log("Start Crownstone application");
-		// set platform
-		var device = window.device;
-		if (typeof device !== 'undefined') {
-			console.log("Device platform: " + device.platform);
-			if (device.platform === "Android" || device.platform === "iOS" || device.platform === "Tizen" ||
-					device.platform === "webOS") {
-				self.mobilePlatform = true;
-			}
-		}
-
-		if (!self.mobilePlatform) {
-			console.log("Not a mobile platform, do not initialize ble");
-			return;
-		}
 
 		// set up bluetooth connection
 		console.log("Initialize ble");
@@ -78,15 +64,22 @@ var crownstone = {
 			$('#hocBinaryBtn').prop("disabled", !enabled);
 		});
 
+		//$("#hubPage").pagecontainer( "change");
+
+		$(':mobile-pagecontainer').pagecontainer('change', '#hubPage', {
+			allowSamePageTransition: true,
+         transition: 'flip',
+         changeHash: false, // do not save in history
+         reverse: true,
+         showLoadMsg: true
+      });
+
 		//$.mobile.changePage("#hotOrColdPage", {transition:'slide', hashChange:true});
 	},
 
 	create:function() {
 		var self = this;
 
-		console.log("---------------------------------------------------------");
-		console.log("----- Distributed Organisms B.V. (http://dobots.nl) -----");
-		console.log("---------------------------------------------------------");
 		console.log("Create Crownstone application");
 
 		// creates BLE object, does nothing with it yet
@@ -126,6 +119,11 @@ var crownstone = {
 		start = function() {
 			console.log("Set side menu event handlers, swipe gestures, etc.");
 
+			self.mobilePlatform = !document.URL.match(/^https?:/);
+      	if (!self.mobilePlatform) {
+				console.log("Do not load BLE, we're in a browser");
+			}
+
 			// set up bluetooth connection
 			//ble.init(function(enabled) {
 			//	$('#findCrownstones').prop("disabled", !enabled);
@@ -143,6 +141,7 @@ var crownstone = {
 			// add swipe gesture to all pages with a panel
 			console.log("Add swipe gesture to all pages with side panel");
 			$(document).delegate('[data-role="page"]', 'pageinit', function () {
+				console.log("Yes, add swipe gesture");
 				//check for a `data-role="panel"` element to add swiperight action to
 				var $panel = $(this).children('[data-role="panel"]');
 				if ($panel.length) {
@@ -165,10 +164,7 @@ var crownstone = {
 		 * Remote Control
 		 ******************************************************************************************************/
 
-		var obj = $('#remoteControlPage');
-		console.log("Object: " + obj);
-
-		$('#remoteControlPage').on("pagecreate", function(event) {
+		$('#remoteControlPage').on('pagecreate', function(event) {
 			console.log("create remote control page");
 
 			$('#rcTogglePower').on('click', function(event) {
@@ -284,7 +280,7 @@ var crownstone = {
 		 * Hub
 		 ******************************************************************************************************/
 
-		$('#hubPage').on('pagecreate', function(event) {
+		$('#hubPage').on('pagebeforecreate', function(event) {
 
 			console.log("Create hub page");
 
