@@ -52,13 +52,22 @@
 			</div>
 
 			<div class="scrollable" role="main">
-				<div style="opacity: 0.3" class="debug">
+				<div id="scanDevicesTab">
+					<button id="scanDevices" class="ui-btn-active ui-state-persist" data-role="button">Scan</button>
+<!--
+					<ol data-role="listview" id="deviceList" style="display: none"></ol>
+-->
 					<table class="rcCrownstoneTable" style="display: none; width: 100%; margin: 0px 10px 0px"></table>
+					<hr>
+					<div class="rcClosestCrownstone">Closest Crownstone:</div>
+				</div>
+				<!--
+				<div style="opacity: 0.3" class="debug">
 					<p/>
 					<div class="rcClosestCrownstone">Closest Crownstone:</div>
 					<p/>
 				</div>
-				<hr/>
+				-->
 				<div class="wifiBtn">
 					<button id="wifiBtn" class="ui-btn-active ui-state-persist" data-role="button">Send</button>
 					<form id="wifiSettingsForm" action="">

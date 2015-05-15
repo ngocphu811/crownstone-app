@@ -48,12 +48,12 @@ var app = {
 
       var browser = document.URL.match(/^https?:/);
       if(browser) {
-         console.log("Is web.");
+         console.log("We are in a web browser");
          //In case of web we ignore PG but resolve the Deferred Object to trigger initialization
 	 		pgReady.resolve();
       }
       else {
-         console.log("Is not web.");
+         console.log("We are not in a web browser (but on a mobile device)");
 	 		this.bindEvents();
       }
 	},
@@ -83,6 +83,7 @@ var app = {
       switch(event) {
          case 'deviceready':
          	// phonegap is ready on deviceready
+         	console.log("Cordova is ready. Plugins are available");
 	    		pgReady.resolve();
 	    		break;
       }
@@ -93,7 +94,7 @@ var app = {
  * When the pagecreate event is generated, we can assume JQuery Mobile is ready.
  */
 $(document).on("pagecreate", function(event, ui) {
-	console.log("Resolve jqmReady");
+	console.log("JQuery Mobile is ready.");
    jqmReady.resolve();
 });
 

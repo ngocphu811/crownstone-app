@@ -47,7 +47,7 @@ var configIBeaconUuidUuid                        = 0x08;
 var configIBeaconRSSIUuid                        = 0x09;
 var configWifiUuid                               = 0x0A;
 
-var RESERVED = 0x00;
+var RESERVED = 0xFF;
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -150,7 +150,7 @@ var BLEHandler = function() {
 		var paramsObj = {"address": address};
 		bluetoothle.connect(function(obj) { // connectSuccess
 				if (obj.status == "connected") {
-					console.log("Connected to: " + obj.name + " - " + obj.address);
+					console.log("Connected to: " + obj.name + " [" + obj.address + "]");
 
 					self.clearConnectTimeout();
 
@@ -160,7 +160,7 @@ var BLEHandler = function() {
 
 				}
 				else if (obj.status == "connecting") {
-					console.log("Connecting to: " + obj.name + " - " + obj.address);
+					console.log("Connecting to: " + obj.name + " [" + obj.address + "]");
 				}
 				else {
 					console.log("Unexpected connect status: " + obj.status);
@@ -768,18 +768,15 @@ var BLEHandler = function() {
 	 *
 	 */
 	self.writeConfiguration = function(address, configuration, successCB, errorCB) {
-		if (configuration.type != configFloorUuid) {
-			var msg = "Not yet support configuration option";
-			console.log(msg);
-			if (errorCB) errorCB(msg);
-		}
+
+		console.log("Write to " + address + " configuration type " + configuration.type);
 
 		// build up a single byte array, prepending payload with type and payload length, preamble size is 4
 		var u8 = new Uint8Array(configuration.length+4);
 		u8[0] = configuration.type;
 		u8[1] = RESERVED;
-		u8[2] = (configuration.length >> 8).getUint8(); // big-endian, network order, most significant first
-		u8[3] = (configuration.length & 0x0F).getUint8();
+		u8[2] = (configuration.length & 0x0F); // endianness: least significant byte first
+		u8[3] = (configuration.length >> 8);
 		u8.set(configuration.payload, 4);
 
 		var v = bluetoothle.bytesToEncodedString(u8);
