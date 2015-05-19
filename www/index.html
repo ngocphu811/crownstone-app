@@ -25,11 +25,13 @@
 			See https://issues.apache.org/jira/browse/CB-4323 -->
 		<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
 
+		<script type="text/javascript" src="cordova.js"></script>
 		<script type="text/javascript" src="js/third/jquery-2.1.4.min.js"></script>
+		<!-- mobileinit can only be captured before loading jquery mobile, but after jquery -->
+		<script type="text/javascript" src="js/index.js"></script>
 		<script type="text/javascript" src="js/third/jquery.mobile-1.4.5.min.js"></script>
 		<script type="text/javascript" src="js/third/list.min.js"></script>
 		<script type="text/javascript" src="js/third/jquery.flot.js"></script>
-		<script type="text/javascript" src="cordova.js"></script>
 
 		<link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css" />
 		<link rel="stylesheet" type="text/css" href="css/crownstone.css" />
@@ -386,16 +388,20 @@ crownstones before you can use them to localize yourself. This will not be the f
 
 		<script type="text/javascript" src="js/ble.js"></script>
 		<script type="text/javascript" src="js/crownstone.js"></script>
-		<script type="text/javascript" src="js/index.js"></script>
 		<script type="text/javascript">
 			console.log("---------------------------------------------------------");
 			console.log("----- Distributed Organisms B.V. (http://dobots.nl) -----");
 			console.log("---------------------------------------------------------");
+/*
 			start = function() {
+				console.log("Create pages etc.");
 				crownstone.create();
+				console.log("Start crownstone app");
 				crownstone.start();
 			}
 			app.initialize(start);
+*/
+			app.initialize();
 		</script>
 	</body>
 </html>

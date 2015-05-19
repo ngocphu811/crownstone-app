@@ -280,8 +280,10 @@ var crownstone = {
 		 * Hub
 		 ******************************************************************************************************/
 
+		console.log("Create page");
+
 		// TODO: on('pagecreate') doesn't end up here!!!
-		$('#hubPage').on('pageshow', function(event) {
+		$('#hubPage').on('pagecreate', function(event) {
 
 			console.log("Create hub page");
 

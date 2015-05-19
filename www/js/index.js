@@ -30,6 +30,7 @@
  * [2]: http://www.gajotres.net/page-events-order-in-jquery-mobile-version-1-4-update/
  */
 
+/*
 // Flag that indicates that JQuery Mobile (jqm) is ready
 var jqmReady = $.Deferred();
 // Flag that indicates that PhoneGap (pg) is ready
@@ -90,18 +91,14 @@ var app = {
 	}
 };
 
-/*
- * When the pagecreate event is generated, we can assume JQuery Mobile is ready.
- */
-$(document).on("pagecreate", function(event, ui) {
+// When the mobileinit event is generated, jQuery mobile is NOT ready. We can assume JQuery Mobile is ready when
+// pagecreate is generated.
+$(document).one("pagecreate", function(event, ui) {
 	console.log("JQuery Mobile is ready.");
    jqmReady.resolve();
 });
 
-
-/**
- * General initialization.
- */
+// General initialization.
 $.when(jqmReady, pgReady).then(function() {
    //Initialization code here
    console.log("Start app.");
@@ -110,3 +107,58 @@ $.when(jqmReady, pgReady).then(function() {
    }
    console.log("Frameworks ready.");
 });
+*/
+var app = {
+
+	// Application Constructor
+	// If we creat the crownstone after deviceready event, it won't bind the GUI elements properly. The events
+	// pagecreate will not be triggered for the first page, nor the on-click events will be registered.
+	initialize: function() {
+		this.bindEvents();
+
+		console.log("Create crownstone GUI elements");
+		crownstone.create();
+	},
+	// Bind Event Listeners
+	//
+	// Bind any events that are required on startup. Common events are:
+	// 'load', 'deviceready', 'offline', and 'online'.
+	bindEvents: function() {
+		document.addEventListener('deviceready', this.onDeviceReady, false);
+	},
+	// deviceready Event Handler
+	//
+	// The scope of 'this' is the event. In order to call the 'receivedEvent'
+	// function, we must explicity call 'app.receivedEvent(...);'
+	onDeviceReady: function() {
+		app.receivedEvent('deviceready');
+		if(window && window.device) {
+			if(window.device.platform == 'iOS' && parseFloat(window.device.version) >= 7.0) {
+				$('body').addClass('phonegap-ios-7');
+			}
+		}
+		app.receivedEvent('deviceready');
+	},
+	// Update DOM on a Received Event
+	receivedEvent: function(id) {
+      console.log("Cordova is ready. Plugins are available");
+		crownstone.start();
+	}
+};
+
+// debugging section
+/*
+$(document).on("mobileinit", function() {
+	console.log("Order: mobileinit");
+});
+$(document).on("ready", function() {
+	console.log("Order: ready");
+});
+$(document).on("pagecreate", function() {
+	console.log("Order: pagecreate");
+});
+$(document).on("pageinit", function() {
+	console.log("Order: pageinit");
+});
+*/
+
