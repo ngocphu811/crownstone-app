@@ -775,7 +775,7 @@ var BLEHandler = function() {
 		var u8 = new Uint8Array(configuration.length+4);
 		u8[0] = configuration.type;
 		u8[1] = RESERVED;
-		u8[2] = (configuration.length & 0x0F); // endianness: least significant byte first
+		u8[2] = (configuration.length & 0x00FF); // endianness: least significant byte first
 		u8[3] = (configuration.length >> 8);
 		u8.set(configuration.payload, 4);
 
