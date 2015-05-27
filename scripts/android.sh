@@ -37,7 +37,8 @@ build() {
 }
 
 upload() {
-	adb install -r platforms/android/ant-build/$name-debug.apk
+	# adb install -r platforms/android/ant-build/$name-debug.apk
+	adb install -r platforms/android/build/outputs/apk/android-debug.apk
 	start
 }
 
@@ -54,7 +55,7 @@ all() {
 	sleep 1
 	upload
 	sleep 1
-	log
+	# log
 }
 
 case "$cmd" in 
