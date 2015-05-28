@@ -715,7 +715,7 @@ var BLEHandler = function() {
 	/* Set Wifi SSID and password
 	 */
 	self.setWifi = function(address, value, successCB, errorCB) {
-		var u8;
+		var u8 = new Uint8Array(1);
 		if (value != "") {
 			u8 = bluetoothle.stringToBytes(value);
 		} else {
@@ -745,10 +745,10 @@ var BLEHandler = function() {
 					var str = bluetoothle.bytesToString(bytearray);
 					var configuration = {};
 					configuration.type = bytearray[0];
-					configuration.length = bytearray[1];
-					configuration.payload = new ArrayBuffer(configuration.length);
+					configuration.length = bytearray[2];
+					configuration.payload = new Uint8Array(configuration.length);
 					for (var i = 0; i < configuration.length; i++) {
-						configuration.payload[i] = bytearray[i+2];
+						configuration.payload[i] = bytearray[i+4];
 					}
 					successCB(configuration);
 				}
@@ -776,15 +776,15 @@ var BLEHandler = function() {
 		console.log("Write to " + address + " configuration type " + configuration.type);
 
 		// build up a single byte array, prepending payload with type and payload length, preamble size is 4
-		var u8 = new Uint8Array(configuration.length+4);
+		var u8 = new Uint8Array(configuration.length+4);;
 		u8[0] = configuration.type;
 		u8[1] = RESERVED;
 		u8[2] = (configuration.length & 0x00FF); // endianness: least significant byte first
 		u8[3] = (configuration.length >> 8);
-		for (var i = 0; i < configuration.payload.length; i++) {
+		for (var i = 0; i < configuration.length; i++) {
 			u8[i+4] = configuration.payload[i];
 		}
-//		u8.set(configuration.payload, 4);
+
 
 		var v = bluetoothle.bytesToEncodedString(u8);
 		console.log("Write " + v + " at service " + generalServiceUuid +
@@ -816,7 +816,7 @@ var BLEHandler = function() {
 	/** Before getting the value of a specific configuration type, we have to select it.
 	 */
 	self.selectConfiguration = function(address, configurationType, successCB, errorCB) {
-		if (configurationType != configFloorUuid) {
+		if (configurationType != configFloorUuid && configurationType != configWifiUuid) {
 			var msg = "Not yet support configuration option";
 			if (errorCB) errorCB(msg);
 		}
@@ -826,7 +826,7 @@ var BLEHandler = function() {
 
 		var v = bluetoothle.bytesToEncodedString(u8);
 		console.log("Write " + v + " at service " + generalServiceUuid +
-				' and characteristic ' + selectConfigurationCharacteristicUuid );
+				' and characteristic ' + selectConfigurationCharacteristicUuid + " at address " + address );
 		var paramsObj = {"address": address, "serviceUuid": generalServiceUuid,
 			"characteristicUuid": selectConfigurationCharacteristicUuid , "value" : v};
 		bluetoothle.write(
