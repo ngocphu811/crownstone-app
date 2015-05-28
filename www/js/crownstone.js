@@ -1374,11 +1374,6 @@ var crownstone = {
 		findCrownstones = function(callback) {
 			console.log("Find crownstones");
 			ble.startEndlessScan(callback);
-			findTimer = setInterval(function() {
-				console.log("restart");
-				ble.stopEndlessScan();
-				ble.startEndlessScan(callback);
-			}, 1000);
 		}
 
 		stopSearch = function() {
