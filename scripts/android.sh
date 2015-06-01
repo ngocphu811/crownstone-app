@@ -55,10 +55,10 @@ all() {
 	sleep 1
 	upload
 	sleep 1
-	# log
+	log
 }
 
-case "$cmd" in 
+case "$cmd" in
 	release)
 		release
 		;;
