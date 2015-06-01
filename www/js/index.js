@@ -131,7 +131,7 @@ var app = {
 	// The scope of 'this' is the event. In order to call the 'receivedEvent'
 	// function, we must explicity call 'app.receivedEvent(...);'
 	onDeviceReady: function() {
-		app.receivedEvent('deviceready');
+	//	app.receivedEvent('deviceready');
 		if(window && window.device) {
 			if(window.device.platform == 'iOS' && parseFloat(window.device.version) >= 7.0) {
 				$('body').addClass('phonegap-ios-7');
@@ -140,9 +140,14 @@ var app = {
 		app.receivedEvent('deviceready');
 	},
 	// Update DOM on a Received Event
-	receivedEvent: function(id) {
-      console.log("Cordova is ready. Plugins are available");
-		crownstone.start();
+	receivedEvent: function(event) {
+      switch(event) {
+         case 'deviceready':
+         	// cordova/phonegap is ready on deviceready
+         	console.log("Cordova is ready. Plugins are available");
+				crownstone.start();
+	    		break;
+      }
 	}
 };
 

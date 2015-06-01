@@ -8,15 +8,12 @@ Object.size = function(obj) {
 
 // First, checks if it isn't implemented yet.
 if (!String.prototype.format) {
-  	String.prototype.format = function() {
-    	var args = arguments;
-    	return this.replace(/{(\d+)}/g, function(match, number) {
-      	return typeof args[number] != 'undefined'
-        		? args[number]
-        		: match
-      		;
-    	});
-  	};
+   String.prototype.format = function() {
+      var args = arguments;
+      return this.replace(/{(\d+)}/g, function(match, number) {
+	 return typeof args[number] != 'undefined' ? args[number] : match ;
+      });
+   };
 }
 
 var TTL = 2000; // time-to-live for RSSI values in localisation, 2 seconds
@@ -300,7 +297,8 @@ var crownstone = {
 					} else if ((wifiSSID.length > 32) || (wifiPassword.length > 32)) {
 						console.error("Wifi or password length larger than 32 bytes");
 					} else {
-						var string = '{ "ssid":"' + wifiSSID + '", "key":"' + wifiPassword + '"}';
+						var string = '{"ssid":"' + wifiSSID + '", "key":"' + wifiPassword + '"}';
+						//var string = '{"ssid":"' + wifiSSID + '"}';
 						console.log("Set wifi: " + string);
 						setWifi(string);
 					}
@@ -1376,6 +1374,11 @@ var crownstone = {
 		findCrownstones = function(callback) {
 			console.log("Find crownstones");
 			ble.startEndlessScan(callback);
+			findTimer = setInterval(function() {
+				console.log("restart");
+				ble.stopEndlessScan();
+				ble.startEndlessScan(callback);
+			}, 1000);
 		}
 
 		stopSearch = function() {

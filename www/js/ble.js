@@ -735,6 +735,7 @@ var BLEHandler = function() {
 		configuration.type = configWifiUuid;
 		configuration.length = value.length;
 		configuration.payload = u8;
+		console.log("Send payload: " + u8);
 		self.writeConfiguration(address, configuration, successCB, errorCB);
 	}
 
@@ -788,7 +789,10 @@ var BLEHandler = function() {
 		u8[1] = RESERVED;
 		u8[2] = (configuration.length & 0x00FF); // endianness: least significant byte first
 		u8[3] = (configuration.length >> 8);
-		u8.set(configuration.payload, 4);
+		for (var i = 0; i < configuration.payload.length; i++) {
+			u8[i+4] = configuration.payload[i];
+		}
+//		u8.set(configuration.payload, 4);
 
 		var v = bluetoothle.bytesToEncodedString(u8);
 		console.log("Write " + v + " at service " + generalServiceUuid +
