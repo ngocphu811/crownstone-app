@@ -54,6 +54,13 @@ var configWifiUuid                               = 0x0A;
 var RESERVED = 0x00;
 
 //////////////////////////////////////////////////////////////////////////////
+// Mesh messages
+var channelData = 0x02;
+var meshTypePwm =            0x01;
+var meshTypeBeaconConfig =   0x02;
+
+
+//////////////////////////////////////////////////////////////////////////////
 
 
 var BLEHandler = function() {
@@ -858,8 +865,10 @@ var BLEHandler = function() {
 	 * .payload: data to be sent
 	 */
 	self.writeMeshMessage = function(address, message, successCB, errorCB) {
+		
+		message.length += 8 // Add length of target address and length of message type
 		// build up a single byte array, prepending payload with type and payload length, preamble size is 4
-		var u8 = new Uint8Array(message.length+4);
+		var u8 = new Uint8Array(message.length+12);
 		u8[0] = message.channel;
 		u8[1] = RESERVED;
 		u8[2] = (message.length & 0xFF); // endianness: least significant byte first
@@ -872,7 +881,7 @@ var BLEHandler = function() {
 		u8.set(message.target, 4); // bluetooth address of target crownstone: 6 bytes
 		u8[10] = (message.type & 0xFF); // endianness: least significant byte first
 		u8[11] = (message.type >> 8 & 0xFF);
-		u8.set(message.payload, 10);
+		u8.set(message.payload, 12);
 		
 		var v = bluetoothle.bytesToEncodedString(u8);
 		console.log("Write " + v + " at service " + generalServiceUuid +
@@ -1077,6 +1086,5 @@ var BLEHandler = function() {
 			},
 			paramsObj);
 	}
-
 }
 
