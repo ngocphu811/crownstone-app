@@ -50,7 +50,8 @@ var configIBeaconUuidUuid                        = 0x08;
 var configIBeaconRSSIUuid                        = 0x09;
 var configWifiUuid                               = 0x0A;
 
-var RESERVED = 0xFF;
+// Value set at reserved bytes for allignment
+var RESERVED = 0x00;
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -841,6 +842,56 @@ var BLEHandler = function() {
 			},
 			function(obj) { // write error
 				var msg = 'Error in writing to "select configuration" characteristic - ' +
+					obj.error + " - " + obj.message;
+				console.log(msg);
+				if (errorCB) errorCB(msg);
+			},
+			paramsObj);
+	}
+
+	/** Send a message over the mesh network
+	 * message needs the following properties:
+	 * .channel: there are several channels to use
+	 * .target: bluetooth address (6 bytes) of target of this message. Use all zeroes for broadcast.
+	 * .type: what type of message this is
+	 * .length: length of payload
+	 * .payload: data to be sent
+	 */
+	self.writeMeshMessage = function(address, message, successCB, errorCB) {
+		// build up a single byte array, prepending payload with type and payload length, preamble size is 4
+		var u8 = new Uint8Array(message.length+4);
+		u8[0] = message.channel;
+		u8[1] = RESERVED;
+		u8[2] = (message.length & 0xFF); // endianness: least significant byte first
+		u8[3] = (message.length >> 8 & 0xFF);
+		
+		if (message.target.length != 6) {
+			console.log("invalid bluetooth address ", message.target);
+			return;
+		}
+		u8.set(message.target, 4); // bluetooth address of target crownstone: 6 bytes
+		u8[10] = (message.type & 0xFF); // endianness: least significant byte first
+		u8[11] = (message.type >> 8 & 0xFF);
+		u8.set(message.payload, 10);
+		
+		var v = bluetoothle.bytesToEncodedString(u8);
+		console.log("Write " + v + " at service " + generalServiceUuid +
+				' and characteristic ' + meshCharacteristicUuid );
+		var paramsObj = {"address": address, "serviceUuid": generalServiceUuid,
+			"characteristicUuid": meshCharacteristicUuid , "value" : v};
+		bluetoothle.write(function(obj) { // write success
+				if (obj.status == 'written') {
+					var msg = 'Successfully written to "mesh" characteristic - ' + obj.status;
+					console.log(msg);
+					if (successCB) successCB(msg);
+				} else {
+					var msg = 'Error in writing to "mesh" characteristic - ' + obj;
+					console.log(msg);
+					if (errorCB) errorCB(msg);
+				}
+			},
+			function(obj) { // write error
+				var msg = 'Error in writing to "mesh" characteristic - ' +
 					obj.error + " - " + obj.message;
 				console.log(msg);
 				if (errorCB) errorCB(msg);
