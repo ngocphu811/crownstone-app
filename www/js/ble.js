@@ -787,12 +787,9 @@ var BLEHandler = function() {
 		var u8 = new Uint8Array(configuration.length+4);
 		u8[0] = configuration.type;
 		u8[1] = RESERVED;
-		u8[2] = (configuration.length & 0x00FF); // endianness: least significant byte first
-		u8[3] = (configuration.length >> 8);
-		for (var i = 0; i < configuration.payload.length; i++) {
-			u8[i+4] = configuration.payload[i];
-		}
-//		u8.set(configuration.payload, 4);
+		u8[2] = ((configuration.length) & 0x00FF); // endianness: least significant byte first
+		u8[3] = ((configuration.length >> 8) & 0x00FF);
+		u8.set(configuration.payload, 4);
 
 		var v = bluetoothle.bytesToEncodedString(u8);
 		console.log("Write " + v + " at service " + generalServiceUuid +
