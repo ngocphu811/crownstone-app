@@ -50,7 +50,15 @@ var configIBeaconUuidUuid                        = 0x08;
 var configIBeaconRSSIUuid                        = 0x09;
 var configWifiUuid                               = 0x0A;
 
-var RESERVED = 0xFF;
+// Value set at reserved bytes for allignment
+var RESERVED = 0x00;
+
+//////////////////////////////////////////////////////////////////////////////
+// Mesh messages
+var channelData = 0x02;
+var meshTypePwm =            0x01;
+var meshTypeBeaconConfig =   0x02;
+
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -715,7 +723,7 @@ var BLEHandler = function() {
 	/* Set Wifi SSID and password
 	 */
 	self.setWifi = function(address, value, successCB, errorCB) {
-		var u8 = new Uint8Array(1);
+		var u8;
 		if (value != "") {
 			u8 = bluetoothle.stringToBytes(value);
 		} else {
@@ -745,10 +753,10 @@ var BLEHandler = function() {
 					var str = bluetoothle.bytesToString(bytearray);
 					var configuration = {};
 					configuration.type = bytearray[0];
-					configuration.length = bytearray[2];
-					configuration.payload = new Uint8Array(configuration.length);
+					configuration.length = bytearray[1];
+					configuration.payload = new ArrayBuffer(configuration.length);
 					for (var i = 0; i < configuration.length; i++) {
-						configuration.payload[i] = bytearray[i+4];
+						configuration.payload[i] = bytearray[i+2];
 					}
 					successCB(configuration);
 				}
@@ -776,15 +784,12 @@ var BLEHandler = function() {
 		console.log("Write to " + address + " configuration type " + configuration.type);
 
 		// build up a single byte array, prepending payload with type and payload length, preamble size is 4
-		var u8 = new Uint8Array(configuration.length+4);;
+		var u8 = new Uint8Array(configuration.length+4);
 		u8[0] = configuration.type;
 		u8[1] = RESERVED;
-		u8[2] = (configuration.length & 0x00FF); // endianness: least significant byte first
-		u8[3] = (configuration.length >> 8);
-		for (var i = 0; i < configuration.length; i++) {
-			u8[i+4] = configuration.payload[i];
-		}
-
+		u8[2] = ((configuration.length) & 0x00FF); // endianness: least significant byte first
+		u8[3] = ((configuration.length >> 8) & 0x00FF);
+		u8.set(configuration.payload, 4);
 
 		var v = bluetoothle.bytesToEncodedString(u8);
 		console.log("Write " + v + " at service " + generalServiceUuid +
@@ -816,7 +821,7 @@ var BLEHandler = function() {
 	/** Before getting the value of a specific configuration type, we have to select it.
 	 */
 	self.selectConfiguration = function(address, configurationType, successCB, errorCB) {
-		if (configurationType != configFloorUuid && configurationType != configWifiUuid) {
+		if (configurationType != configFloorUuid) {
 			var msg = "Not yet support configuration option";
 			if (errorCB) errorCB(msg);
 		}
@@ -826,7 +831,7 @@ var BLEHandler = function() {
 
 		var v = bluetoothle.bytesToEncodedString(u8);
 		console.log("Write " + v + " at service " + generalServiceUuid +
-				' and characteristic ' + selectConfigurationCharacteristicUuid + " at address " + address );
+				' and characteristic ' + selectConfigurationCharacteristicUuid );
 		var paramsObj = {"address": address, "serviceUuid": generalServiceUuid,
 			"characteristicUuid": selectConfigurationCharacteristicUuid , "value" : v};
 		bluetoothle.write(
@@ -845,6 +850,58 @@ var BLEHandler = function() {
 			},
 			function(obj) { // write error
 				var msg = 'Error in writing to "select configuration" characteristic - ' +
+					obj.error + " - " + obj.message;
+				console.log(msg);
+				if (errorCB) errorCB(msg);
+			},
+			paramsObj);
+	}
+
+	/** Send a message over the mesh network
+	 * message needs the following properties:
+	 * .channel: there are several channels to use
+	 * .target: bluetooth address (6 bytes) of target of this message. Use all zeroes for broadcast.
+	 * .type: what type of message this is
+	 * .length: length of payload
+	 * .payload: data to be sent
+	 */
+	self.writeMeshMessage = function(address, message, successCB, errorCB) {
+		
+		message.length += 8 // Add length of target address and length of message type
+		// build up a single byte array, prepending payload with type and payload length, preamble size is 4
+		var u8 = new Uint8Array(message.length+12);
+		u8[0] = message.channel;
+		u8[1] = RESERVED;
+		u8[2] = (message.length & 0xFF); // endianness: least significant byte first
+		u8[3] = (message.length >> 8 & 0xFF);
+		
+		if (message.target.length != 6) {
+			console.log("invalid bluetooth address ", message.target);
+			return;
+		}
+		u8.set(message.target, 4); // bluetooth address of target crownstone: 6 bytes
+		u8[10] = (message.type & 0xFF); // endianness: least significant byte first
+		u8[11] = (message.type >> 8 & 0xFF);
+		u8.set(message.payload, 12);
+		
+		var v = bluetoothle.bytesToEncodedString(u8);
+		console.log("Write " + v + " at service " + generalServiceUuid +
+				' and characteristic ' + meshCharacteristicUuid );
+		var paramsObj = {"address": address, "serviceUuid": generalServiceUuid,
+			"characteristicUuid": meshCharacteristicUuid , "value" : v};
+		bluetoothle.write(function(obj) { // write success
+				if (obj.status == 'written') {
+					var msg = 'Successfully written to "mesh" characteristic - ' + obj.status;
+					console.log(msg);
+					if (successCB) successCB(msg);
+				} else {
+					var msg = 'Error in writing to "mesh" characteristic - ' + obj;
+					console.log(msg);
+					if (errorCB) errorCB(msg);
+				}
+			},
+			function(obj) { // write error
+				var msg = 'Error in writing to "mesh" characteristic - ' +
 					obj.error + " - " + obj.message;
 				console.log(msg);
 				if (errorCB) errorCB(msg);
@@ -1030,6 +1087,4 @@ var BLEHandler = function() {
 			},
 			paramsObj);
 	}
-
 }
-

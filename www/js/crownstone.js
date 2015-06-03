@@ -406,7 +406,7 @@ var crownstone = {
 			argCB.value = value;
 
 			executeFunction(device.address, func, argCB, generalServiceUuid, setConfigurationCharacteristicUuid,
-					successCB, errorCB);
+					errorCB);
 		}
 
         readIP= function(){
@@ -461,7 +461,7 @@ var crownstone = {
             }
         }
 
-		executeFunction = function(address, func, argCB, serviceUuid, characteristicUuid, successCB, errorCB) {
+		executeFunction = function(address, func, argCB, serviceUuid, characteristicUuid, errorCB) {
 			if (connectedDeviceAddress) {
 				function callback() {
 					setTimeout(disconnect,10000);
@@ -1442,6 +1442,11 @@ var crownstone = {
 		findCrownstones = function(callback) {
 			console.log("Find crownstones");
 			ble.startEndlessScan(callback);
+			findTimer = setInterval(function() {
+				console.log("restart");
+				ble.stopEndlessScan();
+				ble.startEndlessScan(callback);
+			}, 1000);
 		}
 
 		stopSearch = function() {
