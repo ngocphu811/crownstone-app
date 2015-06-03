@@ -113,6 +113,8 @@ var crownstone = {
 
 		var connectedDeviceAddress = "";
 
+		var hubIP= "";
+
 		start = function() {
 			console.log("Set side menu event handlers, swipe gestures, etc.");
 
@@ -307,6 +309,21 @@ var crownstone = {
 				}
 			});
 
+			// add event handler to read IP from crownstone
+			$('#IPBtn').on('click', function(event) {
+			    if(hubIP!=""){
+			        var message = "The IP of the hub is: " + hubIP;
+			        navigator.notification.alert(message, null , "hub IP")
+			    }else{
+                    if (self.closestCrownstone.name) {
+                        console.log("accessing IP....");
+                        readIP();
+                    } else {
+                        console.error("There is no closest crownstone available");
+                    }
+                }
+			});
+
 			$('#scanDevices').on('click', function(event) {
 				if (!searching) {
 					console.log("Start scanning for devices");
@@ -370,6 +387,9 @@ var crownstone = {
 
 			function successCB() {
 				console.log("Written wifi config successfully");
+				navigator.notification.activityStart("Please wait" , "connecting the hub to WiFi, it may take a few minutes...");
+				disconnect();
+				setTimeout(readIP,8000);
 			}
 			function errorCB() {
 				console.error("Mistake in writing wifi config");
@@ -386,14 +406,65 @@ var crownstone = {
 			argCB.value = value;
 
 			executeFunction(device.address, func, argCB, generalServiceUuid, setConfigurationCharacteristicUuid,
-					successCB, errorCB);
+					errorCB);
 		}
 
-		executeFunction = function(address, func, argCB, serviceUuid, characteristicUuid, successCB, errorCB) {
+        readIP= function(){
+            var device = self.closestCrownstone;
+            console.log("Read from closest crownstone: " + device.name + " [" + device.address + "]");
+            connectedDeviceAddress=device.address;
+            console.log("retrieving IP");
+            connectAndDiscover(
+                connectedDeviceAddress,
+                generalServiceUuid,
+                getConfigurationCharacteristicUuid,
+                selectIP,
+                connectionFailed
+            );
+            function selectIP(){
+                ble.selectConfiguration(
+                    connectedDeviceAddress,
+                    configWifiUuid,
+                    getIP,
+                    function(){
+                        console.log("error: couldn't select the configuration at " + connectedDeviceAddress);
+                        disconnect();
+                    }
+                );
+            }
+            function getIP(){
+                navigator.notification.activityStop();
+                ble.getConfiguration(
+                    connectedDeviceAddress,
+                    function(configuration){ //get config successCB
+                        var message = "The IP of the hub is: " + hubIP ;
+                        if(hubIP==""){
+                            hubIP=bluetoothle.bytesToString(configuration.payload);
+                            if (configuration.length > 15){
+                                message = "The hub couldn't access the crownstone. Please make sure the crownstone name contains \"wifi\" and the hub is powered on";
+                            }
+                            else{
+                                if(configuration.length < 7){
+                                    message = "Couldn't connect to WiFi. Please make sure the informations provided are correct";
+                                }
+                                else message= "The IP of the hub is: " + hubIP;
+                            }
+                        }
+                        navigator.notification.alert(message, null , "hub IP");
+                        disconnect();
+                    },
+                    function(){
+                        console.log("error: couldn't get the configuration");
+                        disconnect();
+                    }
+                );
+            }
+        }
+
+		executeFunction = function(address, func, argCB, serviceUuid, characteristicUuid, errorCB) {
 			if (connectedDeviceAddress) {
 				function callback() {
-					disconnect();
-					if (successCB) successCB();
+					setTimeout(disconnect,10000);
 				}
 				func(argCB, callback);
 			} else {
@@ -406,10 +477,7 @@ var crownstone = {
 							// TODO: make sure the disconnect is not too fast
 							function callback() {
 								console.log("Just disconnect after 10 seconds now. Should be done in proper callback");
-								setTimeout(function(){
-									disconnect();
-									if (successCB) successCB();
-								}, 10000);
+								setTimeout(disconnect, 10000);
 							}
 							// enforce callback as argument, if not called by callee, connection will not be closed, nor
 							// successCB be called

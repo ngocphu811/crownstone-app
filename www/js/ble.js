@@ -1088,4 +1088,3 @@ var BLEHandler = function() {
 			paramsObj);
 	}
 }
-
