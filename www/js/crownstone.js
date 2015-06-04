@@ -1,19 +1,19 @@
 Object.size = function(obj) {
-   var size = 0, key;
-   for (key in obj) {
-      if (obj.hasOwnProperty(key)) size++;
-   }
-   return size;
+	var size = 0, key;
+	for (key in obj) {
+		if (obj.hasOwnProperty(key)) size++;
+	}
+	return size;
 };
 
 // First, checks if it isn't implemented yet.
 if (!String.prototype.format) {
-   String.prototype.format = function() {
-      var args = arguments;
-      return this.replace(/{(\d+)}/g, function(match, number) {
-	 return typeof args[number] != 'undefined' ? args[number] : match ;
-      });
-   };
+	String.prototype.format = function() {
+		var args = arguments;
+		return this.replace(/{(\d+)}/g, function(match, number) {
+			return typeof args[number] != 'undefined' ? args[number] : match ;
+		});
+	};
 }
 
 var TTL = 2000; // time-to-live for RSSI values in localisation, 2 seconds
@@ -46,8 +46,8 @@ var crownstone = {
 
 	mobilePlatform: false,
 
-		/* Start should be called if all plugins are ready and all functionality can be called.
-	 	*/
+	/* Start should be called if all plugins are ready and all functionality can be called.
+	*/
 	start:function() {
 		console.log("Start Crownstone application");
 
@@ -65,11 +65,11 @@ var crownstone = {
 
 		$(':mobile-pagecontainer').pagecontainer('change', '#hubPage', {
 			allowSamePageTransition: true,
-         transition: 'flip',
-         changeHash: false, // do not save in history
-         reverse: true,
-         showLoadMsg: true
-      });
+			transition: 'flip',
+			changeHash: false, // do not save in history
+			reverse: true,
+			showLoadMsg: true
+		});
 
 		//$.mobile.changePage("#hotOrColdPage", {transition:'slide', hashChange:true});
 	},
@@ -92,8 +92,8 @@ var crownstone = {
 		// $.ajaxSetup({ cache: false });
 
 		// start = function() {
-		// 	console.log("Go to first page");
-		// 	$.mobile.changePage("#controlPage", {transition:'slide', hashChange:true});
+		//  console.log("Go to first page");
+		//  $.mobile.changePage("#controlPage", {transition:'slide', hashChange:true});
 		// }
 
 		// very important statement to make swiping work:
@@ -119,13 +119,13 @@ var crownstone = {
 			console.log("Set side menu event handlers, swipe gestures, etc.");
 
 			self.mobilePlatform = !document.URL.match(/^https?:/);
-      	if (!self.mobilePlatform) {
+			if (!self.mobilePlatform) {
 				console.log("Do not load BLE, we're in a browser");
 			}
 
 			// set up bluetooth connection
 			//ble.init(function(enabled) {
-			//	$('#findCrownstones').prop("disabled", !enabled);
+			//  $('#findCrownstones').prop("disabled", !enabled);
 			//});
 
 			// add menu options to side menu that opens up at swiping
@@ -150,11 +150,11 @@ var crownstone = {
 				}
 			});
 
-			//			$.ajaxSetup({
-			//				"error": function() {
-			//					console.log("General error with one of the ajax calls");
-			//				}
-			//			});
+			//          $.ajaxSetup({
+			//              "error": function() {
+			//                  console.log("General error with one of the ajax calls");
+			//              }
+			//          });
 
 		}
 
@@ -222,6 +222,7 @@ var crownstone = {
 					}
 			);
 		}
+
 		$('#remoteControlPage').on("pageshow", function(event) {
 
 			resetCrownstoneList();
@@ -311,17 +312,17 @@ var crownstone = {
 
 			// add event handler to read IP from crownstone
 			$('#IPBtn').on('click', function(event) {
-			    if(hubIP!=""){
-			        var message = "The IP of the hub is: " + hubIP;
-			        navigator.notification.alert(message, null , "hub IP")
-			    }else{
-                    if (self.closestCrownstone.name) {
-                        console.log("accessing IP....");
-                        readIP();
-                    } else {
-                        console.error("There is no closest crownstone available");
-                    }
-                }
+				if (hubIP!="") {
+					var message = "The IP of the hub is: " + hubIP;
+					navigator.notification.alert(message, null , "hub IP")
+				} else {
+					if (self.closestCrownstone.name) {
+						console.log("accessing IP....");
+						readIP();
+					} else {
+						console.error("There is no closest crownstone available");
+					}
+				}
 			});
 
 			$('#scanDevices').on('click', function(event) {
@@ -409,57 +410,56 @@ var crownstone = {
 					errorCB);
 		}
 
-        readIP= function(){
-            var device = self.closestCrownstone;
-            console.log("Read from closest crownstone: " + device.name + " [" + device.address + "]");
-            connectedDeviceAddress=device.address;
-            console.log("retrieving IP");
-            connectAndDiscover(
-                connectedDeviceAddress,
-                generalServiceUuid,
-                getConfigurationCharacteristicUuid,
-                selectIP,
-                connectionFailed
-            );
-            function selectIP(){
-                ble.selectConfiguration(
-                    connectedDeviceAddress,
-                    configWifiUuid,
-                    getIP,
-                    function(){
-                        console.log("error: couldn't select the configuration at " + connectedDeviceAddress);
-                        disconnect();
-                    }
-                );
-            }
-            function getIP(){
-                navigator.notification.activityStop();
-                ble.getConfiguration(
-                    connectedDeviceAddress,
-                    function(configuration){ //get config successCB
-                        var message = "The IP of the hub is: " + hubIP ;
-                        if(hubIP==""){
-                            hubIP=bluetoothle.bytesToString(configuration.payload);
-                            if (configuration.length > 15){
-                                message = "The hub couldn't access the crownstone. Please make sure the crownstone name contains \"wifi\" and the hub is powered on";
-                            }
-                            else{
-                                if(configuration.length < 7){
-                                    message = "Couldn't connect to WiFi. Please make sure the informations provided are correct";
-                                }
-                                else message= "The IP of the hub is: " + hubIP;
-                            }
-                        }
-                        navigator.notification.alert(message, null , "hub IP");
-                        disconnect();
-                    },
-                    function(){
-                        console.log("error: couldn't get the configuration");
-                        disconnect();
-                    }
-                );
-            }
-        }
+		readIP= function(){
+			var device = self.closestCrownstone;
+			console.log("Read from closest crownstone: " + device.name + " [" + device.address + "]");
+			connectedDeviceAddress=device.address;
+			console.log("retrieving IP");
+			connectAndDiscover(
+				connectedDeviceAddress,
+				generalServiceUuid,
+				getConfigurationCharacteristicUuid,
+				selectIP,
+				connectionFailed
+			);
+			function selectIP() {
+				ble.selectConfiguration(
+					connectedDeviceAddress,
+					configWifiUuid,
+					getIP,
+					function() {
+						console.log("error: couldn't select the configuration at " + connectedDeviceAddress);
+						disconnect();
+					}
+				);
+			}
+			function getIP() {
+				navigator.notification.activityStop();
+				ble.getConfiguration(
+					connectedDeviceAddress,
+					function(configuration) { //get config successCB
+						var message = "The IP of the hub is: " + hubIP ;
+						if (hubIP=="") {
+							hubIP=bluetoothle.bytesToString(configuration.payload);
+							if (configuration.length > 15) {
+								message = "The hub couldn't access the crownstone. Please make sure the crownstone name contains \"wifi\" and the hub is powered on";
+							} else {
+								if (configuration.length < 7) {
+									message = "Couldn't connect to WiFi. Please make sure the informations provided are correct";
+								}
+								else message= "The IP of the hub is: " + hubIP;
+							}
+						}
+						navigator.notification.alert(message, null , "hub IP");
+						disconnect();
+					},
+					function() {
+						console.log("error: couldn't get the configuration");
+						disconnect();
+					}
+				);
+			}
+		}
 
 		executeFunction = function(address, func, argCB, serviceUuid, characteristicUuid, errorCB) {
 			if (connectedDeviceAddress) {
@@ -575,7 +575,7 @@ var crownstone = {
 		updateScreen = function() {
 
 			// if (self.closestCrownstone.avgRSSI > MIN_RSSI) {
-			// 	MIN_RSSI = self.closestCrownstone.avgRSSI;
+			//  MIN_RSSI = self.closestCrownstone.avgRSSI;
 			// }
 
 			if (binary) {
@@ -731,7 +731,7 @@ var crownstone = {
 			console.log("Create page to control a crownstone");
 
 			// $('#pwm').on('slidestop focusout', function() {
-			// 	setPWM($(this).val());
+			//  setPWM($(this).val());
 			// });
 			$('#setPWM').on('click', function(event) {
 				setPWM($('#pwm').val());
@@ -864,43 +864,43 @@ var crownstone = {
 								console.log(JSON.stringify(list));
 
 
-								//								var list = [];
-								//								// Number of incremental values:
-								//								var size=(result.length-2-2-4)/2;
-								//								var i=2;
-								//								var j=2+2+size;
-								//								var v = (result[i] << 8) + result[i+1];
-								//								var t = (result[j] << 24) + (result[j+1] << 16) + (result[j+2] << 8) + result[j+3];
-								//								var t_start = t;
-								//								i+=2;
-								//								j+=4;
-								//								// Convert timestamp to seconds, divide by clock rate (32768Hz)
-								//								list.push([(t-t_start)/32768, v]);
-								//								for (var k=0;k<size; ++k, ++i, ++j) {
-								//									var dv=result[i];
-								//									if (dv > 127) dv-=256;
-								//									v+=dv;
-								//									var dt=result[j];
-								//									if (dt > 127) dt-=256;
-								//									t+=dt;
-								//									list.push([(t-t_start)/32768, v]);
-								//								}
-								//								//console.log(JSON.stringify(list));
+//                              var list = [];
+//                              // Number of incremental values:
+//                              var size=(result.length-2-2-4)/2;
+//                              var i=2;
+//                              var j=2+2+size;
+//                              var v = (result[i] << 8) + result[i+1];
+//                              var t = (result[j] << 24) + (result[j+1] << 16) + (result[j+2] << 8) + result[j+3];
+//                              var t_start = t;
+//                              i+=2;
+//                              j+=4;
+//                              // Convert timestamp to seconds, divide by clock rate (32768Hz)
+//                              list.push([(t-t_start)/32768, v]);
+//                              for (var k=0;k<size; ++k, ++i, ++j) {
+//                                  var dv=result[i];
+//                                  if (dv > 127) dv-=256;
+//                                  v+=dv;
+//                                  var dt=result[j];
+//                                  if (dt > 127) dt-=256;
+//                                  t+=dt;
+//                                  list.push([(t-t_start)/32768, v]);
+//                              }
+//                              //console.log(JSON.stringify(list));
 
-								//								// Curve starts after a zero crossing, start with 0 for a nice graph
-								//								list.push([0, 0]);
-								//								// First and last number are start and end timestamp, use them to calculate the x values
-								//								var t_start = result[0];
-								//								var t_end = result[result.length-1];
-								//								var t_step = (t_end-t_start) / (result.length -2);
-								//								// Convert to ms
-								//								t_step = t_step / 32.768;
-								//								for (var i = 2; i < result.length-1; ++i) {
-								//									list.push([(i-1)*t_step, result[i]]);
-								//								}
+//                              // Curve starts after a zero crossing, start with 0 for a nice graph
+//                              list.push([0, 0]);
+//                              // First and last number are start and end timestamp, use them to calculate the x values
+//                              var t_start = result[0];
+//                              var t_end = result[result.length-1];
+//                              var t_step = (t_end-t_start) / (result.length -2);
+//                              // Convert to ms
+//                              t_step = t_step / 32.768;
+//                              for (var i = 2; i < result.length-1; ++i) {
+//                                  list.push([(i-1)*t_step, result[i]]);
+//                              }
 
 								$('#currentCurve').show();
-								//								$.plot("#currentCurve", [list], {xaxis: {show: false}});
+//                              $.plot("#currentCurve", [list], {xaxis: {show: false}});
 								$.plot("#currentCurve", [list]);
 							});
 						}, 100);
@@ -980,12 +980,12 @@ var crownstone = {
 
 			$('#addTrackedDevice').on('click', function(event) {
 				addTrackedDevice($('#trackAddress').val(), $('#trackRSSI').val());
-				//				tracking = !tracking;
-				//				if (tracking) {
-				//					$(this).html('Stop tracking');
-				//				} else {
-				//					$(this).html('Start tracking');
-				//				}
+//              tracking = !tracking;
+//              if (tracking) {
+//                  $(this).html('Stop tracking');
+//              } else {
+//                  $(this).html('Start tracking');
+//              }
 			});
 
 			$('#getFloor').on('click', function(event) {
@@ -1000,37 +1000,37 @@ var crownstone = {
 			});
 
 			// $('#findCrownstones').on('click', function(event) {
-			// 	$('#crownStoneTable').show();
+			//  $('#crownStoneTable').show();
 
-			// 	var r = new Array(), j = -1;
-			// 	r[++j] = '<col width="20%">';
-			// 	r[++j] = '<col width="60%">';
-			// 	r[++j] = '<col width="20%">';
-			// 	r[++j] = '<tr><th align="left">Nr</th><th align="left">MAC</th><th align="left">RSSI</th></tr>';
-			// 	$('#crownStoneTable').html(r.join(''));
+			//  var r = new Array(), j = -1;
+			//  r[++j] = '<col width="20%">';
+			//  r[++j] = '<col width="60%">';
+			//  r[++j] = '<col width="20%">';
+			//  r[++j] = '<tr><th align="left">Nr</th><th align="left">MAC</th><th align="left">RSSI</th></tr>';
+			//  $('#crownStoneTable').html(r.join(''));
 
-			// 	var nr = 0;
-			// 	var closest_rssi = -128;
-			// 	var closest_name = "";
-			// 	findCrownstones(function(obj) {
-			// 		var existing = $('#crownStoneTable').html();
-			// 		var r = new Array(), j = -1;
+			//  var nr = 0;
+			//  var closest_rssi = -128;
+			//  var closest_name = "";
+			//  findCrownstones(function(obj) {
+			//      var existing = $('#crownStoneTable').html();
+			//      var r = new Array(), j = -1;
 
-			// 		r[++j] ='<tr><td>';
-			// 		r[++j] = nr++;
-			// 		r[++j] = '</td><td>';
-			// 		r[++j] = obj.address;
-			// 		r[++j] = '</td><td>';
-			// 		r[++j] = obj.rssi;
-			// 		r[++j] = '</td></tr>';
+			//      r[++j] ='<tr><td>';
+			//      r[++j] = nr++;
+			//      r[++j] = '</td><td>';
+			//      r[++j] = obj.address;
+			//      r[++j] = '</td><td>';
+			//      r[++j] = obj.rssi;
+			//      r[++j] = '</td></tr>';
 
-			// 		$('#crownStoneTable').html(existing + r.join(''));
+			//      $('#crownStoneTable').html(existing + r.join(''));
 
-			// 		if (obj.rssi > closest_rssi) {
-			// 			closest_rssi = obj.rssi;
-			// 			closest_name = obj.name;
-			// 		}
-			// 	});
+			//      if (obj.rssi > closest_rssi) {
+			//          closest_rssi = obj.rssi;
+			//          closest_name = obj.name;
+			//      }
+			//  });
 			// });
 
 			$('#disconnect').on('click', function(event) {
