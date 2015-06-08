@@ -821,7 +821,7 @@ var BLEHandler = function() {
 	/** Before getting the value of a specific configuration type, we have to select it.
 	 */
 	self.selectConfiguration = function(address, configurationType, successCB, errorCB) {
-		if (configurationType != configFloorUuid) {
+		if (configurationType != configFloorUuid && configurationType != configWifiUuid) {
 			var msg = "Not yet support configuration option";
 			if (errorCB) errorCB(msg);
 		}
