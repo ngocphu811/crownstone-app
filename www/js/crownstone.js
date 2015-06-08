@@ -44,6 +44,9 @@ var crownstone = {
 		// store the device which is currently closest
 	closestCrownstone : {},
 
+		// store the device wich has wifi in its name
+	wifiCrownstone : {},
+
 	mobilePlatform: false,
 
 	/* Start should be called if all plugins are ready and all functionality can be called.
@@ -291,10 +294,14 @@ var crownstone = {
 
 			// add event handler to send wifi config to crownstone
 			$('#wifiBtn').on('click', function(event) {
-				if (self.closestCrownstone.name) {
-					console.log("Send information to: " + self.closestCrownstone.name);
+				if (self.wifiCrownstone.name) {
+					console.log("Send information to: " + self.wifiCrownstone.name);
 					var wifiSSID = $('#wifiSSID').val();
 					var wifiPassword = $('#wifiPassword').val();
+					if(searching) {
+						searching=false;
+						stopSearch();
+					}
 					if (wifiSSID == '') {
 						console.error("A wifi SSID should be set");
 					} else if ((wifiSSID.length > 32) || (wifiPassword.length > 32)) {
@@ -306,7 +313,8 @@ var crownstone = {
 						setWifi(string);
 					}
 				} else {
-					console.error("There is no closest crownstone available");
+					console.error("There is no wifi crownstone available");
+					navigator.notification.alert("couldn't find a crownstone with \"wifi\" in its name", null , "no wifi Crownstone");
 				}
 			});
 
@@ -314,13 +322,14 @@ var crownstone = {
 			$('#IPBtn').on('click', function(event) {
 				if (hubIP!="") {
 					var message = "The IP of the hub is: " + hubIP;
-					navigator.notification.alert(message, null , "hub IP")
+					navigator.notification.alert(message, null , "hub IP");
 				} else {
-					if (self.closestCrownstone.name) {
+					if (self.wifiCrownstone.name) {
 						console.log("accessing IP....");
 						readIP();
 					} else {
-						console.error("There is no closest crownstone available");
+						console.error("There is no wifi crownstone available");
+						navigator.notification.alert("couldn't find a crownstone with \"wifi\" in its name", null , "no wifi Crownstone");
 					}
 				}
 			});
@@ -346,6 +355,7 @@ var crownstone = {
 						console.log("Found indeed some crownstones, update the list");
 						updateCrownstoneList(obj, 100);
 						showCrownstones();
+						$('.rcWifiCrownstone').html("Wifi Crownstone: <b>" + self.wifiCrownstone.name + "</b>");
 					});
 
 				} else {
@@ -390,12 +400,12 @@ var crownstone = {
 				console.log("Written wifi config successfully");
 				navigator.notification.activityStart("Please wait" , "connecting the hub to WiFi, it may take a few minutes...");
 				disconnect();
-				setTimeout(readIP,8000);
+				setTimeout(readIP,10000);
 			}
 			function errorCB() {
 				console.error("Mistake in writing wifi config");
 			}
-			var device = self.closestCrownstone;
+			var device = self.wifiCrownstone;
 			console.log("Send to closest crownstone: " + device.name + " [" + device.address + "]");
 
 			var argCB = {};
@@ -411,14 +421,14 @@ var crownstone = {
 		}
 
 		readIP= function(){
-			var device = self.closestCrownstone;
-			console.log("Read from closest crownstone: " + device.name + " [" + device.address + "]");
+			var device = self.wifiCrownstone;
+			console.log("Read from wifi crownstone: " + device.name + " [" + device.address + "]");
 			connectedDeviceAddress=device.address;
 			console.log("retrieving IP");
 			connectAndDiscover(
 				connectedDeviceAddress,
 				generalServiceUuid,
-				getConfigurationCharacteristicUuid,
+				selectConfigurationCharacteristicUuid,
 				selectIP,
 				connectionFailed
 			);
@@ -1450,9 +1460,10 @@ var crownstone = {
 		}
 
 		stopSearch = function() {
-			$('#findCrownstones').html("Find Crownstones");
+//			$('#findCrownstones').html("Find Crownstones");
 			console.log("stop search");
 			ble.stopEndlessScan();
+			clearInterval(findTimer);
 		}
 
 		connect = function(address, timeout, successCB, errorCB) {
@@ -2068,12 +2079,15 @@ var crownstone = {
 
 		updateClosestCrownstone = function() {
 			self.closestCrownstone = {avgRSSI: -255};
-
+			self.wifiCrownstone = {};
 			for (var addr in self.crownstones) {
 				var device = self.crownstones[addr];
 				if (!device.ignore && device.avgRSSI > self.closestCrownstone.avgRSSI) {
 					self.closestCrownstone = device;
 				}
+				if (device.name.indexOf("wifi") > -1) {
+                   self.wifiCrownstone = device;
+                }
 			}
 		}
 
@@ -2100,6 +2114,7 @@ var crownstone = {
 		resetCrownstoneList = function() {
 			self.crownstones = {};
 			self.closestCrownstone = {avgRSSI: -255};
+			self.wifiCrownstone = {};
 		}
 
 		addToBlacklist = function(device) {
