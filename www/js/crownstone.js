@@ -295,7 +295,7 @@ var crownstone = {
 			// add event handler to send wifi config to crownstone
 			$('#wifiBtn').on('click', function(event) {
 				if (self.wifiCrownstone.name) {
-					console.log("Send information to: " + self.closestCrownstone.name);
+					console.log("Send information to: " + self.wifiCrownstone.name);
 					var wifiSSID = $('#wifiSSID').val();
 					var wifiPassword = $('#wifiPassword').val();
 					if(searching) {
@@ -461,11 +461,11 @@ var crownstone = {
 							}
 						}
 						navigator.notification.alert(message, null , "hub IP");
-						setTimeOut(disconnect,1000);
+						disconnect();
 					},
 					function() {
 						console.log("error: couldn't get the configuration");
-						setTimeOut(disconnect,1000);
+						disconnect();
 					}
 				);
 			}
@@ -1452,17 +1452,18 @@ var crownstone = {
 		findCrownstones = function(callback) {
 			console.log("Find crownstones");
 			ble.startEndlessScan(callback);
-//			findTimer = setInterval(function() {
-//				console.log("restart");
-//				ble.stopEndlessScan();
-//				ble.startEndlessScan(callback);
-//			}, 1000);
+			findTimer = setInterval(function() {
+				console.log("restart");
+				ble.stopEndlessScan();
+				ble.startEndlessScan(callback);
+			}, 1000);
 		}
 
 		stopSearch = function() {
 //			$('#findCrownstones').html("Find Crownstones");
 			console.log("stop search");
 			ble.stopEndlessScan();
+			clearInterval(findTimer);
 		}
 
 		connect = function(address, timeout, successCB, errorCB) {
