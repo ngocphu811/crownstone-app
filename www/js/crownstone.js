@@ -66,9 +66,9 @@ var crownstone = {
 
 		//$("#hubPage").pagecontainer( "change");
 
-		$(':mobile-pagecontainer').pagecontainer('change', '#hubPage', {
+		$(':mobile-pagecontainer').pagecontainer('change', '#selectionPage', {
 			allowSamePageTransition: true,
-			transition: 'flip',
+			transition: 'pop',
 			changeHash: false, // do not save in history
 			reverse: true,
 			showLoadMsg: true
@@ -1460,7 +1460,7 @@ var crownstone = {
 		}
 
 		stopSearch = function() {
-//			$('#findCrownstones').html("Find Crownstones");
+			$('#findCrownstones').html("Find Crownstones");
 			console.log("stop search");
 			ble.stopEndlessScan();
 			clearInterval(findTimer);
