@@ -56,13 +56,15 @@ var crownstone = {
 
 		// set up bluetooth connection
 		console.log("Initialize ble");
-		ble.init(function(enabled) {
-			$('#findCrownstones').prop("disabled", !enabled);
-			$('#localizeBtn').prop("disabled", !enabled);
-			$('#searchFloorBtn').prop("disabled", !enabled);
-			$('#rcTogglePower').prop("disabled", !enabled);
-			$('#hocBinaryBtn').prop("disabled", !enabled);
-		});
+		ble.init(
+			function() {
+				$('#findCrownstones').prop("disabled", false);
+				$('#localizeBtn').prop("disabled", false);
+				$('#searchFloorBtn').prop("disabled", false);
+				$('#rcTogglePower').prop("disabled", false);
+				$('#hocBinaryBtn').prop("disabled", false);
+			}
+		);
 
 		//$("#hubPage").pagecontainer( "change");
 
@@ -83,7 +85,7 @@ var crownstone = {
 		console.log("Create Crownstone application");
 
 		// creates BLE object, does nothing with it yet
-		ble = new BLEHandler();
+		ble = new BleExt();
 
 		var repeatFunctionHandle = null;
 
@@ -173,10 +175,13 @@ var crownstone = {
 				$('#switchedCrownstone').html("Switched Crownstone: <b>" + self.closestCrownstone.name + "</b>");
 				console.log("Switched crownstone: " + self.closestCrownstone.name);
 
-				connectAndTogglePower(self.closestCrownstone, function() {
-					self.switchedCrownstone = self.closestCrownstone;
-					$('#feedback').show();
-				})
+				ble.connectAndTogglePower(
+					self.closestCrownstone,
+					function() {
+						self.switchedCrownstone = self.closestCrownstone;
+						$('#feedback').show();
+					}
+				);
 			});
 
 			$('#fbYes').on('click', function() {
@@ -191,40 +196,43 @@ var crownstone = {
 				console.log("addr: " + self.closestCrownstone.address);
 				self.crownstones[self.closestCrownstone.address].ignore = true;
 
-				connectAndTogglePower(self.closestCrownstone, function() {
-					self.switchedCrownstone = self.closestCrownstone;
-					$('#rcTogglePower').trigger('click');
-				});
+				ble.connectAndTogglePower(
+					self.closestCrownstone,
+					function() {
+						self.switchedCrownstone = self.closestCrownstone;
+						$('#rcTogglePower').trigger('click');
+					}
+				);
 
 			});
 		});
 
-		connectAndTogglePower = function(address, successCB, errorCB) {
-			console.log("Connect and toggle power");
-			connectAndDiscover(
-					address,
-					powerServiceUuid,
-					pwmUuid,
-					function() {//success
-						function callback() {
-							disconnect();
-							if (successCB) successCB();
-						}
+		//connectAndTogglePower = function(address, successCB, errorCB) {
+			//console.log("Connect and toggle power");
+			//connectAndDiscover(
+					//address,
+					//powerServiceUuid,
+					//pwmUuid,
+					//function() {//success
+						//function callback() {
+							//disconnect();
+							//if (successCB) successCB();
+						//}
 
-						getPWM(function(value) {
-							if (value == 0) {
-								powerON(callback);
-							} else {
-								powerOFF(callback);
-							}
-						});
-					},
-					function(msg) {//error
-						console.log("failed to connect");
-						if (errorCB) errorCB();
-					}
-			);
-		}
+						//getPWM(function(value) {
+							//if (value == 0) {
+								//powerON(callback);
+							//} else {
+								//powerOFF(callback);
+							//}
+						//});
+					//},
+					//function(msg) {//error
+						//console.log("failed to connect");
+						//if (errorCB) errorCB();
+					//}
+			//);
+		//}
 
 		$('#remoteControlPage').on("pageshow", function(event) {
 
@@ -334,10 +342,10 @@ var crownstone = {
 				}
 			});
 
-			$('#scanDevices').on('click', function(event) {
+			$('#scanWifiDevices').on('click', function(event) {
 				if (!searching) {
 					console.log("Start scanning for devices");
-					$('#scanDevices').html('Stop scanning');
+					$('#scanWifiDevices').html('Stop scanning');
 
 					searching = true;
 					// TODO: do we need to reset the list?
@@ -361,7 +369,7 @@ var crownstone = {
 				} else {
 					console.log("Stop scanning for devices");
 					stopSearch();
-					$('#scanDevices').html('Scan');
+					$('#scanWifiDevices').html('Scan');
 					searching = false;
 				}
 			});
@@ -389,118 +397,53 @@ var crownstone = {
 
 		});
 		*/
+		
 		setWifi = function(value) {
-			function func(argCB, callback) {
-				console.log("Write wifi config to " + argCB.connectedDeviceAddress + ", and well " + argCB.value);
-				ble.setWifi(argCB.connectedDeviceAddress, argCB.value, successCB, errorCB);
-				callback();
-			}
-
-			function successCB() {
+			ble.connectAndWriteWifi(
+				self.wifiCrownstone.address,
+				value,
+				onWrittenWifi,
+				function() {
+					console.error("Mistake in writing wifi config");
+				}
+			);
+			
+			function onWrittenWifi() {
 				console.log("Written wifi config successfully");
 				navigator.notification.activityStart("Please wait" , "connecting the hub to WiFi, it may take a few minutes...");
-				disconnect();
-				setTimeout(readIP,10000);
+				setTimeout(readIP, 10000);
 			}
-			function errorCB() {
-				console.error("Mistake in writing wifi config");
-			}
-			var device = self.wifiCrownstone;
-			console.log("Send to closest crownstone: " + device.name + " [" + device.address + "]");
-
-			var argCB = {};
-			if (connectedDeviceAddress) {
-				argCB.connectedDeviceAddress = connectedDeviceAddress;
-			} else {
-				argCB.connectedDeviceAddress = device.address;
-			}
-			argCB.value = value;
-
-			executeFunction(device.address, func, argCB, generalServiceUuid, setConfigurationCharacteristicUuid,
-					errorCB);
 		}
-
-		readIP= function(){
-			var device = self.wifiCrownstone;
-			console.log("Read from wifi crownstone: " + device.name + " [" + device.address + "]");
-			connectedDeviceAddress=device.address;
-			console.log("retrieving IP");
-			connectAndDiscover(
-				connectedDeviceAddress,
-				generalServiceUuid,
-				selectConfigurationCharacteristicUuid,
-				selectIP,
-				connectionFailed
-			);
-			function selectIP() {
-				ble.selectConfiguration(
-					connectedDeviceAddress,
-					configWifiUuid,
-					getIP,
-					function() {
-						console.log("error: couldn't select the configuration at " + connectedDeviceAddress);
-						disconnect();
-					}
-				);
-			}
-			function getIP() {
-				navigator.notification.activityStop();
-				ble.getConfiguration(
-					connectedDeviceAddress,
-					function(configuration) { //get config successCB
-						var message = "The IP of the hub is: " + hubIP ;
-						if (hubIP=="") {
-							hubIP=bluetoothle.bytesToString(configuration.payload);
-							if (configuration.length > 15) {
-								message = "The hub couldn't access the crownstone. Please make sure the crownstone name contains \"wifi\" and the hub is powered on";
-							} else {
-								if (configuration.length < 7) {
-									message = "Couldn't connect to WiFi. Please make sure the informations provided are correct";
-								}
-								else message= "The IP of the hub is: " + hubIP;
-							}
+		
+		readIP = function() {
+			ble.connectAndReadIp(
+				self.wifiCrownstone.address,
+				function (configuration) {
+					navigator.notification.activityStop();
+					var message = "The IP of the hub is: " + hubIP;
+					console.log("hubIP: " + hubIP);
+					if (hubIP=="") {
+						hubIP=bluetoothle.bytesToString(configuration.payload);
+						console.log("hubIP: " + hubIP);
+						if (configuration.length > 15) {
+							// Hub didn't read the wifi settings, so we read the wifi settings
+							message = "The hub couldn't access the crownstone. Please make sure the crownstone name contains \"wifi\" and the hub is powered on";
 						}
-						navigator.notification.alert(message, null , "hub IP");
-						disconnect();
-					},
-					function() {
-						console.log("error: couldn't get the configuration");
-						disconnect();
+						else if (configuration.length < 7) {
+							// Hub did read the wifi settings, but couldn't connect and thus set an empty string as ip
+							message = "Couldn't connect to WiFi. Please make sure the informations provided are correct";
+						}
+						else message= "The IP of the hub is: " + hubIP;
 					}
-				);
-			}
-		}
-
-		executeFunction = function(address, func, argCB, serviceUuid, characteristicUuid, errorCB) {
-			if (connectedDeviceAddress) {
-				function callback() {
-					setTimeout(disconnect,10000);
+					navigator.notification.alert(message, null , "hub IP");
+				},
+				function() {
+					navigator.notification.activityStop();
+					console.log("Couldn't read IP");
 				}
-				func(argCB, callback);
-			} else {
-				console.log("Connect and execute function on " + address);
-				connectAndDiscover(
-						address,
-						serviceUuid,
-						characteristicUuid,
-						function() { // successfully connected
-							// TODO: make sure the disconnect is not too fast
-							function callback() {
-								console.log("Just disconnect after 10 seconds now. Should be done in proper callback");
-								setTimeout(disconnect, 10000);
-							}
-							// enforce callback as argument, if not called by callee, connection will not be closed, nor
-							// successCB be called
-							func(argCB, callback);
-						},
-						function(msg) { // error in connecting
-							console.error("Connection can not be established");
-							if (errorCB) errorCB();
-						}
-						);
-			}
+			);
 		}
-
+		
 
 		/*******************************************************************************************************
 		 * Hot or Cold
@@ -768,9 +711,9 @@ var crownstone = {
 				}
 				console.log("Set repeat action");
 
-				togglePower(function() {
+				ble.togglePower(function() {
 					$('#powerState').show();
-					repeatFunctionHandle = setInterval(togglePower, 4000);
+					repeatFunctionHandle = setInterval(function() { ble.togglePower(); }, 4000);
 				});
 			});
 
@@ -831,107 +774,54 @@ var crownstone = {
 			});
 
 			$('#sampleCurrentCurve').on('click', function(event) {
-				sampleCurrentCurve(function(success) {
-					if (success) {
-						setTimeout(function() {
-							getCurrentCurve(function(result) {
-								var list = [];
-								// Number of incremental values:
-								var i=0;
-								var size=(result[i+1] << 8) + result[i];
-								i+=2;
-								if (!size) {
-									console.log("0 samples!");
-									console.log(JSON.stringify(list));
-									return;
-								}
-								if (result.length < 2+2+2+4+4+size-1) {
-									console.log("Invalid current curve data (size mismatch)")
-										console.log(JSON.stringify(list));
-									return;
-								}
-								var v = (result[i+1] << 8) + result[i];
-								i+=2;
-								i+=2;
-								var t_start = (result[i+3] << 24) + (result[i+2] << 16) + (result[i+1] << 8) + result[i];
-								i+=4;
-								var t_end =   (result[i+3] << 24) + (result[i+2] << 16) + (result[i+1] << 8) + result[i];
-								i+=4;
-								// Convert timestamp to seconds, divide by clock rate (32768Hz)
-								var t_step = (t_end-t_start) / (size-1) / 32768;
-								var t=t_start;
-								list.push([(t-t_start)/32768, v]);
-								for (var k=1;k<size; ++k, ++i) {
-									var dv=result[i];
-									if (dv > 127) dv-=256;
-									v+=dv;
-									var dt=result[i+size-1];
-									if (dt > 127) dt-=256;
-									t+=dt
-										list.push([(t-t_start)/32768, v]);
-									//list.push([k*t_step, v]);
-								}
-								console.log(JSON.stringify(list));
-
-
-//                              var list = [];
-//                              // Number of incremental values:
-//                              var size=(result.length-2-2-4)/2;
-//                              var i=2;
-//                              var j=2+2+size;
-//                              var v = (result[i] << 8) + result[i+1];
-//                              var t = (result[j] << 24) + (result[j+1] << 16) + (result[j+2] << 8) + result[j+3];
-//                              var t_start = t;
-//                              i+=2;
-//                              j+=4;
-//                              // Convert timestamp to seconds, divide by clock rate (32768Hz)
-//                              list.push([(t-t_start)/32768, v]);
-//                              for (var k=0;k<size; ++k, ++i, ++j) {
-//                                  var dv=result[i];
-//                                  if (dv > 127) dv-=256;
-//                                  v+=dv;
-//                                  var dt=result[j];
-//                                  if (dt > 127) dt-=256;
-//                                  t+=dt;
-//                                  list.push([(t-t_start)/32768, v]);
-//                              }
-//                              //console.log(JSON.stringify(list));
-
-//                              // Curve starts after a zero crossing, start with 0 for a nice graph
-//                              list.push([0, 0]);
-//                              // First and last number are start and end timestamp, use them to calculate the x values
-//                              var t_start = result[0];
-//                              var t_end = result[result.length-1];
-//                              var t_step = (t_end-t_start) / (result.length -2);
-//                              // Convert to ms
-//                              t_step = t_step / 32.768;
-//                              for (var i = 2; i < result.length-1; ++i) {
-//                                  list.push([(i-1)*t_step, result[i]]);
-//                              }
-
-								$('#currentCurve').show();
-//                              $.plot("#currentCurve", [list], {xaxis: {show: false}});
-								$.plot("#currentCurve", [list]);
-							});
-						}, 100);
-					} else {
-
+				ble.readCurrentCurve(function(result) {
+					var list = [];
+					// Number of incremental values:
+					var i=0;
+					var size=(result[i+1] << 8) + result[i];
+					i+=2;
+					if (!size) {
+						console.log("0 samples!");
+						console.log(JSON.stringify(list));
+						return;
 					}
+					if (result.length < 2+2+2+4+4+size-1) {
+						console.log("Invalid current curve data (size mismatch)")
+							console.log(JSON.stringify(list));
+						return;
+					}
+					var v = (result[i+1] << 8) + result[i];
+					i+=2;
+					i+=2;
+					var t_start = (result[i+3] << 24) + (result[i+2] << 16) + (result[i+1] << 8) + result[i];
+					i+=4;
+					var t_end =   (result[i+3] << 24) + (result[i+2] << 16) + (result[i+1] << 8) + result[i];
+					i+=4;
+					// Convert timestamp to seconds, divide by clock rate (32768Hz)
+					var t_step = (t_end-t_start) / (size-1) / 32768;
+					var t=t_start;
+					list.push([(t-t_start)/32768, v]);
+					for (var k=1;k<size; ++k, ++i) {
+						var dv=result[i];
+						if (dv > 127) dv-=256;
+						v+=dv;
+						var dt=result[i+size-1];
+						if (dt > 127) dt-=256;
+						t+=dt
+							list.push([(t-t_start)/32768, v]);
+						//list.push([k*t_step, v]);
+					}
+					console.log(JSON.stringify(list));
+					$('#currentCurve').show();
+//                              $.plot("#currentCurve", [list], {xaxis: {show: false}});
+					$.plot("#currentCurve", [list]);
 				});
 			});
 
 			$('#getCurrentConsumption').on('click', function(event) {
-				sampleCurrentConsumption(function(success) {
-					if (success) {
-						setTimeout(function() {
-							getCurrentConsumption(function(currentConsumption) {
-								$('#currentConsumption').html("Current consumption: " + currentConsumption + " [mA]");
-								$('#currentConsumption').show();
-							});
-						}, 100);
-					} else {
-
-					}
+				ble.readCurrentConsumption(function(currentConsumption) {
+					$('#currentConsumption').html("Current consumption: " + currentConsumption + " [mA]");
+					$('#currentConsumption').show();
 				});
 			});
 
@@ -990,12 +880,12 @@ var crownstone = {
 
 			$('#addTrackedDevice').on('click', function(event) {
 				addTrackedDevice($('#trackAddress').val(), $('#trackRSSI').val());
-//              tracking = !tracking;
-//              if (tracking) {
-//                  $(this).html('Stop tracking');
-//              } else {
-//                  $(this).html('Start tracking');
-//              }
+				//tracking = !tracking;
+				//if (tracking) {
+					//$(this).html('Stop tracking');
+				//} else {
+					//$(this).html('Start tracking');
+				//}
 			});
 
 			$('#getFloor').on('click', function(event) {
@@ -1182,36 +1072,22 @@ var crownstone = {
 		onShake = function() {
 			if ($.now() - lastShake > SHAKE_TIMEOUT) {
 				console.log("on shake, toggle Power!!");
-				togglePower();
+				ble.togglePower();
 				lastShake = $.now();
 			}
 		}
 
-		setPWM = function(pwm, callback, cargs) {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
-
+		setPWM = function(pwm, callback) {
 			console.log("Set pwm to " + pwm);
-			ble.writePWM(connectedDeviceAddress, pwm, function() {
-				if (callback) {
-					callback(cargs);
-				}
-			});
+			ble.writePWM(pwm, callback);
 		}
 
 		getPWM = function(callback) {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
-
 			console.log("Reading current PWM value");
-			ble.readPWM(connectedDeviceAddress, callback);
+			ble.readPWM(callback);
 		}
 
-		powerON = function(callback, cargs) {
+		powerON = function(callback) {
 			if (!connectedDeviceAddress) {
 				console.log("no connected device address!!");
 				return;
@@ -1220,10 +1096,10 @@ var crownstone = {
 			console.log("switch power ON");
 			$('#powerState').html("LED: ON");
 			powerStateOn = true;
-			setPWM(255, callback, cargs);
+			ble.powerOn(callback);
 		}
 
-		powerOFF = function(callback, cargs) {
+		powerOFF = function(callback) {
 			if (!connectedDeviceAddress) {
 				console.log("no connected device address!!");
 				return;
@@ -1232,56 +1108,38 @@ var crownstone = {
 			console.log("switch power OFF");
 			$('#powerState').html("LED: OFF");
 			powerStateOn = false;
-			setPWM(0, callback, cargs);
+			ble.powerOff(callback);
 		}
 
-		togglePower = function(callback, cargs) {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
+		//togglePower = function(callback, cargs) {
+			//if (!connectedDeviceAddress) {
+				//console.log("no connected device address!!");
+				//return;
+			//}
 
-			console.log('Switch power event');
-			if (powerStateOn) {
-				powerOFF(callback, cargs);
-			} else {
-				powerON(callback, cargs);
-			}
-		}
+			//console.log('Switch power event');
+			//if (powerStateOn) {
+				//powerOFF(callback, cargs);
+			//} else {
+				//powerON(callback, cargs);
+			//}
+		//}
 
-		startDeviceScan = function(callback, cargs) {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
-
+		startDeviceScan = function(callback) {
 			navigator.notification.activityStart("Device Scan", "scanning");
 			console.log("Scan for devices");
-			ble.scanDevices(connectedDeviceAddress, true);
-			if (callback) {
-				callback(cargs);
-			}
+			ble.writeScanDevices(true, callback);
 		}
 
 		stopDeviceScan = function(callback) {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
-
 			console.log("Stop Scan");
-			ble.scanDevices(connectedDeviceAddress, false);
+			ble.writeScanDevices(false, callback);
 		}
 
 		getDeviceList = function() {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
-
 			navigator.notification.activityStop();
 			console.log("Get Device List");
-			ble.listDevices(connectedDeviceAddress, function(list) {
+			ble.readScannedDevices(function(list) {
 				var size = Object.size(list);
 				var elements = list[0];
 				var deviceList = $('#deviceList');
@@ -1334,115 +1192,53 @@ var crownstone = {
 		}
 
 		readTemperature = function(callback) {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
-
 			console.log("Reading temperature");
-			ble.readTemperature(connectedDeviceAddress, callback);
+			ble.readTemperature(callback);
 		}
 
 		getCurrentConsumption = function(callback) {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
-
 			console.log("Reading consumption");
-			ble.readCurrentConsumption(connectedDeviceAddress, callback);
+			ble.readCurrentConsumption(callback);
 		}
 
 		getDeviceName = function(callback) {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
-
 			console.log("Get device name");
-			ble.readDeviceName(connectedDeviceAddress, callback);
+			ble.readDeviceName(callback);
 		}
 
-		setDeviceName = function(deviceName, callback, cargs) {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
-
+		setDeviceName = function(deviceName, callback) {
 			console.log("Set device name to: " + deviceName);
-			ble.writeDeviceName(connectedDeviceAddress, deviceName);
-			if (callback) {
-				callback(cargs);
-			}
+			ble.writeDeviceName(deviceName, callback);
 		}
 
 		getDeviceType = function(callback) {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
-
 			console.log("Get device type");
-			ble.readDeviceType(connectedDeviceAddress, callback);
+			ble.readDeviceType(callback);
 		}
 
-		setDeviceType = function(deviceType, callback, cargs) {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
-
+		setDeviceType = function(deviceType, callback) {
 			console.log("Set device type to: " + deviceType);
-			ble.writeDeviceType(connectedDeviceAddress, deviceType);
-			if (callback) {
-				callback(cargs);
-			}
+			ble.writeDeviceType(deviceType, callback);
 		}
 
 		getRoom = function(callback) {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
-
 			console.log("Get room");
-			ble.readRoom(connectedDeviceAddress, callback);
+			ble.readRoom(callback);
 		}
 
-		setRoom = function(room, callback, cargs) {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
-
+		setRoom = function(room, callback) {
 			console.log("Set room to: " + room);
-			ble.writeRoom(connectedDeviceAddress, room);
-			if (callback) {
-				callback(cargs);
-			}
+			ble.writeRoom(room, callback);
 		}
 
 		getCurrentLimit = function(callback) {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
-
 			console.log("Get current limit");
-			ble.readCurrentLimit(connectedDeviceAddress, callback);
+			ble.readCurrentLimit(callback);
 		}
 
-		setCurrentLimit = function(currentLimit, callback, cargs) {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
-
+		setCurrentLimit = function(currentLimit, callback) {
 			console.log("Set current limit to: " + currentLimit);
-			ble.writeCurrentLimit(connectedDeviceAddress, currentLimit);
-			if (callback) {
-				callback(cargs);
-			}
+			ble.writeCurrentLimit(currentLimit, callback);
 		}
 
 		/** Find crownstones and report the RSSI strength of the advertisements
@@ -1451,18 +1247,22 @@ var crownstone = {
 		 */
 		findCrownstones = function(callback) {
 			console.log("Find crownstones");
-			ble.startEndlessScan(callback);
-			findTimer = setInterval(function() {
-				console.log("restart");
-				ble.stopEndlessScan();
-				ble.startEndlessScan(callback);
-			}, 1000);
+			ble.startScan(callback);
+			findTimer = setInterval(
+				function() {
+					console.log("restart");
+					ble.stopScan(function() {
+						ble.startScan(callback);
+					});
+				},
+				1000
+			);
 		}
 
 		stopSearch = function() {
-//			$('#findCrownstones').html("Find Crownstones");
+			$('#findCrownstones').html("Find Crownstones");
 			console.log("stop search");
-			ble.stopEndlessScan();
+			ble.stopScan();
 			clearInterval(findTimer);
 		}
 
@@ -1474,137 +1274,95 @@ var crownstone = {
 			if (!(connected || connecting)) {
 				connecting = true;
 				console.log("Connecting to " + address);
-				ble.connectDevice(address, timeout, function(success) {
-					connecting = false;
-					if (success) {
+				ble.connect(
+					address,
+					function() {
+						connecting = false;
 						connected = true;
 						connectedDeviceAddress = address;
 						if (successCB) successCB();
-					} else {
+					},
+					function() {
+						connecting = false;
 						var msg = "Connection failure";
 						if (errorCB) errorCB(msg);
 					}
-
-				});
+				);
 			}
 		}
 
 		discoverServices = function(callback) {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
-
 			console.log("discover services");
 			trigger = 0;
-			ble.discoverServices(connectedDeviceAddress, callback);
+			ble.discoverServices(callback);
 		}
 
 		disconnect = function() {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
-
 			if (connected) {
 				connected = false;
 				console.log("disconnecting...");
-				ble.disconnectDevice(connectedDeviceAddress);
+				ble.disconnect();
 				connectedDeviceAddress = null;
 			}
 		}
 
 		getTrackedDevices = function(callback) {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
-
 			console.log("Get tracked devices");
-			ble.getTrackedDevices(connectedDeviceAddress, callback);
+			ble.readTrackedDevices(callback);
 		}
 
-		addTrackedDevice = function(address, rssi) {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
+		addTrackedDevice = function(address, rssi, successCB, errorCB) {
+			var bt_address = hexStringToBluetoothAddress(address);
+			if (!bt_address.length) {
+				console.log("error, malformed bluetooth address");
+				if (errorCB) errorCB();
 				return;
-			}
-
-			if (address.length == 0) {
-				console.log("no address provided");
-				return;
-			}
-
-			if (address.indexOf(':') > -1) {
-				var bt_address = address.split(':');
-				if (bt_address.length != 6) {
-					console.log("error, malformed bluetooth address");
-				}
-			} else if (address.indexOf('-') > -1) {
-				var bt_address = address.split('-');
-				if (bt_address.length != 6) {
-					console.log("error, malformed bluetooth address");
-				}
-			} else  {
-				var bt_address = [];
-				for (var i = 0; i < 6; i++) {
-					bt_address[i] = address.slice(i*2, i*2+2);
-				}
 			}
 			console.log("Add tracked device");
-			ble.addTrackedDevice(connectedDeviceAddress, bt_address, rssi);
+			ble.writeTrackedDevice(bt_address, rssi, successCB, errorCB);
 		}
 
-		sampleCurrentConsumption = function(callback) {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
+		//sampleCurrentConsumption = function(callback) {
+			//if (!connectedDeviceAddress) {
+				//console.log("no connected device address!!");
+				//return;
+			//}
 
-			console.log("Sample current consumption");
-			ble.sampleCurrent(connectedDeviceAddress, 0x01, callback);
-		}
+			//console.log("Sample current consumption");
+			//ble.sampleCurrent(connectedDeviceAddress, 0x01, callback);
+		//}
 
-		sampleCurrentCurve = function(callback) {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
+		//sampleCurrentCurve = function(callback) {
+			//if (!connectedDeviceAddress) {
+				//console.log("no connected device address!!");
+				//return;
+			//}
 
-			console.log("Sample current curve");
-			ble.sampleCurrent(connectedDeviceAddress, 0x02, callback);
-		}
+			//console.log("Sample current curve");
+			//ble.sampleCurrent(connectedDeviceAddress, 0x02, callback);
+		//}
 
-		getCurrentCurve = function(callback) {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
+		//getCurrentCurve = function(callback) {
+			//if (!connectedDeviceAddress) {
+				//console.log("no connected device address!!");
+				//return;
+			//}
 
-			console.log("Get current curve");
-			ble.getCurrentCurve(connectedDeviceAddress, callback);
-		}
+			//console.log("Get current curve");
+			//ble.getCurrentCurve(connectedDeviceAddress, callback);
+		//}
 
 		/* Getting a floor in the configuration characteristic
 		 *
 		 *  + requires connecting to the device
 		 */
 		getFloor = function(callback, errorCB) {
-			if (!connectedDeviceAddress) {
-				msg = "No device connected";
-				errorCB(msg);
-			} else {
-				console.log("Get floor level");
-				ble.getFloor(connectedDeviceAddress, callback, errorCB);
-			}
+			console.log("Get floor level");
+			ble.readFloor(callback, errorCB);
 		}
 
-		setFloor = function(value) {
-			if (!connectedDeviceAddress) {
-				console.log("no connected device address!!");
-				return;
-			}
-			ble.setFloor(connectedDeviceAddress, value);
+		setFloor = function(value, successCB, errorCB) {
+			ble.writeFloor(value, successCB, errorCB);
 		}
 
 		/*******************************************************************************************************
