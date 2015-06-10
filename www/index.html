@@ -46,6 +46,37 @@
 
 	<body class="ui-body-a"> <!-- onload="connect()"> -->
 		<!--
+			The first page to be shown to the user, at the moment.
+			From here:
+			+ Scan for crownstones (a button)
+			+ List crownstones that can be found
+			+ Swipe from left to right to see a menu
+		-->
+		<div data-role="page" id="selectionPage">
+			<div data-role="header" data-position='fixed'>
+				<h1 class="ui-title" role="heading" aria-level="1">Crownstone</h1>
+			</div>
+
+			<div class="scrollable" role="main">
+				<img class="scaledLogo" src="img/crownstone.png"></img>
+				<div>
+					<button id="findCrownstones" class="ui-btn-active ui-state-persist" data-role="button" disabled>Find Crownstones</button>
+					<table id="crownStoneTable" style="display: none; width: 100%"></table>
+					<p/>
+					<div id="closestCrownstone">Closest Crownstone:</div>
+				</div>
+				<div>
+					<img class="scaledLogo" src="img/logos/DoBots.png"></img>
+				</div>
+			</div>
+			<div data-role="panel" class="sideMenu" data-display="reveal" data-theme="b">
+				<div id="statusBarFill"></div>
+				<ul data-role="listview">
+				</ul>
+			</div>
+		</div>
+
+		<!--
 			Hub settings
 	  	-->
 		<div data-role="page" id="hubPage">
@@ -85,36 +116,6 @@
                     <button id="IPBtn" class="ui-btn-active ui-state-persist" data-role="button">readIP</button>
                 </div>
 
-			</div>
-			<div data-role="panel" class="sideMenu" data-display="reveal" data-theme="b">
-				<div id="statusBarFill"></div>
-				<ul data-role="listview">
-				</ul>
-			</div>
-		</div>
-		<!--
-			The first page to be shown to the user, at the moment.
-			From here:
-			+ Scan for crownstones (a button)
-			+ List crownstones that can be found
-			+ Swipe from left to right to see a menu
-		-->
-		<div data-role="page" id="selectionPage">
-			<div data-role="header" data-position='fixed'>
-				<h1 class="ui-title" role="heading" aria-level="1">Crownstone</h1>
-			</div>
-
-			<div class="scrollable" role="main">
-				<img class="scaledLogo" src="img/crownstone.png"></img>
-				<div>
-					<button id="findCrownstones" class="ui-btn-active ui-state-persist" data-role="button" disabled>Find Crownstones</button>
-					<table id="crownStoneTable" style="display: none; width: 100%"></table>
-					<p/>
-					<div id="closestCrownstone">Closest Crownstone:</div>
-				</div>
-				<div>
-					<img class="scaledLogo" src="img/logos/DoBots.png"></img>
-				</div>
 			</div>
 			<div data-role="panel" class="sideMenu" data-display="reveal" data-theme="b">
 				<div id="statusBarFill"></div>
