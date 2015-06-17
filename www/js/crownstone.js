@@ -54,6 +54,9 @@ var crownstone = {
 	start:function() {
 		console.log("Start Crownstone application");
 
+		// creates BLE object, does nothing with it yet
+		ble = new bluenet.Extended();
+
 		// set up bluetooth connection
 		console.log("Initialize ble");
 		ble.init(
@@ -83,9 +86,6 @@ var crownstone = {
 		var self = this;
 
 		console.log("Create Crownstone application");
-
-		// creates BLE object, does nothing with it yet
-		ble = new BleExt();
 
 		var repeatFunctionHandle = null;
 
@@ -990,61 +990,61 @@ var crownstone = {
 					function discoverSuccessful(serviceUuid, characteristicUuid) {
 						console.log("updating: " + serviceUuid + ' : ' + characteristicUuid);
 
-						if (serviceUuid == indoorLocalizationServiceUuid) {
-							if (characteristicUuid == deviceScanUuid) {
+						if (serviceUuid == BleTypes.indoorLocalizationServiceUuid) {
+							if (characteristicUuid == BleTypes.deviceScanUuid) {
 								$('#scanDevicesTab').show();
 							}
-							if (characteristicUuid == addTrackedDeviceUuid) {
+							if (characteristicUuid == BleTypes.addTrackedDeviceUuid) {
 								$('#trackedDevicesTab').show();
 							}
 						}
-						if (serviceUuid == generalServiceUuid) {
-							if (characteristicUuid == temperatureCharacteristicUuid) {
+						if (serviceUuid == BleTypes.generalServiceUuid) {
+							if (characteristicUuid == BleTypes.temperatureCharacteristicUuid) {
 								$('#getTemperatureTab').show();
 							}
-							if (characteristicUuid == changeNameCharacteristicUuid) {
+							if (characteristicUuid == BleTypes.changeNameCharacteristicUuid) {
 								$('#changeNameTab').show();
 								// request device name to fill initial value
 								setTimeout(function() {
 									$('#getDeviceName').trigger('click');
 								}, (trigger++) * triggerDelay);
 							}
-							if (characteristicUuid == deviceTypeUuid) {
+							if (characteristicUuid == BleTypes.deviceTypeUuid) {
 								$('#deviceTypeTab').show();
 								// request device type to fill initial value
 								setTimeout(function() {
 									$('#getDeviceType').trigger('click');
 								}, (trigger++) * triggerDelay);
 							}
-							if (characteristicUuid == roomUuid) {
+							if (characteristicUuid == BleTypes.roomUuid) {
 								$('#roomTab').show();
 								// request room to fill initial value
 								setTimeout(function() {
 									$('#getRoom').trigger('click');
 								}, (trigger++) * triggerDelay);
 							}
-							if (characteristicUuid == setConfigurationCharacteristicUuid) {
+							if (characteristicUuid == BleTypes.setConfigurationCharacteristicUuid) {
 								$('#floorTab').show();
 								setTimeout(function() {
 									$('#getFloor').trigger('click');
 								}, (trigger++) * triggerDelay);
 							}
 						}
-						if (serviceUuid == powerServiceUuid) {
-							if (characteristicUuid == pwmUuid) {
+						if (serviceUuid == BleTypes.powerServiceUuid) {
+							if (characteristicUuid == BleTypes.pwmUuid) {
 								$('#pwmTab').show();
 							}
-							if (characteristicUuid == currentConsumptionUuid) {
+							if (characteristicUuid == BleTypes.currentConsumptionUuid) {
 								$('#currentConsumptionTab').show();
 							}
-							if (characteristicUuid == currentLimitUuid) {
+							if (characteristicUuid == BleTypes.currentLimitUuid) {
 								$('#currentLimitTab').show();
 								// request current limit to fill initial value
 								setTimeout(function() {
 									$('#getCurrentLimit').trigger('click');
 								}, (trigger++) * triggerDelay);
 							}
-							if (characteristicUuid == currentCurveUuid) {
+							if (characteristicUuid == BleTypes.currentCurveUuid) {
 								$('#currentCurveTab').show();
 							}
 						}
@@ -1247,6 +1247,7 @@ var crownstone = {
 		 */
 		findCrownstones = function(callback) {
 			console.log("Find crownstones");
+			ble.setScanFilter(bluenet.Filter.crownstone);
 			ble.startScan(callback);
 			findTimer = setInterval(
 				function() {
@@ -1718,8 +1719,8 @@ var crownstone = {
 					console.log("Connect and get floor");
 					connectAndDiscover(
 							address,
-							generalServiceUuid,
-							getConfigurationCharacteristicUuid,
+							BleTypes.generalServiceUuid,
+							BleTypes.getConfigurationCharacteristicUuid,
 							function() {
 								getFloor(function(floor) {
 									console.log("Floor found: " + floor);

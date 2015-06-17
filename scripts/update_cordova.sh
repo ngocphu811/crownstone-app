@@ -13,6 +13,7 @@ cordova plugin remove org.apache.cordova.device-motion
 cordova plugin remove uk.co.ilee.shake
 cordova plugin remove com.randdusing.bluetoothle
 cordova plugin remove com.verso.cordova.clipboard
+cordova plugin remove nl.dobots.bluenet
 
 cordova plugin remove cordova-plugin-device
 cordova plugin remove cordova-plugin-dialogs
@@ -27,6 +28,7 @@ cordova plugin add cordova-plugin-device-motion
 cordova plugin add cordova-plugin-shake
 cordova plugin add com.randdusing.bluetoothle
 cordova plugin add com.verso.cordova.clipboard
+cordova plugin add https://github.com/dobots/bluenet-lib-js.git
 # cordova plugin add https://git-wip-us.apache.org/repos/asf/cordova-plugin-device.git
 
 #cordova plugin rm /data/ws_cordova/cordova-plugin-sensors
