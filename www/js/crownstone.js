@@ -55,7 +55,7 @@ var crownstone = {
 		console.log("Start Crownstone application");
 
 		// creates BLE object, does nothing with it yet
-		ble = new bluenet.Extended();
+		ble = new bluenet.BleExt();
 
 		// set up bluetooth connection
 		console.log("Initialize ble");
@@ -1002,13 +1002,6 @@ var crownstone = {
 							if (characteristicUuid == BleTypes.temperatureCharacteristicUuid) {
 								$('#getTemperatureTab').show();
 							}
-							if (characteristicUuid == BleTypes.changeNameCharacteristicUuid) {
-								$('#changeNameTab').show();
-								// request device name to fill initial value
-								setTimeout(function() {
-									$('#getDeviceName').trigger('click');
-								}, (trigger++) * triggerDelay);
-							}
 							if (characteristicUuid == BleTypes.deviceTypeUuid) {
 								$('#deviceTypeTab').show();
 								// request device type to fill initial value
@@ -1027,6 +1020,11 @@ var crownstone = {
 								$('#floorTab').show();
 								setTimeout(function() {
 									$('#getFloor').trigger('click');
+								}, (trigger++) * triggerDelay);
+
+								$('#changeNameTab').show();
+								setTimeout(function() {
+									$('#getDeviceName').trigger('click');
 								}, (trigger++) * triggerDelay);
 							}
 						}
@@ -1247,7 +1245,7 @@ var crownstone = {
 		 */
 		findCrownstones = function(callback) {
 			console.log("Find crownstones");
-			ble.setScanFilter(bluenet.Filter.crownstone);
+			ble.setScanFilter(bluenet.BleFilter.crownstone);
 			ble.startScan(callback);
 			findTimer = setInterval(
 				function() {

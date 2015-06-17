@@ -38,8 +38,9 @@ build() {
 
 upload() {
 	# adb install -r platforms/android/ant-build/$name-debug.apk
-	adb install -r platforms/android/build/outputs/apk/android-debug.apk
-	start
+	# adb install -r platforms/android/build/outputs/apk/android-debug.apk
+	# start
+	cordova run android
 }
 
 start() {
