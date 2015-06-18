@@ -211,8 +211,8 @@ var crownstone = {
 			//console.log("Connect and toggle power");
 			//connectAndDiscover(
 					//address,
-					//powerServiceUuid,
-					//pwmUuid,
+					//POWER_SERVICE_UUID,
+					//CHAR_PWM_UUID,
 					//function() {//success
 						//function callback() {
 							//disconnect();
@@ -397,7 +397,7 @@ var crownstone = {
 
 		});
 		*/
-		
+
 		setWifi = function(value) {
 			ble.connectAndWriteWifi(
 				self.wifiCrownstone.address,
@@ -407,14 +407,14 @@ var crownstone = {
 					console.error("Mistake in writing wifi config");
 				}
 			);
-			
+
 			function onWrittenWifi() {
 				console.log("Written wifi config successfully");
 				navigator.notification.activityStart("Please wait" , "connecting the hub to WiFi, it may take a few minutes...");
 				setTimeout(readIP, 10000);
 			}
 		}
-		
+
 		readIP = function() {
 			ble.connectAndReadIp(
 				self.wifiCrownstone.address,
@@ -443,7 +443,7 @@ var crownstone = {
 				}
 			);
 		}
-		
+
 
 		/*******************************************************************************************************
 		 * Hot or Cold
@@ -990,59 +990,71 @@ var crownstone = {
 					function discoverSuccessful(serviceUuid, characteristicUuid) {
 						console.log("updating: " + serviceUuid + ' : ' + characteristicUuid);
 
-						if (serviceUuid == BleTypes.indoorLocalizationServiceUuid) {
-							if (characteristicUuid == BleTypes.deviceScanUuid) {
+						if (serviceUuid == BleTypes.INDOOR_LOCALIZATION_SERVICE_UUID) {
+							if (characteristicUuid == BleTypes.CHAR_DEVICE_SCAN_UUID) {
 								$('#scanDevicesTab').show();
 							}
-							if (characteristicUuid == BleTypes.addTrackedDeviceUuid) {
+							if (characteristicUuid == BleTypes.CHAR_ADD_TRACKED_DEVICE_UUID) {
 								$('#trackedDevicesTab').show();
 							}
 						}
-						if (serviceUuid == BleTypes.generalServiceUuid) {
-							if (characteristicUuid == BleTypes.temperatureCharacteristicUuid) {
+						if (serviceUuid == BleTypes.GENERAL_SERVICE_UUID) {
+							if (characteristicUuid == BleTypes.CHAR_TEMPERATURE_UUID) {
 								$('#getTemperatureTab').show();
 							}
-							if (characteristicUuid == BleTypes.deviceTypeUuid) {
-								$('#deviceTypeTab').show();
-								// request device type to fill initial value
-								setTimeout(function() {
-									$('#getDeviceType').trigger('click');
-								}, (trigger++) * triggerDelay);
-							}
-							if (characteristicUuid == BleTypes.roomUuid) {
-								$('#roomTab').show();
-								// request room to fill initial value
-								setTimeout(function() {
-									$('#getRoom').trigger('click');
-								}, (trigger++) * triggerDelay);
-							}
-							if (characteristicUuid == BleTypes.setConfigurationCharacteristicUuid) {
-								$('#floorTab').show();
-								setTimeout(function() {
-									$('#getFloor').trigger('click');
-								}, (trigger++) * triggerDelay);
+							if (characteristicUuid == BleTypes.CHAR_SET_CONFIGURATION_UUID) {
+								console.log("set config char found");
 
 								$('#changeNameTab').show();
 								setTimeout(function() {
 									$('#getDeviceName').trigger('click');
 								}, (trigger++) * triggerDelay);
+
+								// need to schedule some more time because it is 2 characteristic
+								// calls to get the configuration
+								trigger += 2;
+
+								$('#floorTab').show();
+								setTimeout(function() {
+									$('#getFloor').trigger('click');
+								}, (trigger++) * triggerDelay);
+
+								// // need to schedule some more time because it is 2 characteristic
+								// // calls to get the configuration
+								// trigger += 2;
+
+								// $('#roomTab').show();
+								// // request room to fill initial value
+								// setTimeout(function() {
+								// 	$('#getRoom').trigger('click');
+								// }, (trigger++) * triggerDelay);
+
+								// // need to schedule some more time because it is 2 characteristic
+								// // calls to get the configuration
+								// trigger += 2;
+
+								// $('#deviceTypeTab').show();
+								// // request device type to fill initial value
+								// setTimeout(function() {
+								// 	$('#getDeviceType').trigger('click');
+								// }, (trigger++) * triggerDelay);
 							}
 						}
-						if (serviceUuid == BleTypes.powerServiceUuid) {
-							if (characteristicUuid == BleTypes.pwmUuid) {
+						if (serviceUuid == BleTypes.POWER_SERVICE_UUID) {
+							if (characteristicUuid == BleTypes.CHAR_PWM_UUID) {
 								$('#pwmTab').show();
 							}
-							if (characteristicUuid == BleTypes.currentConsumptionUuid) {
+							if (characteristicUuid == BleTypes.CHAR_CURRENT_CONSUMPTION_UUID) {
 								$('#currentConsumptionTab').show();
 							}
-							if (characteristicUuid == BleTypes.currentLimitUuid) {
+							if (characteristicUuid == BleTypes.CHAR_CURRENT_LIMIT_UUID) {
 								$('#currentLimitTab').show();
 								// request current limit to fill initial value
 								setTimeout(function() {
 									$('#getCurrentLimit').trigger('click');
 								}, (trigger++) * triggerDelay);
 							}
-							if (characteristicUuid == BleTypes.currentCurveUuid) {
+							if (characteristicUuid == BleTypes.CHAR_CURRENT_CURVE_UUID) {
 								$('#currentCurveTab').show();
 							}
 						}
@@ -1717,8 +1729,8 @@ var crownstone = {
 					console.log("Connect and get floor");
 					connectAndDiscover(
 							address,
-							BleTypes.generalServiceUuid,
-							BleTypes.getConfigurationCharacteristicUuid,
+							BleTypes.GENERAL_SERVICE_UUID,
+							BleTypes.CHAR_GET_CONFIGURATION_UUID,
 							function() {
 								getFloor(function(floor) {
 									console.log("Floor found: " + floor);
