@@ -21,13 +21,13 @@ release() {
 	fi
 	# build release version
 	cordova build android --release
-	pushd platforms/android/out/
+	pushd platforms/android/build/outputs/apk/
 	# backup old release
 	mv Crownstone.apk Crownstone.apk.bak
 	# sign apk
 	jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -tsa http://timestamp.digicert.com -keystore $KEYSTORE_DIR/dobots.ks Crownstone-release-unsigned.apk crownstone
 	# zipalign apk
-	zipalign -v 4 Crownstone-release-unsigned.apk Crownstone.apk
+	zipalign -v 4 android-release-unsigned.apk Crownstone.apk
 	nautilus .
 	popd
 }
