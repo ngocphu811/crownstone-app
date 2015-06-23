@@ -284,6 +284,7 @@ crownstones before you can use them to localize yourself. This will not be the f
 				<div class="scrollable">
 					<button id="disconnect" class="ui-btn-active ui-state-persist" data-role="button" data-rel="back">Disconnect</button>
 					<hr>
+					<!-- power service -->
 					<div id="pwmTab" style="display: none">
 						<div>
 							<table width="100%">
@@ -306,20 +307,29 @@ crownstones before you can use them to localize yourself. This will not be the f
 						</div>
 						<hr>
 					</div>
-					<div id="getTemperatureTab" style="display: none">
-						<button id="getTemperature" class="ui-btn-active ui-state-persist" data-role="button">Get Temperature</button>
-						<div id="temperature" style="display: none; text-align: center">Temperature: ?</div>
-						<hr>
-					</div>
-					<div id="scanDevicesTab" style="display: none">
-						<button id="scanDevices" class="ui-btn-active ui-state-persist" data-role="button">Scan Devices</button>
-						<ol data-role="listview" id="deviceList" style="display: none"></ol>
-						<table id="deviceTable" style="display: none; width: 100%"></table>
-						<hr>
-					</div>
 					<div id="currentConsumptionTab" style="display: none">
 						<button id="getCurrentConsumption" class="ui-btn-active ui-state-persist" data-role="button">Get Current Consumption</button>
 						<div id="currentConsumption" style="display: none; text-align: center">Current Consumption: ?</div>
+						<hr>
+					</div>
+					<div id="currentCurveTab" style="display: none">
+						<button id="sampleCurrentCurve" class="ui-btn-active ui-state-persist" data-role="button">Sample Current</button>
+						<div id="currentCurve" style="width:100%; height:150px; display:none"></div>
+						<hr>
+					</div>
+					<div id="currentLimitTab" style="display: none">
+						<button id="getCurrentLimit" class="ui-btn-active ui-state-persist" data-role="button">Get Current Limit</button>
+						<form action="">
+							<label for="currentLimit">Current Limit:</label>
+							<input type="number" name="currentLimit" id="currentLimit" min="0" max="6">
+						</form>
+						<button id="setCurrentLimit" class="ui-btn-active ui-state-persist" data-role="button">Set Current Limit</button>
+						<hr>
+					</div>
+					<!-- general service -->
+					<div id="getTemperatureTab" style="display: none">
+						<button id="getTemperature" class="ui-btn-active ui-state-persist" data-role="button">Get Temperature</button>
+						<div id="temperature" style="display: none; text-align: center">Temperature: ?</div>
 						<hr>
 					</div>
 					<div id="changeNameTab" style="display: none">
@@ -349,13 +359,38 @@ crownstones before you can use them to localize yourself. This will not be the f
 						<button id="setRoom" class="ui-btn-active ui-state-persist" data-role="button">Set Room</button>
 						<hr>
 					</div>
-					<div id="currentLimitTab" style="display: none">
-						<button id="getCurrentLimit" class="ui-btn-active ui-state-persist" data-role="button">Get Current Limit</button>
+					<div id="floorTab" style="display: none">
+						<button id="getFloor" class="ui-btn-active ui-state-persist" data-role="button">Get Floor</button>
 						<form action="">
-							<label for="currentLimit">Current Limit:</label>
-							<input type="number" name="currentLimit" id="currentLimit" min="0" max="6">
+							<label for="floor">Floor:</label>
+							<input type="number" name="floor" id="floor">
 						</form>
-						<button id="setCurrentLimit" class="ui-btn-active ui-state-persist" data-role="button">Set Current Limit</button>
+						<button id="setFloor" class="ui-btn-active ui-state-persist" data-role="button">Set Floor</button>
+						<hr>
+					</div>
+					<div id="txPowerTab" style="display: none">
+						<button id="getTxPower" class="ui-btn-active ui-state-persist" data-role="button">Get TX power</button>
+						<form action="">
+							<label for="txPower">TX power (dBm):</label>
+							<input type="number" name="txPower" id="txPower">
+						</form>
+						<button id="setTxPower" class="ui-btn-active ui-state-persist" data-role="button">Set TX power</button>
+						<hr>
+					</div>
+					<div id="advIntervalTab" style="display: none">
+						<button id="getAdvInterval" class="ui-btn-active ui-state-persist" data-role="button">Get Advertising interval</button>
+						<form action="">
+							<label for="advInterval">Advertiseming interval (ms):</label>
+							<input type="number" name="advInterval" id="advInterval">
+						</form>
+						<button id="setAdvInterval" class="ui-btn-active ui-state-persist" data-role="button">Set Advertising interval</button>
+						<hr>
+					</div>
+					<!-- indoor localization service -->
+					<div id="scanDevicesTab" style="display: none">
+						<button id="scanDevices" class="ui-btn-active ui-state-persist" data-role="button">Scan Devices</button>
+						<ol data-role="listview" id="deviceList" style="display: none"></ol>
+						<table id="deviceTable" style="display: none; width: 100%"></table>
 						<hr>
 					</div>
 					<div id="trackedDevicesTab" style="display: none">
@@ -369,20 +404,6 @@ crownstones before you can use them to localize yourself. This will not be the f
 							<input type="number" name="trackRSSI" id="trackRSSI" min="-127" max="127">
 						</form>
 						<button id="addTrackedDevice" class="ui-btn-active ui-state-persist" data-role="button">Add/update tracked device</button>
-						<hr>
-					</div>
-					<div id="currentCurveTab" style="display: none">
-						<button id="sampleCurrentCurve" class="ui-btn-active ui-state-persist" data-role="button">Sample Current</button>
-						<div id="currentCurve" style="width:100%; height:150px; display:none"></div>
-						<hr>
-					</div>
-					<div id="floorTab" style="display: none">
-						<button id="getFloor" class="ui-btn-active ui-state-persist" data-role="button">Get Floor</button>
-						<form action="">
-							<label for="floor">Floor:</label>
-							<input type="number" name="floor" id="floor">
-						</form>
-						<button id="setFloor" class="ui-btn-active ui-state-persist" data-role="button">Set Floor</button>
 						<hr>
 					</div>
 					<div>

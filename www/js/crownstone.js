@@ -680,8 +680,18 @@ var crownstone = {
 			}
 		}
 
+
+/*******************************************************************************************************
+ * Control page
+ ******************************************************************************************************/
 		$('#controlPage').on('pagecreate', function() {
 			console.log("Create page to control a crownstone");
+
+			$('#disconnect').on('click', function(event) {
+				disconnect();
+				$('#crownstone').hide();
+				history.back();
+			})
 
 			// $('#pwm').on('slidestop focusout', function() {
 			//  setPWM($(this).val());
@@ -717,59 +727,10 @@ var crownstone = {
 				});
 			});
 
-			$('#getTemperature').on('click', function(event) {
-				readTemperature(function(temperature) {
-					$('#temperature').html("Temperature: " + temperature + " °C");
-					$('#temperature').show();
-				});
-			});
-
-			$('#scanDevices').on('click', function(event) {
-				// $(this).prop("disabled", true);
-				startDeviceScan(function() {
-					setTimeout(stopDeviceScan, 10000);
-					setTimeout(getDeviceList, 11000);
-				});
-				// $(this).progressbar("option", "value", false);
-			});
-
-			$('#setDeviceName').on('click', function(event) {
-				setDeviceName($('#deviceName').val());
-			});
-
-			$('#getDeviceName').on('click', function(event) {
-				getDeviceName(function(deviceName) {
-					$('#deviceName').val(deviceName);
-				});
-			});
-
-			$('#setDeviceType').on('click', function(event) {
-				setDeviceType($('#deviceType').val());
-			});
-
-			$('#getDeviceType').on('click', function(event) {
-				getDeviceType(function(deviceType) {
-					$('#deviceType').val(deviceType);
-				});
-			});
-
-			$('#setRoom').on('click', function(event) {
-				setRoom($('#room').val());
-			});
-
-			$('#getRoom').on('click', function(event) {
-				getRoom(function(room) {
-					$('#room').val(room);
-				});
-			});
-
-			$('#setCurrentLimit').on('click', function(event) {
-				setCurrentLimit($('#currentLimit').val());
-			});
-
-			$('#getCurrentLimit').on('click', function(event) {
-				getCurrentLimit(function(currentLimit) {
-					$('#currentLimit').val(currentLimit);
+			$('#getCurrentConsumption').on('click', function(event) {
+				ble.readCurrentConsumption(function(currentConsumption) {
+					$('#currentConsumption').html("Current consumption: " + currentConsumption + " [mA]");
+					$('#currentConsumption').show();
 				});
 			});
 
@@ -818,11 +779,90 @@ var crownstone = {
 				});
 			});
 
-			$('#getCurrentConsumption').on('click', function(event) {
-				ble.readCurrentConsumption(function(currentConsumption) {
-					$('#currentConsumption').html("Current consumption: " + currentConsumption + " [mA]");
-					$('#currentConsumption').show();
+			$('#setCurrentLimit').on('click', function(event) {
+				setCurrentLimit($('#currentLimit').val());
+			});
+
+			$('#getCurrentLimit').on('click', function(event) {
+				getCurrentLimit(function(currentLimit) {
+					$('#currentLimit').val(currentLimit);
 				});
+			});
+
+
+			$('#getTemperature').on('click', function(event) {
+				readTemperature(function(temperature) {
+					$('#temperature').html("Temperature: " + temperature + " °C");
+					$('#temperature').show();
+				});
+			});
+
+			$('#setDeviceName').on('click', function(event) {
+				setDeviceName($('#deviceName').val());
+			});
+			$('#getDeviceName').on('click', function(event) {
+				getDeviceName(function(deviceName) {
+					$('#deviceName').val(deviceName);
+				});
+			});
+
+			$('#setDeviceType').on('click', function(event) {
+				setDeviceType($('#deviceType').val());
+			});
+			$('#getDeviceType').on('click', function(event) {
+				getDeviceType(function(deviceType) {
+					$('#deviceType').val(deviceType);
+				});
+			});
+
+			$('#setRoom').on('click', function(event) {
+				setRoom($('#room').val());
+			});
+			$('#getRoom').on('click', function(event) {
+				getRoom(function(room) {
+					$('#room').val(room);
+				});
+			});
+
+			$('#getFloor').on('click', function(event) {
+				getFloor(function(floor) {
+					$('#floor').val(floor);
+				});
+			});
+			$('#setFloor').on('click', function(event) {
+				console.log('click set floor');
+				setFloor($('#floor').val());
+			});
+
+			$('#getTxPower').on('click', function(event) {
+				ble.readTxPower(function(txPower) {
+					$('#txPower').val(txPower);
+				});
+			});
+			$('#setTxPower').on('click', function(event) {
+				console.log('click set TX power');
+				ble.writeTxPower($('#txPower').val());
+			});
+
+			$('#getAdvInterval').on('click', function(event) {
+				ble.readAdvertisementInterval(function(interval) {
+					$('#advInterval').val(interval);
+				});
+			});
+			$('#setAdvInterval').on('click', function(event) {
+				console.log('click set advInterval');
+				ble.writeAdvertisementInterval($('#advInterval').val());
+			});
+
+
+
+			$('#scanDevices').on('click', function(event) {
+				// $(this).prop("disabled", true);
+				startDeviceScan(function() {
+					setTimeout(stopDeviceScan, 10000);
+					setTimeout(getDeviceList, 11000);
+				});
+				// $(this).progressbar("option", "value", false);
 			});
 
 			var TRACK_DEVICE_LEN = 7;
@@ -888,17 +928,6 @@ var crownstone = {
 				//}
 			});
 
-			$('#getFloor').on('click', function(event) {
-				getFloor(function(floor) {
-					$('#floor').val(floor);
-				});
-			});
-
-			$('#setFloor').on('click', function(event) {
-				console.log('click set floor');
-				setFloor($('#floor').val());
-			});
-
 			// $('#findCrownstones').on('click', function(event) {
 			//  $('#crownStoneTable').show();
 
@@ -932,14 +961,6 @@ var crownstone = {
 			//      }
 			//  });
 			// });
-
-			$('#disconnect').on('click', function(event) {
-				disconnect();
-				$('#crownstone').hide();
-				history.back();
-			})
-
-
 		});
 
 		// triggering of get characteristics for the initial value
@@ -958,32 +979,36 @@ var crownstone = {
 			}
 
 			// clear fields
+			$('#currentLimit').val('');
 			$('#deviceName').val('');
 			$('#deviceType').val('');
 			$('#Room').val('');
-			$('#currentLimit').val('');
+			$('#floor').val('');
+			$('#txPower').val('');
+			$('#advInterval').val('');
+			
+			$('#deviceTable').html('');
 			$('#trackAddress').val('');
 			$('#trackRSSI').val('');
-
-			$('#deviceTable').html('');
 			$('#trackedDevices').html('');
-			$('#floor').val('');
 
 			// hide all tabs, will be shown only if
 			// service / characteristic is available
-			$('#scanDevicesTab').hide();
+			$('#pwmTab').hide();
+			$('#currentConsumptionTab').hide();
+			$('#currentConsumption').hide();
+			$('#currentCurveTab').hide();
+			$('#currentCurve').hide();
+			$('#currentLimitTab').hide();
 			$('#getTemperatureTab').hide();
 			$('#changeNameTab').hide();
 			$('#deviceTypeTab').hide();
 			$('#roomTab').hide();
-			$('#pwmTab').hide();
-			$('#currentConsumptionTab').hide();
-			$('#currentConsumption').hide();
-			$('#currentLimitTab').hide();
-			$('#trackedDevicesTab').hide();
-			$('#currentCurveTab').hide();
-			$('#currentCurve').hide();
 			$('#floorTab').hide();
+			$('#txPowerTab').hide();
+			$('#advIntervalTab').hide();
+			$('#scanDevicesTab').hide();
+			$('#trackedDevicesTab').hide();
 
 			// discover available services
 			discoverServices(
@@ -1013,10 +1038,21 @@ var crownstone = {
 								// need to schedule some more time because it is 2 characteristic
 								// calls to get the configuration
 								trigger += 2;
-
 								$('#floorTab').show();
 								setTimeout(function() {
 									$('#getFloor').trigger('click');
+								}, (trigger++) * triggerDelay);
+								
+								trigger += 2;
+								$('#txPowerTab').show();
+								setTimeout(function() {
+									$('#getTxPower').trigger('click');
+								}, (trigger++) * triggerDelay);
+								
+								trigger += 2;
+								$('#advIntervalTab').show();
+								setTimeout(function() {
+									$('#getAdvInterval').trigger('click');
 								}, (trigger++) * triggerDelay);
 
 								// // need to schedule some more time because it is 2 characteristic

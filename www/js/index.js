@@ -141,13 +141,13 @@ var app = {
 	},
 	// Update DOM on a Received Event
 	receivedEvent: function(event) {
-      switch(event) {
-         case 'deviceready':
-         	// cordova/phonegap is ready on deviceready
-         	console.log("Cordova is ready. Plugins are available");
+		switch(event) {
+			case 'deviceready':
+				// cordova/phonegap is ready on deviceready
+				console.log("Cordova is ready. Plugins are available");
 				crownstone.start();
-	    		break;
-      }
+				break;
+		}
 	}
 };
 
