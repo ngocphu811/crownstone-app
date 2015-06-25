@@ -11,5 +11,5 @@
 	<access origin="*" />
 	<preference name="StatusBarOverlaysWebView" value="true" />
 	<preference name="UIWebViewBounce" value="false" />
-	<icon src="www/img/crownstone.png"/>
+	<icon src="www/img/icon.png"/>
 </widget>
