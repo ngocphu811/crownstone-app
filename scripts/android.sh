@@ -9,6 +9,8 @@ working_path=$path/..
 name="Crownstone"
 name1="CrownStone"
 package_prefix="nl.dobots"
+tag="CordovaLog"
+tag="chromium"
 
 # working path, should be parent directory of script directory
 echo "Navigate to working path: $working_path"
@@ -48,7 +50,7 @@ start() {
 }
 
 log() {
-	adb logcat -s "CordovaLog" -t 0
+	adb logcat -s "$tag" -t 0
 }
 
 all() {

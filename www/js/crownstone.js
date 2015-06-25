@@ -694,6 +694,12 @@ var crownstone = {
 		$('#controlPage').on('pagecreate', function() {
 			console.log("Create page to control a crownstone");
 
+			$('#disconnect').on('click', function(event) {
+				disconnect();
+				$('#crownstone').hide();
+				history.back();
+			})
+
 			// $('#pwm').on('slidestop focusout', function() {
 			//  setPWM($(this).val());
 			// });
@@ -728,29 +734,10 @@ var crownstone = {
 				});
 			});
 
-			$('#getTemperature').on('click', function(event) {
-				readTemperature(function(temperature) {
-					$('#temperature').html("Temperature: " + temperature + " °C");
-					$('#temperature').show();
-				});
-			});
-
-			$('#scanDevices').on('click', function(event) {
-				// $(this).prop("disabled", true);
-				startDeviceScan(function() {
-					setTimeout(stopDeviceScan, 10000);
-					setTimeout(getDeviceList, 11000);
-				});
-				// $(this).progressbar("option", "value", false);
-			});
-
-			$('#setCurrentLimit').on('click', function(event) {
-				setCurrentLimit($('#currentLimit').val());
-			});
-
-			$('#getCurrentLimit').on('click', function(event) {
-				getCurrentLimit(function(currentLimit) {
-					$('#currentLimit').val(currentLimit);
+			$('#getCurrentConsumption').on('click', function(event) {
+				ble.readCurrentConsumption(function(currentConsumption) {
+					$('#currentConsumption').html("Current consumption: " + currentConsumption + " [mA]");
+					$('#currentConsumption').show();
 				});
 			});
 
@@ -799,11 +786,30 @@ var crownstone = {
 				});
 			});
 
-			$('#getCurrentConsumption').on('click', function(event) {
-				ble.readCurrentConsumption(function(currentConsumption) {
-					$('#currentConsumption').html("Current consumption: " + currentConsumption + " [mA]");
-					$('#currentConsumption').show();
+			$('#setCurrentLimit').on('click', function(event) {
+				setCurrentLimit($('#currentLimit').val());
+			});
+
+			$('#getCurrentLimit').on('click', function(event) {
+				getCurrentLimit(function(currentLimit) {
+					$('#currentLimit').val(currentLimit);
 				});
+			});
+
+			$('#getTemperature').on('click', function(event) {
+				readTemperature(function(temperature) {
+					$('#temperature').html("Temperature: " + temperature + " °C");
+					$('#temperature').show();
+				});
+			});
+
+			$('#scanDevices').on('click', function(event) {
+				// $(this).prop("disabled", true);
+				startDeviceScan(function() {
+					setTimeout(stopDeviceScan, 10000);
+					setTimeout(getDeviceList, 11000);
+				});
+				// $(this).progressbar("option", "value", false);
 			});
 
 			var TRACK_DEVICE_LEN = 7;
@@ -869,11 +875,6 @@ var crownstone = {
 				//}
 			});
 
-			$('#disconnect').on('click', function(event) {
-				disconnect();
-				$('#crownstone').hide();
-				history.back();
-			})
 
 			$('#settings').on('click', function(event) {
 				settingsShown = true;
@@ -1192,6 +1193,9 @@ var crownstone = {
 			// service / characteristic is available
 			$('#scanDevicesTab').hide();
 			$('#getTemperatureTab').hide();
+			$('#changeNameTab').hide();
+			$('#deviceTypeTab').hide();
+			$('#roomTab').hide();
 			$('#pwmTab').hide();
 			$('#currentConsumptionTab').hide();
 			$('#currentConsumption').hide();
