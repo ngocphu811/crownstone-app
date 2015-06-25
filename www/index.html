@@ -36,6 +36,7 @@
 		<link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css" />
 		<link rel="stylesheet" type="text/css" href="css/crownstone.css" />
 		<link rel="stylesheet" type="text/css" href="css/easyrtc.css" />
+		<link rel="stylesheet" type="text/css" href="css/ionicons.css" />
 		<!--
 		<script type="text/javascript" src="js/third/socket.io.js"></script>
 		<script type="text/javascript" src="js/third/easyrtc.js"></script>
@@ -274,6 +275,143 @@ crownstones before you can use them to localize yourself. This will not be the f
 			</div>
 		</div>
 
+		<!-- Remote Control
+		-->
+		<div data-role="page" id="settingsPage">
+			<div data-role="header" data-add-back-btn="true" data-position='fixed'>
+				<h1 class="ui-title" role="heading" aria-level="1">Settings</h1>
+			</div>
+
+			<div id="controlPageMain" role="main">
+
+				<p>Adjust settings for the crownstone. Don't forget to press upload (<span class="icon ion-android-upload"/>) for the change to be sent to the crownstone. Press reload (<span class="icon ion-refresh"/>) to get the current value from the crownstone.</p>
+
+				<hr>
+
+				<!-- DEVICE NAME -->
+				<label for="deviceName">Name:</label>
+				<!-- <table width="100%">
+					<col width="70%">
+					<col width="15%">
+					<col width="15%">
+					<tr>
+						<td> -->
+							<input type="text" name="deviceName" id="deviceName">
+						<!-- </td>
+						<td><button id="setDeviceName" class="ui-btn-active ui-state-persist icon ion-android-upload" data-role="button"></button></td>
+						<td><button id="reloadDeviceName" class="ui-btn-active ui-state-persist icon ion-refresh" data-role="button"></button></td>
+					</tr>
+				</table> -->
+
+				<hr>
+
+				<!-- DEVICE TYPE -->
+				<!--
+				<label for="deviceType">Device type:</label>
+				<table width="100%">
+					<col width="70%">
+					<col width="15%">
+					<col width="15%">
+					<tr>
+						<td><input type="text" name="deviceType" id="deviceType"></td>
+						<td><button id="setDeviceType" class="ui-btn-active ui-state-persist icon ion-android-upload" data-role="button"></button></td>
+						<td><button id="reloadDeviceType" class="ui-btn-active ui-state-persist icon ion-refresh" data-role="button"></button></td>
+					</tr>
+				</table>
+
+				<hr>
+				-->
+
+				<!-- ROOM -->
+				<!--
+				<label for="room">Room:</label>
+				<table width="100%">
+					<col width="70%">
+					<col width="15%">
+					<col width="15%">
+					<tr>
+						<td><input type="text" name="room" id="room"></td>
+						<td><button id="setRoom" class="ui-btn-active ui-state-persist icon ion-android-upload" data-role="button"></button></td>
+						<td><button id="reloadRoom" class="ui-btn-active ui-state-persist icon ion-refresh" data-role="button"></button></td>
+					</tr>
+				</table>
+
+				<hr>
+				-->
+
+				<!-- FLOOR -->
+				<label for="floor">Floor:</label>
+				<!-- <table width="100%">
+					<col width="70%">
+					<col width="15%">
+					<col width="15%">
+					<tr>
+						<td> -->
+							<input type="number" name="floor" id="floor">
+						<!-- </td>
+						<td><button id="setFloor" class="ui-btn-active ui-state-persist icon ion-android-upload" data-role="button"></button></td>
+						<td><button id="reloadFloor" class="ui-btn-active ui-state-persist icon ion-refresh" data-role="button"></button></td>
+					</tr>
+				</table> -->
+
+				<hr>
+
+				<!-- TX POWER -->
+				<label for="txPower">TX Power in dB:</label>
+				<!-- <table width="100%">
+					<col width="70%">
+					<col width="15%">
+					<col width="15%">
+					<tr>
+						<td> -->
+							<select id="txPower">
+								<option value="+4" > +4 dB</option>
+								<option value="0"  >  0 dB</option>
+								<option value="-4" > -4 dB</option>
+								<option value="-8" > -8 dB</option>
+								<option value="-12">-12 dB</option>
+								<option value="-16">-16 dB</option>
+								<option value="-20">-20 dB</option>
+								<option value="-30">-30 dB</option>
+								<option value="-40">-40 dB</option>
+							</select>
+						<!-- </td>
+						<td><button id="setTxPower" class="ui-btn-active ui-state-persist icon ion-android-upload" data-role="button"></button></td>
+						<td><button id="reloadTxPower" class="ui-btn-active ui-state-persist icon ion-refresh" data-role="button"></button></td>
+					</tr>
+				</table> -->
+
+				<hr>
+
+				<!-- ADVERTISEMENT INTERVAL -->
+				<label for="advertisementInterval">Advertisement Interval in ms:</label>
+				<!-- <table width="100%">
+					<col width="70%">
+					<col width="15%">
+					<col width="15%">
+					<tr>
+						<td> -->
+							<input type="number" name="advertisementInterval" id="advertisementInterval" min="20" max="10240">
+						<!-- </td>
+						<td><button id="setAdvertisementInterval" class="ui-btn-active ui-state-persist icon ion-android-upload" data-role="button"></button></td>
+						<td><button id="reloadAdvertisementInterval" class="ui-btn-active ui-state-persist icon ion-refresh" data-role="button"></button></td>
+					</tr>
+				</table> -->
+
+				<hr>
+
+				<table width="100%">
+					<tr>
+						<td><button id="saveConfig" class="ui-btn-active ui-state-persist icon ion-android-upload" data-role="button"></button></td>
+						<td><button id="reloadConfig" class="ui-btn-active ui-state-persist icon ion-refresh" data-role="button"></button></td>
+					</tr>
+				</table>
+
+			</div>
+
+		</div>
+
+
 		<!-- Control switch -->
 		<div data-role="page" id="controlPage">
 			<div data-role="header" data-position='fixed'>
@@ -283,6 +421,7 @@ crownstones before you can use them to localize yourself. This will not be the f
 			<div id="controlPageMain" role="main">
 				<div class="scrollable">
 					<button id="disconnect" class="ui-btn-active ui-state-persist" data-role="button" data-rel="back">Disconnect</button>
+					<button id="settings" class="ui-btn-active ui-state-persist" data-role="button" style="display: none;">Settings</button>
 					<hr>
 					<div id="pwmTab" style="display: none">
 						<div>
@@ -322,33 +461,6 @@ crownstones before you can use them to localize yourself. This will not be the f
 						<div id="currentConsumption" style="display: none; text-align: center">Current Consumption: ?</div>
 						<hr>
 					</div>
-					<div id="changeNameTab" style="display: none">
-						<button id="getDeviceName" class="ui-btn-active ui-state-persist" data-role="button">Get Name</button>
-						<form action="">
-							<label for="deviceName">Name:</label>
-							<input type="text" name="deviceName" id="deviceName">
-						</form>
-						<button id="setDeviceName" class="ui-btn-active ui-state-persist" data-role="button">Set Name</button>
-						<hr>
-					</div>
-					<div id="deviceTypeTab" style="display: none">
-						<button id="getDeviceType" class="ui-btn-active ui-state-persist" data-role="button">Get Device Type</button>
-						<form action="">
-							<label for="deviceType">Device type:</label>
-							<input type="text" name="deviceType" id="deviceType">
-						</form>
-						<button id="setDeviceType" class="ui-btn-active ui-state-persist" data-role="button">Set Device Type</button>
-						<hr>
-					</div>
-					<div id="roomTab" style="display: none">
-						<button id="getRoom" class="ui-btn-active ui-state-persist" data-role="button">Get Room</button>
-						<form action="">
-							<label for="room">Room:</label>
-							<input type="text" name="room" id="room">
-						</form>
-						<button id="setRoom" class="ui-btn-active ui-state-persist" data-role="button">Set Room</button>
-						<hr>
-					</div>
 					<div id="currentLimitTab" style="display: none">
 						<button id="getCurrentLimit" class="ui-btn-active ui-state-persist" data-role="button">Get Current Limit</button>
 						<form action="">
@@ -374,15 +486,6 @@ crownstones before you can use them to localize yourself. This will not be the f
 					<div id="currentCurveTab" style="display: none">
 						<button id="sampleCurrentCurve" class="ui-btn-active ui-state-persist" data-role="button">Sample Current</button>
 						<div id="currentCurve" style="width:100%; height:150px; display:none"></div>
-						<hr>
-					</div>
-					<div id="floorTab" style="display: none">
-						<button id="getFloor" class="ui-btn-active ui-state-persist" data-role="button">Get Floor</button>
-						<form action="">
-							<label for="floor">Floor:</label>
-							<input type="number" name="floor" id="floor">
-						</form>
-						<button id="setFloor" class="ui-btn-active ui-state-persist" data-role="button">Set Floor</button>
 						<hr>
 					</div>
 					<div>

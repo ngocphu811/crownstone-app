@@ -116,7 +116,11 @@ var crownstone = {
 		var floorsearching = false;
 		var localizing = false;
 
+		var settingsShown = false;
+
 		var connectedDeviceAddress = "";
+
+		var configuration = {};
 
 		var hubIP= "";
 
@@ -680,6 +684,12 @@ var crownstone = {
 			}
 		}
 
+
+		/*******************************************************************************************************
+		 * Control page
+		 ******************************************************************************************************/
+
+
 		$('#controlPage').on('pagecreate', function() {
 			console.log("Create page to control a crownstone");
 
@@ -731,36 +741,6 @@ var crownstone = {
 					setTimeout(getDeviceList, 11000);
 				});
 				// $(this).progressbar("option", "value", false);
-			});
-
-			$('#setDeviceName').on('click', function(event) {
-				setDeviceName($('#deviceName').val());
-			});
-
-			$('#getDeviceName').on('click', function(event) {
-				getDeviceName(function(deviceName) {
-					$('#deviceName').val(deviceName);
-				});
-			});
-
-			$('#setDeviceType').on('click', function(event) {
-				setDeviceType($('#deviceType').val());
-			});
-
-			$('#getDeviceType').on('click', function(event) {
-				getDeviceType(function(deviceType) {
-					$('#deviceType').val(deviceType);
-				});
-			});
-
-			$('#setRoom').on('click', function(event) {
-				setRoom($('#room').val());
-			});
-
-			$('#getRoom').on('click', function(event) {
-				getRoom(function(room) {
-					$('#room').val(room);
-				});
 			});
 
 			$('#setCurrentLimit').on('click', function(event) {
@@ -888,16 +868,149 @@ var crownstone = {
 				//}
 			});
 
-			$('#getFloor').on('click', function(event) {
-				getFloor(function(floor) {
-					$('#floor').val(floor);
-				});
+			/////////////////////////////////
+			///  CONFIGURATION
+			/////////////////////////////////
+
+			$('#reloadConfig').on('click', function(event) {
+				reloadConfig(false);
 			});
 
-			$('#setFloor').on('click', function(event) {
-				console.log('click set floor');
-				setFloor($('#floor').val());
+			$('#saveConfig').on('click', function(event) {
+				saveConfig(false);
 			});
+
+			$('#deviceName').change(function() {
+				if (configuration.deviceName != this.value) {
+					console.log('deviceName has changed, old: ' + configuration.deviceName + ", now: " + this.value);
+					$(this).addClass('dirty');
+				} else {
+					$(this).removeClass('dirty');
+				}
+			})
+
+			$('#deviceType').change(function() {
+				if (configuration.deviceType != this.value) {
+					console.log('deviceType has changed, old: ' + configuration.deviceType + ", now: " + this.value);
+					$(this).addClass('dirty');
+				} else {
+					$(this).removeClass('dirty');
+				}
+			})
+
+			$('#room').change(function() {
+				if (configuration.room != this.value) {
+					console.log('room has changed, old: ' + configuration.room + ", now: " + this.value);
+					$(this).addClass('dirty');
+				} else {
+					$(this).removeClass('dirty');
+				}
+			})
+
+			$('#floor').change(function() {
+				if (configuration.floor != this.value) {
+					console.log('floor has changed, old: ' + configuration.floor + ", now: " + this.value);
+					$(this).addClass('dirty');
+				} else {
+					$(this).removeClass('dirty');
+				}
+			})
+
+			$('#txPower').change(function() {
+				if (configuration.txPower != this.value) {
+					console.log('txPower has changed, old: ' + configuration.txPower + ", now: " + this.value);
+					$(this).addClass('dirty');
+				} else {
+					$(this).removeClass('dirty');
+				}
+			})
+
+			$('#advertisementInterval').change(function() {
+				if (configuration.advertisementInterval != this.value) {
+					console.log('advertisementInterval has changed, old: ' + configuration.advertisementInterval + ", now: " + this.value);
+					$(this).addClass('dirty');
+				} else {
+					$(this).removeClass('dirty');
+				}
+			})
+
+			// $('#setDeviceName').on('click', function(event) {
+			// 	setDeviceName($('#deviceName').val());
+			// });
+
+			// $('#reloadDeviceName').on('click', function(event) {
+			// 	getDeviceName(function(deviceName) {
+			// 		$('#deviceName').val(deviceName);
+			// 	});
+			// });
+
+			// $('#setDeviceType').on('click', function(event) {
+			// 	setDeviceType($('#deviceType').val());
+			// });
+
+			// $('#reloadDeviceType').on('click', function(event) {
+			// 	getDeviceType(function(deviceType) {
+			// 		$('#deviceType').val(deviceType);
+			// 	});
+			// });
+
+			// $('#setRoom').on('click', function(event) {
+			// 	setRoom($('#room').val());
+			// });
+
+			// $('#reloadRoom').on('click', function(event) {
+			// 	getRoom(function(room) {
+			// 		$('#room').val(room);
+			// 	});
+			// });
+
+			// $('#reloadFloor').on('click', function(event) {
+			// 	getFloor(function(floor) {
+			// 		configuration.floor = floor;
+			// 		$('#floor').val(floor);
+			// 	});
+			// });
+
+			// $('#setFloor').on('click', function(event) {
+			// 	console.log('click set floor');
+			// 	var floor = $('#floor').val();
+			// 	configuration.floor = floor;
+			// 	setFloor(floor);
+			// 	$('#floor').removeClass('dirty');
+			// });
+
+			// $('#floor').change(function() {
+			// 	if (configuration.floor != this.value) {
+			// 		console.log('floor has changed, old: ' + configuration.floor + ", now: " + this.value);
+			// 		$(this).addClass('dirty');
+			// 	} else {
+			// 		$(this).removeClass('dirty');
+			// 	}
+			// })
+
+			// $('#reloadTxPower').on('click', function(event) {
+			// 	getTxPower(function(txPower) {
+			// 		configuration.txPower = txPower;
+			// 		$('#txPower').val(txPower).change();
+			// 	});
+			// });
+
+			// $('#setTxPower').on('click', function(event) {
+			// 	console.log('click set tx power');
+			// 	setTxPower($('#txPower').val());
+			// });
+
+			// $('#reloadAdvertisementInterval').on('click', function(event) {
+			// 	getAdvertisementInterval(function(advertisementInterval) {
+			// 		configuration.advertisementInterval = advertisementInterval;
+			// 		$('#advertisementInterval').val(advertisementInterval);
+			// 	});
+			// });
+
+			// $('#setAdvertisementInterval').on('click', function(event) {
+			// 	console.log('click set advertisement interval');
+			// 	setAdvertisementInterval($('#advertisementInterval').val());
+			// });
 
 			// $('#findCrownstones').on('click', function(event) {
 			//  $('#crownStoneTable').show();
@@ -939,6 +1052,10 @@ var crownstone = {
 				history.back();
 			})
 
+			$('#settings').on('click', function(event) {
+				settingsShown = true;
+				$.mobile.changePage("#settingsPage", {transition:'slide', hashChange:true});
+			})
 
 		});
 
@@ -948,7 +1065,187 @@ var crownstone = {
 		// at a different time
 		var trigger = 0;
 		var triggerDelay = 500;
+		reloadConfig = function(all) {
+
+			// reset trigger
+			trigger = 0;
+
+			if (all || $('#deviceName').hasClass('dirty')) {
+				setTimeout(function() {
+					getDeviceName(function(deviceName) {
+						configuration.deviceName = deviceName;
+						$('#deviceName').val(deviceName);
+						$('#deviceName').removeClass('dirty');
+					});
+				}, (trigger++) * triggerDelay);
+
+				// need to schedule some more time because it is 2 characteristic
+				// calls to get the configuration
+				trigger += 3;
+			}
+
+			// if (all || $('#deviceType').hasClass('dirty')) {
+			// 	setTimeout(function() {
+			// 		getDeviceType(function(deviceType) {
+			// 			configuration.deviceType = deviceType;
+			// 			$('#deviceType').val(deviceType);
+			// 			$('#deviceType').removeClass('dirty');
+			// 		});
+			// 	}, (trigger++) * triggerDelay);
+
+			// 	// need to schedule some more time because it is 2 characteristic
+			// 	// calls to get the configuration
+			// 	trigger += 3;
+			// }
+
+			// if (all || $('#room').hasClass('dirty')) {
+			// 	setTimeout(function() {
+			// 		getRoom(function(room) {
+			// 			configuration.room = room;
+			// 			$('#room').val(room);
+			// 			$('#room').removeClass('dirty');
+			// 		});
+			// 	}, (trigger++) * triggerDelay);
+
+			// 	// need to schedule some more time because it is 2 characteristic
+			// 	// calls to get the configuration
+			// 	trigger += 3;
+			// }
+
+			if (all || $('#floor').hasClass('dirty')) {
+				setTimeout(function() {
+					getFloor(function(floor) {
+						configuration.floor = floor;
+						$('#floor').val(floor);
+						$('#floor').removeClass('dirty');
+					});
+				}, (trigger++) * triggerDelay);
+
+				// need to schedule some more time because it is 2 characteristic
+				// calls to get the configuration
+				trigger += 3;
+			}
+
+			if (all || $('#txPower').hasClass('dirty')) {
+				setTimeout(function() {
+					getTxPower(function(txPower) {
+						configuration.txPower = txPower;
+						$('#txPower').val(txPower).change();
+						$('#txPower').removeClass('dirty');
+					});
+				}, (trigger++) * triggerDelay);
+
+				// need to schedule some more time because it is 2 characteristic
+				// calls to get the configuration
+				trigger += 3;
+			}
+
+			if (all || $('#advertisementInterval').hasClass('dirty')) {
+				setTimeout(function() {
+					getAdvertisementInterval(function(advertisementInterval) {
+						configuration.advertisementInterval = advertisementInterval;
+						$('#advertisementInterval').val(advertisementInterval);
+						$('#advertisementInterval').removeClass('dirty');
+					});
+				}, (trigger++) * triggerDelay);
+
+				// need to schedule some more time because it is 2 characteristic
+				// calls to get the configuration
+				trigger += 3;
+			}
+		}
+
+		saveConfig = function(all) {
+
+			// reset trigger
+			trigger = 0;
+
+			if (all || $('#deviceName').hasClass('dirty')) {
+				setTimeout(function() {
+					var deviceName = $('#deviceName').val();
+					setDeviceName(deviceName);
+					configuration.deviceName = deviceName;
+					$('#deviceName').removeClass('dirty');
+				}, (trigger++) * triggerDelay);
+
+				// need to schedule some more time because it is 2 characteristic
+				// calls to get the configuration
+				trigger += 1;
+			}
+
+			// if (all || $('#deviceType').hasClass('dirty')) {
+			// 	setTimeout(function() {
+			// 		var deviceType = $('#deviceType').val();
+			// 		setDeviceType(deviceType);
+			// 		configuration.deviceType = deviceType;
+			// 		$('#deviceType').removeClass('dirty');
+			// 	}, (trigger++) * triggerDelay);
+
+			// 	// need to schedule some more time because it is 2 characteristic
+			// 	// calls to get the configuration
+			// 	trigger += 1;
+			// }
+
+			// if (all || $('#room').hasClass('dirty')) {
+			// 	setTimeout(function() {
+			// 		var room = $('#room').val();
+			// 		setRoom(room);
+			// 		configuration.room = room;
+			// 		$('#room').removeClass('dirty');
+			// 	}, (trigger++) * triggerDelay);
+
+			// 	// need to schedule some more time because it is 2 characteristic
+			// 	// calls to get the configuration
+			// 	trigger += 1;
+			// }
+
+			if (all || $('#floor').hasClass('dirty')) {
+				setTimeout(function() {
+					var floor = $('#floor').val();
+					setFloor(floor);
+					configuration.floor = floor;
+					$('#floor').removeClass('dirty');
+				}, (trigger++) * triggerDelay);
+
+				// need to schedule some more time because it is 2 characteristic
+				// calls to get the configuration
+				trigger += 1;
+			}
+
+			if (all || $('#txPower').hasClass('dirty')) {
+				setTimeout(function() {
+					var txPower = $('#txPower').val();
+					setTxPower(txPower);
+					configuration.txPower = txPower;
+					$('#txPower').removeClass('dirty').change();
+				}, (trigger++) * triggerDelay);
+
+				// need to schedule some more time because it is 2 characteristic
+				// calls to get the configuration
+				trigger += 1;
+			}
+
+			if (all || $('#advertisementInterval').hasClass('dirty')) {
+				setTimeout(function() {
+					var advertisementInterval = $('#advertisementInterval').val();
+					setAdvertisementInterval(advertisementInterval);
+					configuration.advertisementInterval = advertisementInterval;
+					$('#advertisementInterval').removeClass('dirty');
+				}, (trigger++) * triggerDelay);
+
+				// need to schedule some more time because it is 2 characteristic
+				// calls to get the configuration
+				trigger += 1;
+			}
+
+		}
+
 		$('#controlPage').on('pageshow', function(event) {
+			if (settingsShown) {
+				settingsShown = false;
+				return;
+			}
+
 			if (!connectedDeviceAddress) {
 				console.log("no connected device address assigned");
 			}
@@ -969,13 +1266,16 @@ var crownstone = {
 			$('#trackedDevices').html('');
 			$('#floor').val('');
 
+			$('#settings').hide();
+			$('#settings').prop("disabled", true);
+
 			// hide all tabs, will be shown only if
 			// service / characteristic is available
 			$('#scanDevicesTab').hide();
 			$('#getTemperatureTab').hide();
-			$('#changeNameTab').hide();
-			$('#deviceTypeTab').hide();
-			$('#roomTab').hide();
+			// $('#changeNameTab').hide();
+			// $('#deviceTypeTab').hide();
+			// $('#roomTab').hide();
 			$('#pwmTab').hide();
 			$('#currentConsumptionTab').hide();
 			$('#currentConsumption').hide();
@@ -983,7 +1283,9 @@ var crownstone = {
 			$('#trackedDevicesTab').hide();
 			$('#currentCurveTab').hide();
 			$('#currentCurve').hide();
-			$('#floorTab').hide();
+			// $('#floorTab').hide();
+			// $('#txPowerTab').hide();
+			// $('#advertisementIntervalTab').hide();
 
 			// discover available services
 			discoverServices(
@@ -1005,39 +1307,60 @@ var crownstone = {
 							if (characteristicUuid == BleTypes.CHAR_SET_CONFIGURATION_UUID) {
 								console.log("set config char found");
 
-								$('#changeNameTab').show();
-								setTimeout(function() {
-									$('#getDeviceName').trigger('click');
-								}, (trigger++) * triggerDelay);
+								$('#settings').show();
 
-								// need to schedule some more time because it is 2 characteristic
-								// calls to get the configuration
-								trigger += 2;
+								reloadConfig(true);
 
-								$('#floorTab').show();
-								setTimeout(function() {
-									$('#getFloor').trigger('click');
-								}, (trigger++) * triggerDelay);
+								// setTimeout(function() {
+								// 	$('#reloadDeviceName').trigger('click');
+								// }, (trigger++) * triggerDelay);
+
+								// // need to schedule some more time because it is 2 characteristic
+								// // calls to get the configuration
+								// trigger += 3;
+
+								// setTimeout(function() {
+								// 	$('#reloadFloor').trigger('click');
+								// }, (trigger++) * triggerDelay);
+
+								// // need to schedule some more time because it is 2 characteristic
+								// // calls to get the configuration
+								// trigger += 3;
+
+								// setTimeout(function() {
+								// 	$('#reloadTxPower').trigger('click');
+								// }, (trigger++) * triggerDelay);
+
+								// // need to schedule some more time because it is 2 characteristic
+								// // calls to get the configuration
+								// trigger += 3;
+
+								// setTimeout(function() {
+								// 	$('#reloadAdvertisementInterval').trigger('click');
+								// }, (trigger++) * triggerDelay);
 
 								// // need to schedule some more time because it is 2 characteristic
 								// // calls to get the configuration
 								// trigger += 2;
 
-								// $('#roomTab').show();
 								// // request room to fill initial value
 								// setTimeout(function() {
-								// 	$('#getRoom').trigger('click');
+								// 	$('#reloadRoom').trigger('click');
 								// }, (trigger++) * triggerDelay);
 
 								// // need to schedule some more time because it is 2 characteristic
 								// // calls to get the configuration
 								// trigger += 2;
 
-								// $('#deviceTypeTab').show();
 								// // request device type to fill initial value
 								// setTimeout(function() {
-								// 	$('#getDeviceType').trigger('click');
+								// 	$('#reloadDeviceType').trigger('click');
 								// }, (trigger++) * triggerDelay);
+
+								// enable settings button once all settings are read
+								setTimeout(function() {
+									$('#settings').prop("disabled", false);
+								}, (trigger++) * triggerDelay);
 							}
 						}
 						if (serviceUuid == BleTypes.POWER_SERVICE_UUID) {
@@ -1068,7 +1391,7 @@ var crownstone = {
 		});
 
 		$('#controlPage').on('pagehide', function(event) {
-			if (connected) {
+			if (connected && !settingsShown) {
 				disconnect();
 			}
 
@@ -1374,6 +1697,32 @@ var crownstone = {
 
 		setFloor = function(value, successCB, errorCB) {
 			ble.writeFloor(value, successCB, errorCB);
+		}
+
+		/* Getting the TX power from the configuration characteristic
+		 *
+		 *  + requires connecting to the device
+		 */
+		getTxPower = function(callback, errorCB) {
+			console.log("Get tx power");
+			ble.readTxPower(callback, errorCB);
+		}
+
+		setTxPower = function(value, successCB, errorCB) {
+			ble.writeTxPower(value, successCB, errorCB);
+		}
+
+		/* Getting the advertisement interval from the configuration characteristic
+		 *
+		 *  + requires connecting to the device
+		 */
+		getAdvertisementInterval = function(callback, errorCB) {
+			console.log("Get advertisement interval");
+			ble.readAdvertisementInterval(callback, errorCB);
+		}
+
+		setAdvertisementInterval = function(value, successCB, errorCB) {
+			ble.writeAdvertisementInterval(value, successCB, errorCB);
 		}
 
 		/*******************************************************************************************************
