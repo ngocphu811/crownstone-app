@@ -284,40 +284,20 @@ crownstones before you can use them to localize yourself. This will not be the f
 
 			<div id="controlPageMain" role="main">
 
-				<p>Adjust settings for the crownstone. Don't forget to press upload (<span class="icon ion-android-upload"/>) for the change to be sent to the crownstone. Press reload (<span class="icon ion-refresh"/>) to get the current value from the crownstone.</p>
+				<p>Adjust settings for the crownstone. Don't forget to press upload (<span class="icon ion-android-upload"/>) for the changes to be sent to the crownstone. Press reload (<span class="icon ion-refresh"/>) to get the current values from the crownstone.</p>
 
 				<hr>
 
 				<!-- DEVICE NAME -->
 				<label for="deviceName">Name:</label>
-				<!-- <table width="100%">
-					<col width="70%">
-					<col width="15%">
-					<col width="15%">
-					<tr>
-						<td> -->
-							<input type="text" name="deviceName" id="deviceName">
-						<!-- </td>
-						<td><button id="setDeviceName" class="ui-btn-active ui-state-persist icon ion-android-upload" data-role="button"></button></td>
-						<td><button id="reloadDeviceName" class="ui-btn-active ui-state-persist icon ion-refresh" data-role="button"></button></td>
-					</tr>
-				</table> -->
+				<input type="text" name="deviceName" id="deviceName">
 
 				<hr>
 
 				<!-- DEVICE TYPE -->
 				<!--
 				<label for="deviceType">Device type:</label>
-				<table width="100%">
-					<col width="70%">
-					<col width="15%">
-					<col width="15%">
-					<tr>
-						<td><input type="text" name="deviceType" id="deviceType"></td>
-						<td><button id="setDeviceType" class="ui-btn-active ui-state-persist icon ion-android-upload" data-role="button"></button></td>
-						<td><button id="reloadDeviceType" class="ui-btn-active ui-state-persist icon ion-refresh" data-role="button"></button></td>
-					</tr>
-				</table>
+				<input type="text" name="deviceType" id="deviceType">
 
 				<hr>
 				-->
@@ -325,85 +305,43 @@ crownstones before you can use them to localize yourself. This will not be the f
 				<!-- ROOM -->
 				<!--
 				<label for="room">Room:</label>
-				<table width="100%">
-					<col width="70%">
-					<col width="15%">
-					<col width="15%">
-					<tr>
-						<td><input type="text" name="room" id="room"></td>
-						<td><button id="setRoom" class="ui-btn-active ui-state-persist icon ion-android-upload" data-role="button"></button></td>
-						<td><button id="reloadRoom" class="ui-btn-active ui-state-persist icon ion-refresh" data-role="button"></button></td>
-					</tr>
-				</table>
+				<input type="text" name="room" id="room">
 
 				<hr>
 				-->
 
 				<!-- FLOOR -->
 				<label for="floor">Floor:</label>
-				<!-- <table width="100%">
-					<col width="70%">
-					<col width="15%">
-					<col width="15%">
-					<tr>
-						<td> -->
-							<input type="number" name="floor" id="floor">
-						<!-- </td>
-						<td><button id="setFloor" class="ui-btn-active ui-state-persist icon ion-android-upload" data-role="button"></button></td>
-						<td><button id="reloadFloor" class="ui-btn-active ui-state-persist icon ion-refresh" data-role="button"></button></td>
-					</tr>
-				</table> -->
+				<input type="number" name="floor" id="floor">
 
 				<hr>
 
 				<!-- TX POWER -->
 				<label for="txPower">TX Power in dB:</label>
-				<!-- <table width="100%">
-					<col width="70%">
-					<col width="15%">
-					<col width="15%">
-					<tr>
-						<td> -->
-							<select id="txPower">
-								<option value="+4" > +4 dB</option>
-								<option value="0"  >  0 dB</option>
-								<option value="-4" > -4 dB</option>
-								<option value="-8" > -8 dB</option>
-								<option value="-12">-12 dB</option>
-								<option value="-16">-16 dB</option>
-								<option value="-20">-20 dB</option>
-								<option value="-30">-30 dB</option>
-								<option value="-40">-40 dB</option>
-							</select>
-						<!-- </td>
-						<td><button id="setTxPower" class="ui-btn-active ui-state-persist icon ion-android-upload" data-role="button"></button></td>
-						<td><button id="reloadTxPower" class="ui-btn-active ui-state-persist icon ion-refresh" data-role="button"></button></td>
-					</tr>
-				</table> -->
+				<select id="txPower">
+					<option value="4"  > +4 dB</option>
+					<option value="0"  >  0 dB</option>
+					<option value="-4" > -4 dB</option>
+					<option value="-8" > -8 dB</option>
+					<option value="-12">-12 dB</option>
+					<option value="-16">-16 dB</option>
+					<option value="-20">-20 dB</option>
+					<option value="-30">-30 dB</option>
+					<option value="-40">-40 dB</option>
+				</select>
 
 				<hr>
 
 				<!-- ADVERTISEMENT INTERVAL -->
 				<label for="advertisementInterval">Advertisement Interval in ms:</label>
-				<!-- <table width="100%">
-					<col width="70%">
-					<col width="15%">
-					<col width="15%">
-					<tr>
-						<td> -->
-							<input type="number" name="advertisementInterval" id="advertisementInterval" min="20" max="10240">
-						<!-- </td>
-						<td><button id="setAdvertisementInterval" class="ui-btn-active ui-state-persist icon ion-android-upload" data-role="button"></button></td>
-						<td><button id="reloadAdvertisementInterval" class="ui-btn-active ui-state-persist icon ion-refresh" data-role="button"></button></td>
-					</tr>
-				</table> -->
+				<input type="number" name="advertisementInterval" id="advertisementInterval" min="20" max="10240">
 
 				<hr>
 
 				<table width="100%">
 					<tr>
-						<td><button id="saveConfig" class="ui-btn-active ui-state-persist icon ion-android-upload" data-role="button"></button></td>
-						<td><button id="reloadConfig" class="ui-btn-active ui-state-persist icon ion-refresh" data-role="button"></button></td>
+						<td><button id="saveConfig" class="ui-btn-active ui-state-persist icon ion-android-upload"> Save</button></td>
+						<td><button id="reloadConfig" class="ui-btn-active ui-state-persist icon ion-refresh"> Reload</button></td>
 					</tr>
 				</table>
 
